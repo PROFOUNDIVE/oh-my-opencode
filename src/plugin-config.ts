@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { OhMyOpenCodeConfigSchema, type OhMyOpenCodeConfig } from "./config";
+import { applyOpenMathOnlyDefaults } from "./config/openmath-only-defaults";
 import {
   log,
   deepMerge,
@@ -167,6 +168,8 @@ export function loadPluginConfig(
   config = {
     ...config,
   };
+
+  config = applyOpenMathOnlyDefaults(config);
 
   log("Final merged config", {
     agents: config.agents,

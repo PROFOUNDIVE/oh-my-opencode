@@ -465,17 +465,17 @@ describe("Sisyphus-Junior agent override", () => {
     }
   })
 
-  test("schema accepts lowercase agent names (sisyphus, atlas, prometheus)", () => {
+  test("schema accepts lowercase agent names (sisyphus, solver, verifier)", () => {
     // given
     const config = {
       agents: {
         sisyphus: {
           temperature: 0.1,
         },
-        atlas: {
+        solver: {
           temperature: 0.2,
         },
-        prometheus: {
+        verifier: {
           temperature: 0.3,
         },
       },
@@ -488,19 +488,19 @@ describe("Sisyphus-Junior agent override", () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.agents?.sisyphus?.temperature).toBe(0.1)
-      expect(result.data.agents?.atlas?.temperature).toBe(0.2)
-      expect(result.data.agents?.prometheus?.temperature).toBe(0.3)
+      expect(result.data.agents?.solver?.temperature).toBe(0.2)
+      expect(result.data.agents?.verifier?.temperature).toBe(0.3)
     }
   })
 
-  test("schema accepts lowercase metis and momus agent names", () => {
+  test("schema accepts lowercase reference-reviewer and coach agent names", () => {
     // given
     const config = {
       agents: {
-        metis: {
+        "reference-reviewer": {
           category: "ultrabrain",
         },
-        momus: {
+        coach: {
           category: "quick",
         },
       },
@@ -512,8 +512,8 @@ describe("Sisyphus-Junior agent override", () => {
     // then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.metis?.category).toBe("ultrabrain")
-      expect(result.data.agents?.momus?.category).toBe("quick")
+      expect(result.data.agents?.["reference-reviewer"]?.category).toBe("ultrabrain")
+      expect(result.data.agents?.coach?.category).toBe("quick")
     }
   })
 })

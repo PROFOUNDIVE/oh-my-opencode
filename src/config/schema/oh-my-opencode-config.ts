@@ -39,7 +39,6 @@ export const OhMyOpenCodeConfigSchema = z.object({
   sisyphus_agent: SisyphusAgentConfigSchema.optional(),
   comment_checker: CommentCheckerConfigSchema.optional(),
   experimental: ExperimentalConfigSchema.optional(),
-  auto_update: z.boolean().optional(),
   skills: SkillsConfigSchema.optional(),
   ralph_loop: RalphLoopConfigSchema.optional(),
   background_task: BackgroundTaskConfigSchema.optional(),

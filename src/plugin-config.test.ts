@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mergeConfigs, parseConfigPartially } from "./plugin-config";
+import { applyOpenMathOnlyDefaults } from "./config/openmath-only-defaults";
+import { HookNameSchema } from "./config";
 import type { OhMyOpenCodeConfig } from "./config";
 
 describe("mergeConfigs", () => {
@@ -81,22 +83,22 @@ describe("mergeConfigs", () => {
     it("should deep merge agents", () => {
       const base: OhMyOpenCodeConfig = {
         agents: {
-          oracle: { model: "openai/gpt-5.2" },
+          solver: { model: "openai/gpt-5.2" },
         },
       };
 
       const override: OhMyOpenCodeConfig = {
         agents: {
-          oracle: { temperature: 0.5 },
-          explore: { model: "anthropic/claude-haiku-4-5" },
+          solver: { temperature: 0.5 },
+          verifier: { model: "anthropic/claude-haiku-4-5" },
         },
       };
 
       const result = mergeConfigs(base, override);
 
-      expect(result.agents?.oracle?.model).toBe("openai/gpt-5.2");
-      expect(result.agents?.oracle?.temperature).toBe(0.5);
-      expect(result.agents?.explore?.model).toBe("anthropic/claude-haiku-4-5");
+      expect(result.agents?.solver?.model).toBe("openai/gpt-5.2");
+      expect(result.agents?.solver?.temperature).toBe(0.5);
+      expect(result.agents?.verifier?.model).toBe("anthropic/claude-haiku-4-5");
     });
 
     it("should merge disabled arrays without duplicates", () => {
@@ -127,8 +129,8 @@ describe("parseConfigPartially", () => {
     it("should return the full config when everything is valid", () => {
       const rawConfig = {
         agents: {
-          oracle: { model: "openai/gpt-5.2" },
-          momus: { model: "openai/gpt-5.2" },
+          solver: { model: "openai/gpt-5.2" },
+          verifier: { model: "openai/gpt-5.2" },
         },
         disabled_hooks: ["comment-checker"],
       };
@@ -136,8 +138,8 @@ describe("parseConfigPartially", () => {
       const result = parseConfigPartially(rawConfig);
 
       expect(result).not.toBeNull();
-      expect(result!.agents?.oracle?.model).toBe("openai/gpt-5.2");
-      expect(result!.agents?.momus?.model).toBe("openai/gpt-5.2");
+      expect(result!.agents?.solver?.model).toBe("openai/gpt-5.2");
+      expect(result!.agents?.verifier?.model).toBe("openai/gpt-5.2");
       expect(result!.disabled_hooks).toEqual(["comment-checker"]);
     });
   });
@@ -150,8 +152,8 @@ describe("parseConfigPartially", () => {
     it("should preserve valid agent overrides when another section is invalid", () => {
       const rawConfig = {
         agents: {
-          oracle: { model: "openai/gpt-5.2" },
-          momus: { model: "openai/gpt-5.2" },
+          solver: { model: "openai/gpt-5.2" },
+          verifier: { model: "openai/gpt-5.2" },
           prometheus: {
             permission: {
               edit: { "*": "ask", ".sisyphus/**": "allow" },
@@ -171,7 +173,7 @@ describe("parseConfigPartially", () => {
     it("should preserve valid agents when a non-agent section is invalid", () => {
       const rawConfig = {
         agents: {
-          oracle: { model: "openai/gpt-5.2" },
+          solver: { model: "openai/gpt-5.2" },
         },
         disabled_hooks: ["not-a-real-hook"],
       };
@@ -179,7 +181,7 @@ describe("parseConfigPartially", () => {
       const result = parseConfigPartially(rawConfig);
 
       expect(result).not.toBeNull();
-      expect(result!.agents?.oracle?.model).toBe("openai/gpt-5.2");
+      expect(result!.agents?.solver?.model).toBe("openai/gpt-5.2");
       expect(result!.disabled_hooks).toBeUndefined();
     });
   });
@@ -191,7 +193,7 @@ describe("parseConfigPartially", () => {
 
     it("should return empty object when all sections are invalid", () => {
       const rawConfig = {
-        agents: { oracle: { temperature: "not-a-number" } },
+        agents: { solver: { temperature: "not-a-number" } },
         disabled_hooks: ["not-a-real-hook"],
       };
 
@@ -224,7 +226,7 @@ describe("parseConfigPartially", () => {
     it("should ignore unknown keys and return valid sections", () => {
       const rawConfig = {
         agents: {
-          oracle: { model: "openai/gpt-5.2" },
+          solver: { model: "openai/gpt-5.2" },
         },
         some_future_key: { foo: "bar" },
       };
@@ -232,8 +234,67 @@ describe("parseConfigPartially", () => {
       const result = parseConfigPartially(rawConfig);
 
       expect(result).not.toBeNull();
-      expect(result!.agents?.oracle?.model).toBe("openai/gpt-5.2");
+      expect(result!.agents?.solver?.model).toBe("openai/gpt-5.2");
       expect((result as Record<string, unknown>)["some_future_key"]).toBeUndefined();
     });
+  });
+});
+
+describe("applyOpenMathOnlyDefaults", () => {
+  it("applies OpenMath-only disabled defaults for empty config", () => {
+    const result = applyOpenMathOnlyDefaults({});
+    const enabledByOmission = new Set(["background-notification"]);
+
+    expect(result.disabled_agents).toBeDefined();
+    expect(result.disabled_agents).toEqual([]);
+    expect(result.disabled_agents).not.toContain("sisyphus");
+
+    expect(result.disabled_tools).toBeDefined();
+    expect(result.disabled_tools).toContain("call_omo_agent");
+    expect(result.disabled_tools).toContain("lsp_goto_definition");
+    expect(result.disabled_tools).toContain("slashcommand");
+    expect(result.disabled_tools).not.toContain("task");
+    expect(result.disabled_tools).not.toContain("background_output");
+    // OpenMath state tools should be enabled by default
+    expect(result.disabled_tools).not.toContain("openmath_state_get");
+    expect(result.disabled_tools).not.toContain("openmath_state_set");
+    expect(result.disabled_tools).not.toContain("openmath_state_reset");
+
+    expect(result.disabled_hooks).toBeDefined();
+    expect(result.disabled_hooks).toContain("todo-continuation-enforcer");
+    expect(result.disabled_hooks).toContain("session-recovery");
+    expect(result.disabled_hooks).toContain("comment-checker");
+    expect(result.disabled_hooks).toContain("rules-injector");
+    expect(result.disabled_hooks).toContain("think-mode");
+    expect(result.disabled_hooks).toContain("auto-slash-command");
+    expect(result.disabled_hooks).toContain("atlas");
+    expect(result.disabled_hooks).not.toContain("background-notification");
+
+    for (const hookName of HookNameSchema.options) {
+      if (enabledByOmission.has(hookName)) {
+        expect(result.disabled_hooks).not.toContain(hookName);
+      } else {
+        expect(result.disabled_hooks).toContain(hookName);
+      }
+    }
+
+    expect(result.disabled_hooks?.length).toBe(HookNameSchema.options.length - enabledByOmission.size);
+  });
+
+  it("preserves existing disabled list entries while composing defaults", () => {
+    const config: OhMyOpenCodeConfig = {
+      disabled_agents: ["solver"],
+      disabled_tools: ["task"],
+      disabled_hooks: ["background-notification"],
+    };
+
+    const result = applyOpenMathOnlyDefaults(config);
+
+    expect(result.disabled_agents).toContain("solver");
+    expect(result.disabled_tools).toContain("task");
+    expect(result.disabled_hooks).toContain("background-notification");
+    expect(result.disabled_agents).not.toContain("oracle");
+    expect(result.disabled_tools).toContain("call_omo_agent");
+    expect(result.disabled_hooks).toContain("think-mode");
   });
 });
