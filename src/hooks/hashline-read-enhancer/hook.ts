@@ -1,5 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { computeLineHash } from "../../tools/hashline-edit/hash-computation"
+import { computeLineHash } from "./line-hash"
 
 interface HashlineReadEnhancerConfig {
   hashline_edit?: { enabled: boolean }

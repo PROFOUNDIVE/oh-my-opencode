@@ -2,8 +2,8 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 
 /**
  * Agent mode determines UI model selection behavior:
- * - "primary": Respects user's UI-selected model (sisyphus, atlas)
- * - "subagent": Uses own fallback chain, ignores UI selection (oracle, explore, etc.)
+ * - "primary": Respects user's UI-selected model
+ * - "subagent": Uses own fallback chain, ignores UI selection
  * - "all": Available in both contexts (OpenCode compatibility)
  */
 export type AgentMode = "primary" | "subagent" | "all"
@@ -82,14 +82,11 @@ export function isGptModel(model: string): boolean {
 
 export type BuiltinAgentName =
   | "sisyphus"
-  | "hephaestus"
-  | "oracle"
-  | "librarian"
-  | "explore"
   | "multimodal-looker"
-  | "metis"
-  | "momus"
-  | "atlas"
+  | "solver"
+  | "reference-reviewer"
+  | "verifier"
+  | "coach"
 
 export type OverridableAgentName =
   | "build"

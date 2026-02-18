@@ -10,6 +10,7 @@ export function createToolExecuteAfterHandler(args: {
     | undefined,
 ) => Promise<void> {
   const { hooks } = args
+  void hooks
 
   return async (
     input: { tool: string; sessionID: string; callID: string },
@@ -27,23 +28,5 @@ export function createToolExecuteAfterHandler(args: {
       }
     }
 
-    await hooks.claudeCodeHooks?.["tool.execute.after"]?.(input, output)
-    await hooks.toolOutputTruncator?.["tool.execute.after"]?.(input, output)
-    await hooks.preemptiveCompaction?.["tool.execute.after"]?.(input, output)
-    await hooks.contextWindowMonitor?.["tool.execute.after"]?.(input, output)
-    await hooks.commentChecker?.["tool.execute.after"]?.(input, output)
-    await hooks.directoryAgentsInjector?.["tool.execute.after"]?.(input, output)
-    await hooks.directoryReadmeInjector?.["tool.execute.after"]?.(input, output)
-    await hooks.rulesInjector?.["tool.execute.after"]?.(input, output)
-    await hooks.emptyTaskResponseDetector?.["tool.execute.after"]?.(input, output)
-    await hooks.agentUsageReminder?.["tool.execute.after"]?.(input, output)
-    await hooks.categorySkillReminder?.["tool.execute.after"]?.(input, output)
-    await hooks.interactiveBashSession?.["tool.execute.after"]?.(input, output)
-    await hooks.editErrorRecovery?.["tool.execute.after"]?.(input, output)
-    await hooks.jsonErrorRecovery?.["tool.execute.after"]?.(input, output)
-    await hooks.delegateTaskRetry?.["tool.execute.after"]?.(input, output)
-    await hooks.atlasHook?.["tool.execute.after"]?.(input, output)
-    await hooks.taskResumeInfo?.["tool.execute.after"]?.(input, output)
-    await hooks.hashlineReadEnhancer?.["tool.execute.after"]?.(input, output)
   }
 }

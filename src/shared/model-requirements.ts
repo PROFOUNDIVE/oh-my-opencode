@@ -61,6 +61,34 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       { providers: ["opencode"], model: "gpt-5-nano" },
     ],
   },
+  solver: {
+    fallbackChain: [
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-5.2", variant: "high" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-pro", variant: "high" },
+    ],
+  },
+  "reference-reviewer": {
+    fallbackChain: [
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-5.2", variant: "high" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-pro", variant: "high" },
+    ],
+  },
+  verifier: {
+    fallbackChain: [
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-5.2", variant: "high" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-pro", variant: "high" },
+    ],
+  },
+  coach: {
+    fallbackChain: [
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-5.2", variant: "high" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-pro", variant: "high" },
+    ],
+  },
   prometheus: {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },

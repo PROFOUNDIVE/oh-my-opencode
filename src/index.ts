@@ -11,7 +11,6 @@ import { loadPluginConfig } from "./plugin-config"
 import { createModelCacheState } from "./plugin-state"
 import { createFirstMessageVariantGate } from "./shared/first-message-variant"
 import { injectServerAuthIntoClient, log } from "./shared"
-import { startTmuxCheck } from "./tools"
 
 const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   log("[OhMyOpenCodePlugin] ENTRY - plugin loading", {
@@ -19,7 +18,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   })
 
   injectServerAuthIntoClient(ctx.client)
-  startTmuxCheck()
 
   const pluginConfig = loadPluginConfig(ctx.directory, ctx)
   const disabledHooks = new Set(pluginConfig.disabled_hooks ?? [])
@@ -29,20 +27,11 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
 
   const firstMessageVariantGate = createFirstMessageVariantGate()
 
-  const tmuxConfig = {
-    enabled: pluginConfig.tmux?.enabled ?? false,
-    layout: pluginConfig.tmux?.layout ?? "main-vertical",
-    main_pane_size: pluginConfig.tmux?.main_pane_size ?? 60,
-    main_pane_min_width: pluginConfig.tmux?.main_pane_min_width ?? 120,
-    agent_pane_min_width: pluginConfig.tmux?.agent_pane_min_width ?? 40,
-  }
-
   const modelCacheState = createModelCacheState()
 
   const managers = createManagers({
     ctx,
     pluginConfig,
-    tmuxConfig,
     modelCacheState,
     backgroundNotificationHookEnabled: isHookEnabled("background-notification"),
   })
@@ -54,14 +43,9 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   })
 
   const hooks = createHooks({
-    ctx,
-    pluginConfig,
-    modelCacheState,
     backgroundManager: managers.backgroundManager,
     isHookEnabled,
     safeHookEnabled,
-    mergedSkills: toolsResult.mergedSkills,
-    availableSkills: toolsResult.availableSkills,
   })
 
   const pluginInterface = createPluginInterface({
@@ -80,14 +64,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       _input: { sessionID: string },
       output: { context: string[] },
     ): Promise<void> => {
-      await hooks.compactionTodoPreserver?.capture(_input.sessionID)
-      await hooks.claudeCodeHooks?.["experimental.session.compacting"]?.(
-        _input,
-        output,
-      )
-      if (hooks.compactionContextInjector) {
-        output.context.push(hooks.compactionContextInjector(_input.sessionID))
-      }
+      void _input
+      void output
     },
   }
 }
