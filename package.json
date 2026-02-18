@@ -1,7 +1,7 @@
 {
   "name": "oh-my-opencode",
   "version": "3.7.3",
-  "description": "The Best AI Agent Harness - Batteries-Included OpenCode Plugin with Multi-Model Orchestration, Parallel Background Agents, and Crafted LSP/AST Tools",
+  "description": "OpenMath Orchestrator - OpenCode Plugin for guided math problem-solving with solver, reviewer, verifier, and coach agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -34,11 +34,10 @@
   "keywords": [
     "opencode",
     "plugin",
-    "oracle",
-    "librarian",
-    "agents",
+    "openmath",
+    "math",
     "ai",
-    "llm"
+    "agents"
   ],
   "author": "YeonGyu-Kim",
   "license": "SUL-1.0",
