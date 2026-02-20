@@ -1,5 +1,8 @@
 import type { LspServerInfo } from "../types"
-import { isServerInstalled } from "../../../tools/lsp/config"
+
+function isServerInstalled(commands: string[]): boolean {
+  return commands.some((command) => Boolean(Bun.which(command)))
+}
 
 const DEFAULT_LSP_SERVERS: Array<{ id: string; binary: string; extensions: string[] }> = [
   { id: "typescript-language-server", binary: "typescript-language-server", extensions: [".ts", ".tsx", ".js", ".jsx"] },
