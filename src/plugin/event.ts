@@ -8,7 +8,6 @@ import {
   updateSessionAgent,
 } from "../features/claude-code-session-state"
 import { resetMessageCursor } from "../shared"
-import { lspManager } from "../tools"
 
 import type { CreatedHooks } from "../create-hooks"
 import type { Managers } from "../create-managers"
@@ -97,7 +96,6 @@ export function createEventHandler(args: {
         clearSessionAgent(sessionInfo.id)
         resetMessageCursor(sessionInfo.id)
         firstMessageVariantGate.clear(sessionInfo.id)
-        await lspManager.cleanupTempDirectoryClients()
       }
     }
 
