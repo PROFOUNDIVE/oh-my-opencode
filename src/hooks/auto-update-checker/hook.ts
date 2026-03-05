@@ -2,7 +2,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
 import { getCachedVersion, getLocalDevVersion } from "./checker"
 import type { AutoUpdateCheckerOptions } from "./types"
-import { runBackgroundUpdateCheck } from "./hook/background-update-check"
+import * as backgroundUpdateCheck from "./hook/background-update-check"
 import { showConfigErrorsIfAny } from "./hook/config-errors-toast"
 import { updateAndShowConnectedProvidersCacheStatus } from "./hook/connected-providers-status"
 import { showModelCacheWarningIfNeeded } from "./hook/model-cache-warning"
@@ -57,7 +57,7 @@ export function createAutoUpdateCheckerHook(ctx: PluginInput, options: AutoUpdat
           showVersionToast(ctx, displayVersion, getToastMessage(false)).catch(() => {})
         }
 
-        runBackgroundUpdateCheck(ctx, autoUpdate, getToastMessage).catch((err) => {
+        backgroundUpdateCheck.runBackgroundUpdateCheck(ctx, autoUpdate, getToastMessage).catch((err) => {
           log("[auto-update-checker] Background update check failed:", err)
         })
       }, 0)

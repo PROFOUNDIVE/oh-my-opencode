@@ -1,4 +1,6 @@
-import { describe, it, expect, mock } from "bun:test"
+import { describe, it, expect, mock, afterAll, spyOn } from "bun:test"
+
+import * as backgroundUpdateCheck from "./hook/background-update-check"
 
 const mockShowConfigErrorsIfAny = mock(async () => {})
 const mockShowModelCacheWarningIfNeeded = mock(async () => {})
@@ -27,10 +29,6 @@ mock.module("./hook/startup-toasts", () => ({
   showVersionToast: mockShowVersionToast,
 }))
 
-mock.module("./hook/background-update-check", () => ({
-  runBackgroundUpdateCheck: mockRunBackgroundUpdateCheck,
-}))
-
 mock.module("./checker", () => ({
   getCachedVersion: mockGetCachedVersion,
   getLocalDevVersion: mockGetLocalDevVersion,
@@ -39,6 +37,10 @@ mock.module("./checker", () => ({
 mock.module("../../shared/logger", () => ({
   log: () => {},
 }))
+
+afterAll(() => {
+  mock.restore()
+})
 
 const { createAutoUpdateCheckerHook } = await import("./hook")
 
@@ -53,31 +55,38 @@ describe("createAutoUpdateCheckerHook", () => {
     mockShowVersionToast.mockClear()
     mockRunBackgroundUpdateCheck.mockClear()
 
-    const hook = createAutoUpdateCheckerHook(
-      {
-        directory: "/test",
-        client: {} as never,
-      } as never,
-      { showStartupToast: true, isSisyphusEnabled: true, autoUpdate: true }
+    const bgSpy = spyOn(backgroundUpdateCheck, "runBackgroundUpdateCheck").mockImplementation(
+      mockRunBackgroundUpdateCheck as never,
     )
 
-    //#when - session.created event arrives
-    hook.event({
-      event: {
-        type: "session.created",
-        properties: { info: { parentID: undefined } },
-      },
-    })
-    await new Promise((resolve) => setTimeout(resolve, 25))
+    try {
+      const hook = createAutoUpdateCheckerHook(
+        {
+          directory: "/test",
+          client: {} as never,
+        } as never,
+        { showStartupToast: true, isSisyphusEnabled: true, autoUpdate: true }
+      )
 
-    //#then - no update checker side effects run
-    expect(mockShowConfigErrorsIfAny).not.toHaveBeenCalled()
-    expect(mockShowModelCacheWarningIfNeeded).not.toHaveBeenCalled()
-    expect(mockUpdateAndShowConnectedProvidersCacheStatus).not.toHaveBeenCalled()
-    expect(mockShowLocalDevToast).not.toHaveBeenCalled()
-    expect(mockShowVersionToast).not.toHaveBeenCalled()
-    expect(mockRunBackgroundUpdateCheck).not.toHaveBeenCalled()
+      //#when - session.created event arrives
+      hook.event({
+        event: {
+          type: "session.created",
+          properties: { info: { parentID: undefined } },
+        },
+      })
+      await new Promise((resolve) => setTimeout(resolve, 25))
 
-    delete process.env.OPENCODE_CLI_RUN_MODE
+      //#then - no update checker side effects run
+      expect(mockShowConfigErrorsIfAny).not.toHaveBeenCalled()
+      expect(mockShowModelCacheWarningIfNeeded).not.toHaveBeenCalled()
+      expect(mockUpdateAndShowConnectedProvidersCacheStatus).not.toHaveBeenCalled()
+      expect(mockShowLocalDevToast).not.toHaveBeenCalled()
+      expect(mockShowVersionToast).not.toHaveBeenCalled()
+      expect(mockRunBackgroundUpdateCheck).not.toHaveBeenCalled()
+    } finally {
+      bgSpy.mockRestore()
+      delete process.env.OPENCODE_CLI_RUN_MODE
+    }
   })
 })
