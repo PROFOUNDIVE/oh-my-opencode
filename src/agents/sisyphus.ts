@@ -33,6 +33,8 @@ function buildDynamicSisyphusPrompt(
   availableSkills: AvailableSkill[] = [],
   availableCategories: AvailableCategory[] = [],
   useTaskSystem = false,
+  openMathMaxReviewRounds = 3,
+  responseLanguage?: string,
 ): string {
   const keyTriggers = buildKeyTriggersSection(availableAgents, availableSkills);
   const toolSelection = buildToolSelectionTable(
@@ -52,10 +54,17 @@ function buildDynamicSisyphusPrompt(
     ? "YOUR TASK CREATION WOULD BE TRACKED BY HOOK([SYSTEM REMINDER - TASK CONTINUATION])"
     : "YOUR TODO CREATION WOULD BE TRACKED BY HOOK([SYSTEM REMINDER - TODO CONTINUATION])";
 
-  return `<Role>
+  const responseLanguageDirective = responseLanguage
+    ? `<Localization>
+All user-facing prose must be in ${responseLanguage}. Keep JSON/tool outputs unchanged.
+</Localization>
+`
+    : "";
+
+ return `<Role>
  You are "Sisyphus". You are the OpenMath session orchestrator.
  
- You run one loop only: SOLVE -> REVIEW LOOP (max 3) -> FREEZE -> COACH/VERIFY.
+ You run one loop only: SOLVE -> REVIEW LOOP (max ${openMathMaxReviewRounds}) -> FREEZE -> COACH/VERIFY.
  
  You coordinate exactly 4 OpenMath agents:
  - @solver: drafts reference artifacts (reference_solution, hint_ladder, grading_rubric, variant_problem)
@@ -69,20 +78,35 @@ function buildDynamicSisyphusPrompt(
  Do not follow generic coding-orchestrator flows.
  Do not delegate to non-OpenMath agents.
  </Role>
- 
-  <OpenMath_Routing>
-  Prompt explicitly routes request classes: SETUP, PROBLEM, COACH, VERIFY, REVEAL.
+
+ ${responseLanguageDirective}
+ <OpenMath_Routing>
+ Prompt explicitly routes request classes: SETUP, PROBLEM, COACH, VERIFY, REVEAL, SOLVE_ONLY, EXPORT.
  
  Classify EVERY user message into exactly one class:
  
  - SETUP: choose subject + chapter context + refs + hint budget
- - PROBLEM: new problem statement (text or image)
- - COACH: student asks for a hint while working
- - VERIFY: student submits a final solution for grading
- - REVEAL: student explicitly requests the full solution
- 
+  - PROBLEM: new problem statement (text or image)
+  - COACH: student asks for a hint while working
+  - VERIFY: student submits a final solution for grading
+  - REVEAL: student explicitly requests the full solution
+  - SOLVE_ONLY: draft + review + freeze artifacts, then STOP (no coaching, no grading)
+  - EXPORT: export the currently frozen artifacts without changing them
+  
   If ambiguous, ask exactly ONE question and do not proceed until answered.
   </OpenMath_Routing>
+
+  <OpenMath_Artifacts_Format>
+  Artifact format directive:
+  - Default: markdown (human-readable)
+  - Legacy: some OpenMath subagents/tools may emit json; accept it and persist it as-is unless explicitly asked to convert
+  </OpenMath_Artifacts_Format>
+
+  <OpenMath_Mode_Tool_Contracts>
+  Mode-specific tool usage (these are contracts; do not improvise alternate tool names):
+  - SOLVE_ONLY -> call openmath_solve_only
+  - EXPORT -> call openmath_export
+  </OpenMath_Mode_Tool_Contracts>
 
   <OpenMath_Durable_State>
   You MUST use durable OpenMath state tools.
@@ -96,7 +120,7 @@ function buildDynamicSisyphusPrompt(
 
   Canonical processing steps (do this for EVERY user message):
   1) load state -> call openmath_state_get(session_id)
-  2) decide mode -> classify as SETUP | PROBLEM | COACH | VERIFY | REVEAL
+  2) decide mode -> classify as SETUP | PROBLEM | COACH | VERIFY | REVEAL | SOLVE_ONLY | EXPORT
   3) update state -> call openmath_state_set(state=<full snapshot>)
   4) proceed -> delegate to OpenMath agents or respond to the user
 
@@ -113,7 +137,7 @@ function buildDynamicSisyphusPrompt(
     "artifact_state": "DRAFT" | "FROZEN" | "UNFROZEN",
     "artifact_version": number,
     "review_round": number,
-    "max_review_rounds": number,
+   "max_review_rounds": number,
     "hint_budget_state": {
       "hints_used": number,
       "hint_budget": number
@@ -144,7 +168,7 @@ function buildDynamicSisyphusPrompt(
   </OpenMath_Durable_State>
 
    <OpenMath_Workflow_Contract>
-   Workflow: SOLVE -> REVIEW LOOP (max 3) -> FREEZE gate -> student attempt -> COACH -> VERIFY.
+   Workflow: SOLVE -> REVIEW LOOP (max ${openMathMaxReviewRounds}) -> FREEZE gate -> student attempt -> COACH -> VERIFY.
   
   - FAIL-CLOSED COACHING GATE: no problem-specific coaching unless artifacts are FROZEN with [CORRECT] certificate.
   - Hidden reference-solution behavior: never print reference_solution unless the COACH reveal gate is satisfied.
@@ -182,6 +206,8 @@ export function createSisyphusAgent(
   availableSkills?: AvailableSkill[],
   availableCategories?: AvailableCategory[],
   useTaskSystem = false,
+  openMathMaxReviewRounds = 3,
+  responseLanguage?: string,
 ): AgentConfig {
   const tools = availableToolNames ? categorizeTools(availableToolNames) : [];
   const skills = availableSkills ?? [];
@@ -193,8 +219,18 @@ export function createSisyphusAgent(
         skills,
         categories,
         useTaskSystem,
+        openMathMaxReviewRounds,
+        responseLanguage,
       )
-    : buildDynamicSisyphusPrompt([], tools, skills, categories, useTaskSystem);
+    : buildDynamicSisyphusPrompt(
+        [],
+        tools,
+        skills,
+        categories,
+        useTaskSystem,
+        openMathMaxReviewRounds,
+        responseLanguage,
+      );
 
   const permission = {
     question: "allow",

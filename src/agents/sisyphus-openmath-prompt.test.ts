@@ -14,11 +14,15 @@ describe("Sisyphus OpenMath orchestrator prompt contract", () => {
     //#then
     expect(prompt).toContain("OpenMath session orchestrator");
     expect(prompt).toContain(
-      "Prompt explicitly routes request classes: SETUP, PROBLEM, COACH, VERIFY, REVEAL.",
+      "Prompt explicitly routes request classes: SETUP, PROBLEM, COACH, VERIFY, REVEAL, SOLVE_ONLY, EXPORT.",
     );
     expect(prompt).toContain(
       "Workflow: SOLVE -> REVIEW LOOP (max 3) -> FREEZE gate -> student attempt -> COACH -> VERIFY.",
     );
+    expect(prompt).toContain("- SOLVE_ONLY:");
+    expect(prompt).toContain("- EXPORT:");
+    expect(prompt).toContain("- SOLVE_ONLY -> call openmath_solve_only");
+    expect(prompt).toContain("- EXPORT -> call openmath_export");
     expect(prompt).toContain(
       "FAIL-CLOSED COACHING GATE: no problem-specific coaching unless artifacts are FROZEN with [CORRECT] certificate.",
     );
@@ -70,7 +74,7 @@ describe("Sisyphus OpenMath orchestrator prompt contract", () => {
     expect(prompt).toContain("Canonical processing steps (do this for EVERY user message):");
     expect(prompt).toContain("load state -> call openmath_state_get(session_id)");
     expect(prompt).toContain(
-      "decide mode -> classify as SETUP | PROBLEM | COACH | VERIFY | REVEAL",
+      "decide mode -> classify as SETUP | PROBLEM | COACH | VERIFY | REVEAL | SOLVE_ONLY | EXPORT",
     );
     expect(prompt).toContain("update state -> call openmath_state_set(state=<full snapshot>)");
     expect(prompt).toContain("proceed -> delegate to OpenMath agents or respond to the user");
@@ -94,6 +98,20 @@ describe("Sisyphus OpenMath orchestrator prompt contract", () => {
     );
     expect(prompt).toContain(
       "every COACH turn that produces a hint must increment hint_budget_state.hints_used and persist it.",
+    );
+  });
+
+  test("should use configurable max review rounds in REVIEW LOOP headers", () => {
+    //#given
+    const agent = createSisyphusAgent(TEST_MODEL, [], undefined, undefined, undefined, false, 5);
+
+    //#when
+    const prompt = agent.prompt;
+
+    //#then
+    expect(prompt).toContain("REVIEW LOOP (max 5)");
+    expect(prompt).toContain(
+      "Workflow: SOLVE -> REVIEW LOOP (max 5) -> FREEZE gate -> student attempt -> COACH -> VERIFY.",
     );
   });
 });
