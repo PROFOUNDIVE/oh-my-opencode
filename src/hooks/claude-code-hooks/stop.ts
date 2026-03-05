@@ -39,8 +39,20 @@ export interface StopResult {
 export async function executeStopHooks(
   ctx: StopContext,
   config: ClaudeHooksConfig | null,
-  extendedConfig?: PluginExtendedConfig | null
+  extendedConfig?: PluginExtendedConfig | null,
+  deps?: {
+    findMatchingHooks?: typeof findMatchingHooks
+    executeHookCommand?: typeof executeHookCommand
+    log?: typeof log
+  }
 ): Promise<StopResult> {
+  const d = {
+    findMatchingHooks,
+    executeHookCommand,
+    log,
+    ...deps,
+  }
+
   if (ctx.parentSessionId) {
     return { block: false }
   }
@@ -49,7 +61,7 @@ export async function executeStopHooks(
     return { block: false }
   }
 
-  const matchers = findMatchingHooks(config, "Stop")
+  const matchers = d.findMatchingHooks(config, "Stop")
   if (matchers.length === 0) {
     return { block: false }
   }
@@ -70,12 +82,12 @@ export async function executeStopHooks(
      for (const hook of matcher.hooks) {
        if (hook.type !== "command") continue
 
-       if (isHookCommandDisabled("Stop", hook.command, extendedConfig ?? null)) {
-        log("Stop hook command skipped (disabled by config)", { command: hook.command })
+      if (isHookCommandDisabled("Stop", hook.command, extendedConfig ?? null)) {
+        d.log("Stop hook command skipped (disabled by config)", { command: hook.command })
         continue
       }
 
-      const result = await executeHookCommand(
+      const result = await d.executeHookCommand(
         hook.command,
         JSON.stringify(stdinData),
         ctx.cwd,

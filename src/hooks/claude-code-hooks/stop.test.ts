@@ -2,22 +2,13 @@ import { describe, it, expect, mock, beforeEach } from "bun:test"
 import type { ClaudeHooksConfig } from "./types"
 import type { StopContext } from "./stop"
 
+import { executeStopHooks } from "./stop"
+
 const mockExecuteHookCommand = mock(() =>
   Promise.resolve({ exitCode: 0, stdout: "", stderr: "" })
 )
 
-mock.module("../../shared/command-executor", () => ({
-  executeHookCommand: mockExecuteHookCommand,
-  executeCommand: mock(),
-  resolveCommandsInText: mock(),
-}))
-
-mock.module("../../shared/logger", () => ({
-  log: () => {},
-  getLogFilePath: () => "/tmp/test.log",
-}))
-
-const { executeStopHooks } = await import("./stop")
+const noopLog = () => {}
 
 function createStopContext(overrides?: Partial<StopContext>): StopContext {
   return {
@@ -29,6 +20,13 @@ function createStopContext(overrides?: Partial<StopContext>): StopContext {
 
 function createConfig(stopHooks: ClaudeHooksConfig["Stop"]): ClaudeHooksConfig {
   return { Stop: stopHooks }
+}
+
+async function runStopHooks(ctx: StopContext, config: ClaudeHooksConfig | null) {
+  return executeStopHooks(ctx, config, null, {
+    executeHookCommand: mockExecuteHookCommand as never,
+    log: noopLog,
+  })
 }
 
 describe("executeStopHooks", () => {
@@ -45,7 +43,7 @@ describe("executeStopHooks", () => {
       { matcher: "*", hooks: [{ type: "command", command: "echo test" }] },
     ])
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
     expect(mockExecuteHookCommand).not.toHaveBeenCalled()
@@ -54,7 +52,7 @@ describe("executeStopHooks", () => {
   it("#given null config #when stop hooks called #then returns non-blocking", async () => {
     const ctx = createStopContext()
 
-    const result = await executeStopHooks(ctx, null)
+    const result = await runStopHooks(ctx, null)
 
     expect(result.block).toBe(false)
     expect(mockExecuteHookCommand).not.toHaveBeenCalled()
@@ -64,7 +62,7 @@ describe("executeStopHooks", () => {
     const ctx = createStopContext()
     const config = createConfig([])
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
   })
@@ -80,7 +78,7 @@ describe("executeStopHooks", () => {
       stderr: "blocked reason",
     })
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(true)
     expect(result.reason).toBe("blocked reason")
@@ -97,7 +95,7 @@ describe("executeStopHooks", () => {
       stderr: "",
     })
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(true)
     expect(result.reason).toBe("must fix")
@@ -121,7 +119,7 @@ describe("executeStopHooks", () => {
         stderr: "",
       })
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
     expect(mockExecuteHookCommand).toHaveBeenCalledTimes(2)
@@ -150,7 +148,7 @@ describe("executeStopHooks", () => {
         stderr: "",
       })
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
     expect(mockExecuteHookCommand).toHaveBeenCalledTimes(2)
@@ -168,7 +166,7 @@ describe("executeStopHooks", () => {
       stderr: "",
     })
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(true)
     expect(mockExecuteHookCommand).toHaveBeenCalledTimes(1)
@@ -192,7 +190,7 @@ describe("executeStopHooks", () => {
         stderr: "",
       })
 
-    const result = await executeStopHooks(ctx, config)
+    const result = await runStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
     expect(mockExecuteHookCommand).toHaveBeenCalledTimes(2)
