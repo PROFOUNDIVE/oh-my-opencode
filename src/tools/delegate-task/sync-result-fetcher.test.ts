@@ -141,4 +141,33 @@ describe("fetchSyncResult", () => {
     expect(result.ok).toBe(false)
     expect(result.error).toContain("No assistant response found")
   })
+
+  test("excludeReasoningParts: omits reasoning parts while keeping text", async () => {
+    //#given - assistant message with reasoning + text parts
+    const { fetchSyncResult } = require("./sync-result-fetcher")
+
+    const mockClient = {
+      session: {
+        messages: async () => ({
+          data: [
+            {
+              info: { id: "msg_001", role: "assistant", time: { created: 2000 } },
+              parts: [
+                { type: "reasoning", text: "<thinking>internal</thinking>" },
+                { type: "text", text: '{"verdict":"[CORRECT]"}' },
+              ],
+            },
+          ],
+        }),
+      },
+    }
+
+    //#when - default behavior keeps reasoning
+    const defaultResult = await fetchSyncResult(mockClient, "ses_test")
+    const strippedResult = await fetchSyncResult(mockClient, "ses_test", undefined, { excludeReasoningParts: true })
+
+    //#then
+    expect(defaultResult).toEqual({ ok: true, textContent: "<thinking>internal</thinking>\n{\"verdict\":\"[CORRECT]\"}" })
+    expect(strippedResult).toEqual({ ok: true, textContent: '{"verdict":"[CORRECT]"}' })
+  })
 })

@@ -5,7 +5,10 @@ import { normalizeSDKResponse } from "../../shared"
 export async function fetchSyncResult(
   client: OpencodeClient,
   sessionID: string,
-  anchorMessageCount?: number
+  anchorMessageCount?: number,
+  options?: {
+    excludeReasoningParts?: boolean
+  }
 ): Promise<{ ok: true; textContent: string } | { ok: false; error: string }> {
   const messagesResult = await client.session.messages({
     path: { id: sessionID },
@@ -44,7 +47,13 @@ export async function fetchSyncResult(
     return { ok: false, error: `No assistant response found.\n\nSession ID: ${sessionID}` }
   }
 
-  const textParts = lastMessage?.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
+  const excludeReasoningParts = options?.excludeReasoningParts ?? false
+  const textParts =
+    lastMessage?.parts?.filter((p) => {
+      if (p.type === "text") return true
+      if (p.type === "reasoning") return !excludeReasoningParts
+      return false
+    }) ?? []
   const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
 
   return { ok: true, textContent }
