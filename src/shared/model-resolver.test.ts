@@ -2,6 +2,7 @@ import { describe, expect, test, spyOn, beforeEach, afterEach, mock } from "bun:
 import { resolveModel, resolveModelWithFallback, type ModelResolutionInput, type ExtendedModelResolutionInput, type ModelResolutionResult, type ModelSource } from "./model-resolver"
 import * as logger from "./logger"
 import * as connectedProvidersCache from "./connected-providers-cache"
+import { resolveModelPipeline } from "./model-resolution-pipeline"
 
 describe("resolveModel", () => {
   describe("priority chain", () => {
@@ -489,7 +490,7 @@ describe("resolveModelWithFallback", () => {
       expect(logSpy).toHaveBeenCalledWith("No available model found in fallback chain, falling through to system default")
     })
 
-    test("returns undefined when availableModels empty and no connected providers cache exists", () => {
+    test("returns first fallbackChain entry when availableModels empty and no connected providers cache exists", () => {
       // given - both model cache and connected-providers cache are missing (first run)
       const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
       const input: ExtendedModelResolutionInput = {
@@ -503,8 +504,37 @@ describe("resolveModelWithFallback", () => {
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should return undefined to let OpenCode use Provider.defaultModel()
-      expect(result).toBeUndefined()
+      // then - should use first fallbackChain entry as best-effort
+      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.source).toBe("provider-fallback")
+      expect(logSpy).toHaveBeenCalledWith("Model resolved via fallback chain (no cache, first run)", {
+        provider: "anthropic",
+        model: "claude-opus-4-6",
+        variant: undefined,
+      })
+      cacheSpy.mockRestore()
+    })
+
+    test("includes attempted field in pipeline result for first-run fallbackChain resolution", () => {
+      // given
+      const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
+
+      // when
+      const result = resolveModelPipeline({
+        constraints: { availableModels: new Set() },
+        policy: {
+          fallbackChain: [{ providers: ["openai"], model: "gpt-5.2", variant: "high" }],
+          systemDefaultModel: "google/gemini-3-pro",
+        },
+      })
+
+      // then
+      expect(result).toBeDefined()
+      expect(result!.model).toBe("openai/gpt-5.2")
+      expect(result!.provenance).toBe("provider-fallback")
+      expect(result!.variant).toBe("high")
+      expect(result!.attempted).toEqual([])
+
       cacheSpy.mockRestore()
     })
 
@@ -568,7 +598,7 @@ describe("resolveModelWithFallback", () => {
       cacheSpy.mockRestore()
     })
 
-    test("falls through to system default when no cache and systemDefaultModel is provided", () => {
+    test("uses first fallbackChain entry when no cache even if systemDefaultModel is provided", () => {
       // given - no cache but system default is configured
       const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
       const input: ExtendedModelResolutionInput = {
@@ -582,9 +612,9 @@ describe("resolveModelWithFallback", () => {
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should fall through to system default
-      expect(result!.model).toBe("google/gemini-3-pro")
-      expect(result!.source).toBe("system-default")
+      // then - should still use fallbackChain as best-effort
+      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.source).toBe("provider-fallback")
       cacheSpy.mockRestore()
     })
 

@@ -103,7 +103,24 @@ export function resolveModelPipeline(
       const connectedSet = connectedProviders ? new Set(connectedProviders) : null
 
       if (connectedSet === null) {
-        log("Model fallback chain skipped (no connected providers cache) - falling through to system default")
+        const firstFallback = fallbackChain[0]
+        const provider = firstFallback?.providers[0]
+        if (provider) {
+          const model = `${provider}/${firstFallback.model}`
+          log("Model resolved via fallback chain (no cache, first run)", {
+            provider,
+            model: firstFallback.model,
+            variant: firstFallback.variant,
+          })
+          return {
+            model,
+            provenance: "provider-fallback",
+            variant: firstFallback.variant,
+            attempted,
+          }
+        }
+
+        log("Model fallback chain unusable (no providers in first entry) - falling through to system default")
       } else {
         for (const entry of fallbackChain) {
           for (const provider of entry.providers) {
