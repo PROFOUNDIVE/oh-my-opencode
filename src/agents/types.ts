@@ -84,7 +84,11 @@ export type BuiltinAgentName =
   | "sisyphus"
   | "multimodal-looker"
   | "solver"
+  | "solver-markdown"
+  | "solver-markdown-patch"
   | "reference-reviewer"
+  | "reference-reviewer-markdown"
+  | "reference-reviewer-patch"
   | "verifier"
   | "coach"
 
