@@ -1,13 +1,17 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BuiltinAgentName, AgentOverrides, AgentFactory, AgentPromptMetadata } from "./types"
-import type { CategoriesConfig, GitMasterConfig } from "../config/schema"
+import type { CategoriesConfig, GitMasterConfig, OpenMathConfig } from "../config/schema"
 import type { LoadedSkill } from "../features/opencode-skill-loader/types"
 import type { BrowserAutomationProvider } from "../config/schema"
 import { createSisyphusAgent } from "./sisyphus"
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
 import {
   createOpenMathSolverAgent,
+  createOpenMathSolverMarkdownAgent,
+  createOpenMathSolverMarkdownPatchAgent,
   createOpenMathReferenceReviewerAgent,
+  createOpenMathReferenceReviewerMarkdownAgent,
+  createOpenMathReferenceReviewerPatchAgent,
   createOpenMathVerifierAgent,
   createOpenMathCoachAgent,
 } from "./openmath"
@@ -30,7 +34,11 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   sisyphus: createSisyphusAgent,
   "multimodal-looker": createMultimodalLookerAgent,
   solver: createOpenMathSolverAgent as AgentFactory,
+  "solver-markdown": createOpenMathSolverMarkdownAgent as AgentFactory,
+  "solver-markdown-patch": createOpenMathSolverMarkdownPatchAgent as AgentFactory,
   "reference-reviewer": createOpenMathReferenceReviewerAgent as AgentFactory,
+  "reference-reviewer-markdown": createOpenMathReferenceReviewerMarkdownAgent as AgentFactory,
+  "reference-reviewer-patch": createOpenMathReferenceReviewerPatchAgent as AgentFactory,
   verifier: createOpenMathVerifierAgent as AgentFactory,
   coach: createOpenMathCoachAgent as AgentFactory,
 }
@@ -55,7 +63,9 @@ export async function createBuiltinAgents(
   browserProvider?: BrowserAutomationProvider,
   uiSelectedModel?: string,
   disabledSkills?: Set<string>,
-  useTaskSystem = false
+  useTaskSystem = false,
+  openMathConfig?: OpenMathConfig,
+  responseLanguage?: string,
 ): Promise<Record<string, AgentConfig>> {
   const connectedProviders = readConnectedProvidersCache()
   const providerModelsConnected = connectedProviders
@@ -131,6 +141,8 @@ export async function createBuiltinAgents(
     directory,
     userCategories: categories,
     useTaskSystem,
+    openMathMaxReviewRounds: openMathConfig?.max_review_rounds,
+    responseLanguage,
   })
   if (sisyphusConfig) {
     result["sisyphus"] = sisyphusConfig

@@ -22,6 +22,8 @@ export function maybeCreateSisyphusConfig(input: {
   directory?: string
   userCategories?: CategoriesConfig
   useTaskSystem: boolean
+  openMathMaxReviewRounds?: number
+  responseLanguage?: string
 }): AgentConfig | undefined {
   const {
     disabledAgents,
@@ -36,6 +38,8 @@ export function maybeCreateSisyphusConfig(input: {
     mergedCategories,
     directory,
     useTaskSystem,
+    openMathMaxReviewRounds,
+    responseLanguage,
   } = input
 
   const sisyphusOverride = agentOverrides["sisyphus"]
@@ -70,7 +74,9 @@ export function maybeCreateSisyphusConfig(input: {
     undefined,
     availableSkills,
     availableCategories,
-    useTaskSystem
+    useTaskSystem,
+    openMathMaxReviewRounds ?? 3,
+    responseLanguage,
   )
 
   if (sisyphusResolvedVariant) {
