@@ -1,81 +1,69 @@
-import { describe, test, expect, mock, beforeEach, afterAll } from "bun:test"
-import { truncateUntilTargetTokens } from "./storage"
-import * as storage from "./storage"
+import { describe, test, expect, mock, beforeEach } from "bun:test"
 
-// Mock the entire module
-mock.module("./storage", () => {
-  return {
-    ...storage,
-    findToolResultsBySize: mock(() => []),
-    truncateToolResult: mock(() => ({ success: false })),
-  }
-})
-
-afterAll(() => {
-  mock.module("./storage", () => storage)
-})
+import { truncateUntilTargetTokens } from "./target-token-truncation"
+import type { ToolResultInfo } from "./tool-part-types"
 
 describe("truncateUntilTargetTokens", () => {
-  const sessionID = "test-session"
-  
-  beforeEach(() => {
-    // Reset mocks
-    const { findToolResultsBySize, truncateToolResult } = require("./storage")
-    findToolResultsBySize.mockReset()
-    truncateToolResult.mockReset()
-  })
+	const sessionID = "test-session"
 
-  test("truncates only until target is reached", async () => {
-    const { findToolResultsBySize, truncateToolResult } = require("./storage")
-    
-    // given: Two tool results, each 1000 chars. Target reduction is 500 chars.
-    const results = [
-      { partPath: "path1", partId: "id1", messageID: "m1", toolName: "tool1", outputSize: 1000 },
-      { partPath: "path2", partId: "id2", messageID: "m2", toolName: "tool2", outputSize: 1000 },
-    ]
-    
-    findToolResultsBySize.mockReturnValue(results)
-    truncateToolResult.mockImplementation((path: string) => ({
-      success: true,
-      toolName: path === "path1" ? "tool1" : "tool2",
-      originalSize: 1000
-    }))
+	const findToolResultsBySizeMock = mock((_sessionID: string): ToolResultInfo[] => [])
+	const truncateToolResultMock = mock(
+		(_partPath: string): { success: boolean; toolName?: string; originalSize?: number } => ({
+			success: false,
+		})
+	)
 
-    // when: currentTokens=1000, maxTokens=1000, targetRatio=0.5 (target=500, reduce=500)
-    // charsPerToken=1 for simplicity in test
-    const result = await truncateUntilTargetTokens(sessionID, 1000, 1000, 0.5, 1)
+	beforeEach(() => {
+		findToolResultsBySizeMock.mockReset()
+		truncateToolResultMock.mockReset()
+	})
 
-    // then: Should only truncate the first tool
-    expect(result.truncatedCount).toBe(1)
-    expect(truncateToolResult).toHaveBeenCalledTimes(1)
-    expect(truncateToolResult).toHaveBeenCalledWith("path1")
-    expect(result.totalBytesRemoved).toBe(1000)
-    expect(result.sufficient).toBe(true)
-  })
+	test("truncates only until target is reached", async () => {
+		const results = [
+			{ partPath: "path1", partId: "id1", messageID: "m1", toolName: "tool1", outputSize: 1000 },
+			{ partPath: "path2", partId: "id2", messageID: "m2", toolName: "tool2", outputSize: 1000 },
+		]
 
-  test("truncates all if target not reached", async () => {
-    const { findToolResultsBySize, truncateToolResult } = require("./storage")
-    
-    // given: Two tool results, each 100 chars. Target reduction is 500 chars.
-    const results = [
-      { partPath: "path1", partId: "id1", messageID: "m1", toolName: "tool1", outputSize: 100 },
-      { partPath: "path2", partId: "id2", messageID: "m2", toolName: "tool2", outputSize: 100 },
-    ]
-    
-    findToolResultsBySize.mockReturnValue(results)
-    truncateToolResult.mockImplementation((path: string) => ({
-      success: true,
-      toolName: path === "path1" ? "tool1" : "tool2",
-      originalSize: 100
-    }))
+		findToolResultsBySizeMock.mockReturnValue(results)
+		truncateToolResultMock.mockImplementation((path: string) => ({
+			success: true,
+			toolName: path === "path1" ? "tool1" : "tool2",
+			originalSize: 1000,
+		}))
 
-    // when: reduce 500 chars
-    const result = await truncateUntilTargetTokens(sessionID, 1000, 1000, 0.5, 1)
+		const result = await truncateUntilTargetTokens(sessionID, 1000, 1000, 0.5, 1, undefined, {
+			findToolResultsBySize: findToolResultsBySizeMock,
+			truncateToolResult: truncateToolResultMock,
+		})
 
-    // then: Should truncate both
-    expect(result.truncatedCount).toBe(2)
-    expect(truncateToolResult).toHaveBeenCalledTimes(2)
-    expect(result.totalBytesRemoved).toBe(200)
-    expect(result.sufficient).toBe(false)
-  })
+		expect(result.truncatedCount).toBe(1)
+		expect(truncateToolResultMock).toHaveBeenCalledTimes(1)
+		expect(truncateToolResultMock).toHaveBeenCalledWith("path1")
+		expect(result.totalBytesRemoved).toBe(1000)
+		expect(result.sufficient).toBe(true)
+	})
+
+	test("truncates all if target not reached", async () => {
+		const results = [
+			{ partPath: "path1", partId: "id1", messageID: "m1", toolName: "tool1", outputSize: 100 },
+			{ partPath: "path2", partId: "id2", messageID: "m2", toolName: "tool2", outputSize: 100 },
+		]
+
+		findToolResultsBySizeMock.mockReturnValue(results)
+		truncateToolResultMock.mockImplementation((path: string) => ({
+			success: true,
+			toolName: path === "path1" ? "tool1" : "tool2",
+			originalSize: 100,
+		}))
+
+		const result = await truncateUntilTargetTokens(sessionID, 1000, 1000, 0.5, 1, undefined, {
+			findToolResultsBySize: findToolResultsBySizeMock,
+			truncateToolResult: truncateToolResultMock,
+		})
+
+		expect(result.truncatedCount).toBe(2)
+		expect(truncateToolResultMock).toHaveBeenCalledTimes(2)
+		expect(result.totalBytesRemoved).toBe(200)
+		expect(result.sufficient).toBe(false)
+	})
 })

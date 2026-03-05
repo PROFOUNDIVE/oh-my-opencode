@@ -41,7 +41,11 @@ export async function truncateUntilTargetTokens(
 	maxTokens: number,
 	targetRatio: number = 0.8,
 	charsPerToken: number = 4,
-	client?: OpencodeClient
+	client?: OpencodeClient,
+	deps?: {
+		findToolResultsBySize?: typeof findToolResultsBySize
+		truncateToolResult?: typeof truncateToolResult
+	}
 ): Promise<AggressiveTruncateResult> {
 	const { tokensToReduce, targetBytesToRemove } = calculateTargetBytesToRemove(
 		currentTokens,
@@ -149,7 +153,7 @@ export async function truncateUntilTargetTokens(
 		}
 	}
 
-	const results = findToolResultsBySize(sessionID)
+	const results = (deps?.findToolResultsBySize ?? findToolResultsBySize)(sessionID)
 
 	if (results.length === 0) {
 		return {
@@ -167,7 +171,7 @@ export async function truncateUntilTargetTokens(
 	const truncatedTools: Array<{ toolName: string; originalSize: number }> = []
 
 	for (const result of results) {
-		const truncateResult = truncateToolResult(result.partPath)
+		const truncateResult = (deps?.truncateToolResult ?? truncateToolResult)(result.partPath)
 		if (truncateResult.success) {
 			truncatedCount++
 			const removedSize = truncateResult.originalSize ?? result.outputSize
