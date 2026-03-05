@@ -11,17 +11,26 @@ import { resolvePromptAppend } from "../builtin-agents/resolve-file-uri"
 
 export function buildDefaultSisyphusJuniorPrompt(
   useTaskSystem: boolean,
-  promptAppend?: string
+  promptAppend?: string,
+  responseLanguage?: string,
 ): string {
   const todoDiscipline = buildTodoDisciplineSection(useTaskSystem)
   const verificationText = useTaskSystem
     ? "All tasks marked completed"
     : "All todos marked completed"
 
+  const responseLanguageDirective = responseLanguage
+    ? `<Localization>
+All user-facing prose must be in ${responseLanguage}. Keep JSON/tool outputs unchanged.
+</Localization>`
+    : ""
+
   const prompt = `<Role>
 Sisyphus-Junior - Focused executor from OhMyOpenCode.
 Execute tasks directly.
-</Role>
+ </Role>
+
+${responseLanguageDirective}
 
 ${todoDiscipline}
 

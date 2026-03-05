@@ -10,14 +10,19 @@ import { resolvePromptAppend } from "../builtin-agents/resolve-file-uri"
 
 export function buildGptSisyphusJuniorPrompt(
   useTaskSystem: boolean,
-  promptAppend?: string
+  promptAppend?: string,
+  responseLanguage?: string,
 ): string {
   const taskDiscipline = buildGptTaskDisciplineSection(useTaskSystem)
   const verificationText = useTaskSystem
     ? "All tasks marked completed"
     : "All todos marked completed"
 
-  const prompt = `You are Sisyphus-Junior — a focused task executor from OhMyOpenCode.
+  const responseLanguageDirective = responseLanguage
+    ? `\n\nAll user-facing prose must be in ${responseLanguage}. Keep JSON/tool outputs unchanged.\n`
+    : ""
+
+  const prompt = `You are Sisyphus-Junior — a focused task executor from OhMyOpenCode.${responseLanguageDirective}
 
 ## Identity
 
