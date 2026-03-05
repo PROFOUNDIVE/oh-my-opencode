@@ -7,7 +7,10 @@ import {
   CategoryConfigSchema,
   ExperimentalConfigSchema,
   GitMasterConfigSchema,
+  LocalizationConfigSchema,
+  OpenMathConfigSchema,
   OhMyOpenCodeConfigSchema,
+  PerformanceConfigSchema,
 } from "./schema"
 
 describe("disabled_mcps schema", () => {
@@ -836,5 +839,177 @@ describe("skills schema", () => {
 
     //#then
     expect(result.success).toBe(true)
+  })
+})
+
+describe("OpenMathConfigSchema", () => {
+  test("defaults max_review_rounds to 3", () => {
+    // given
+    const input = {}
+
+    // when
+    const result = OpenMathConfigSchema.parse(input)
+
+    // then
+    expect(result.max_review_rounds).toBe(3)
+  })
+
+  test("defaults artifacts.format to 'markdown'", () => {
+    // given
+    const input = {}
+
+    // when
+    const result = OpenMathConfigSchema.parse(input)
+
+    // then
+    expect(result.artifacts.format).toBe("markdown")
+  })
+
+  test("rejects max_review_rounds below 1", () => {
+    // given
+    const input = { max_review_rounds: 0 }
+
+    // when
+    const result = OpenMathConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+
+  test("rejects max_review_rounds above 20", () => {
+    // given
+    const input = { max_review_rounds: 21 }
+
+    // when
+    const result = OpenMathConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+
+  test("accepts artifacts.format='json'", () => {
+    // given
+    const input = { artifacts: { format: "json" } }
+
+    // when
+    const result = OpenMathConfigSchema.parse(input)
+
+    // then
+    expect(result.artifacts.format).toBe("json")
+  })
+})
+
+describe("LocalizationConfigSchema", () => {
+  test("accepts response_language='auto'", () => {
+    // given
+    const input = { response_language: "auto" }
+
+    // when
+    const result = LocalizationConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(true)
+  })
+
+  test("accepts safe language tags", () => {
+    // given
+    const inputs = ["en", "en-US", "zh-Hans", "ko-KR"]
+
+    for (const tag of inputs) {
+      // when
+      const result = LocalizationConfigSchema.safeParse({ response_language: tag })
+
+      // then
+      expect(result.success).toBe(true)
+    }
+  })
+
+  test("rejects whitespace in response_language", () => {
+    // given
+    const input = { response_language: "en US" }
+
+    // when
+    const result = LocalizationConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+
+  test("rejects newlines in response_language", () => {
+    // given
+    const input = { response_language: "en\nUS" }
+
+    // when
+    const result = LocalizationConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+})
+
+describe("PerformanceConfigSchema", () => {
+  test("enforces delegate_task_timing conservative minimums", () => {
+    // given
+    const bad = { delegate_task_timing: { POLL_INTERVAL_MS: 100, MIN_STABILITY_TIME_MS: 500 } }
+    const good = { delegate_task_timing: { POLL_INTERVAL_MS: 250, MIN_STABILITY_TIME_MS: 1000 } }
+
+    // when
+    const badResult = PerformanceConfigSchema.safeParse(bad)
+    const goodResult = PerformanceConfigSchema.safeParse(good)
+
+    // then
+    expect(badResult.success).toBe(false)
+    expect(goodResult.success).toBe(true)
+  })
+
+  test("enforces background_agent_polling conservative minimums", () => {
+    // given
+    const bad = {
+      background_agent_polling: {
+        pollingIntervalMs: 100,
+        minStabilityTimeMs: 500,
+        minIdleTimeMs: 100,
+      },
+    }
+    const good = {
+      background_agent_polling: {
+        pollingIntervalMs: 250,
+        minStabilityTimeMs: 1000,
+        minIdleTimeMs: 250,
+      },
+    }
+
+    // when
+    const badResult = PerformanceConfigSchema.safeParse(bad)
+    const goodResult = PerformanceConfigSchema.safeParse(good)
+
+    // then
+    expect(badResult.success).toBe(false)
+    expect(goodResult.success).toBe(true)
+  })
+})
+
+describe("OhMyOpenCodeConfigSchema - openmath/localization/performance", () => {
+  test("accepts the new sections and applies nested defaults when provided", () => {
+    // given
+    const input = {
+      openmath: {},
+      localization: { response_language: "en-US" },
+      performance: {
+        delegate_task_timing: {
+          POLL_INTERVAL_MS: 250,
+          MIN_STABILITY_TIME_MS: 1000,
+        },
+      },
+    }
+
+    // when
+    const result = OhMyOpenCodeConfigSchema.parse(input)
+
+    // then
+    expect(result.openmath?.max_review_rounds).toBe(3)
+    expect(result.openmath?.artifacts.format).toBe("markdown")
+    expect(result.localization?.response_language).toBe("en-US")
+    expect(result.performance?.delegate_task_timing?.POLL_INTERVAL_MS).toBe(250)
   })
 })
