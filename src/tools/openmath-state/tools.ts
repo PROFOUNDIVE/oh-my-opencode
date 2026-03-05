@@ -5,23 +5,56 @@ import {
   readOpenMathSessionState,
   writeOpenMathSessionState,
 } from "../../openmath/storage"
+import { createInitialOpenMathSessionState } from "../../openmath/state"
 import {
   OpenMathStateGetInputSchema,
   OpenMathStateSetInputSchema,
   OpenMathStateResetInputSchema,
 } from "./types"
 
-export function createOpenMathStateTools(directory: string): Record<string, ToolDefinition> {
+type OpenMathStateToolDefaults = {
+  max_review_rounds?: number
+}
+
+export function createOpenMathStateTools(
+  directory: string,
+  defaults?: OpenMathStateToolDefaults
+): Record<string, ToolDefinition> {
   const openmath_state_get: ToolDefinition = tool({
     description: "Get persisted OpenMath session state by session_id. Returns null if state is missing.",
     args: {
       session_id: tool.schema.string().describe("OpenMath session id to read"),
+      init_if_missing: tool.schema
+        .boolean()
+        .optional()
+        .describe(
+          "If true and no persisted state exists, bootstrap initial state using configured defaults and persist it",
+        ),
     },
     execute: async (args: Record<string, unknown>) => {
       try {
         const validatedArgs = OpenMathStateGetInputSchema.parse(args)
-        const state = readOpenMathSessionState(directory, validatedArgs.session_id)
-        return JSON.stringify({ state })
+
+        const existingState = readOpenMathSessionState(directory, validatedArgs.session_id)
+        if (existingState) {
+          return JSON.stringify({ state: existingState })
+        }
+
+        if (validatedArgs.init_if_missing === true) {
+          const maxReviewRounds = defaults?.max_review_rounds ?? 3
+          const initialState = createInitialOpenMathSessionState(
+            validatedArgs.session_id,
+            3,
+            maxReviewRounds,
+          )
+          const writeOk = writeOpenMathSessionState(directory, initialState)
+          if (!writeOk) {
+            return JSON.stringify({ error: "write_failed" })
+          }
+          return JSON.stringify({ state: initialState })
+        }
+
+        return JSON.stringify({ state: null })
       } catch (error) {
         if (error instanceof Error) {
           return JSON.stringify({ error: "validation_error", message: error.message })

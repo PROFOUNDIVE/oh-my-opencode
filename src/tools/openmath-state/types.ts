@@ -37,6 +37,7 @@ export const OpenMathSessionStateSchema = z.object({
 
 export const OpenMathStateGetInputSchema = z.object({
   session_id: z.string(),
+  init_if_missing: z.boolean().optional(),
 })
 
 export const OpenMathStateSetInputSchema = z.object({
