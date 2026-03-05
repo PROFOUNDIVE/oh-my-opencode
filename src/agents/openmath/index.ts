@@ -1,4 +1,8 @@
 export { createOpenMathSolverAgent } from "./solver"
+export { createOpenMathSolverMarkdownAgent } from "./solver-markdown"
+export { createOpenMathSolverMarkdownPatchAgent } from "./solver-markdown-patch"
 export { createOpenMathReferenceReviewerAgent } from "./reference-reviewer"
+export { createOpenMathReferenceReviewerMarkdownAgent } from "./reference-reviewer-markdown"
+export { createOpenMathReferenceReviewerPatchAgent } from "./reference-reviewer-patch"
 export { createOpenMathVerifierAgent } from "./verifier"
 export { createOpenMathCoachAgent } from "./coach"
