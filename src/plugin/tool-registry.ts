@@ -7,6 +7,9 @@ import {
   createBackgroundTools,
   createLookAt,
   createDelegateTask,
+  createOpenMathArtifactsTools,
+  createOpenMathExportTool,
+  createOpenMathSolveOnlyTool,
   createOpenMathStateTools,
 } from "../tools"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -44,8 +47,24 @@ export function createToolRegistry(args: {
 
   const taskSystemEnabled = false
 
+  const openMathArtifactsTools = createOpenMathArtifactsTools({
+    max_ops: pluginConfig.openmath?.artifacts?.patch?.max_ops ?? 20,
+    allow_unique_substring_replace:
+      pluginConfig.openmath?.artifacts?.patch?.allow_unique_substring_replace ?? true,
+  })
+
   const allTools: Record<string, ToolDefinition> = {
-    ...createOpenMathStateTools(ctx.directory),
+    ...createOpenMathStateTools(
+      ctx.directory,
+      pluginConfig.openmath ? { max_review_rounds: pluginConfig.openmath.max_review_rounds } : undefined,
+    ),
+    openmath_export: createOpenMathExportTool(ctx.directory, pluginConfig.openmath?.export),
+    openmath_solve_only: createOpenMathSolveOnlyTool({
+      directory: ctx.directory,
+      client: ctx.client,
+      openmathConfig: pluginConfig.openmath,
+    }),
+    ...openMathArtifactsTools,
     ...backgroundTools,
     ...(lookAt ? { look_at: lookAt } : {}),
     task: delegateTask,
