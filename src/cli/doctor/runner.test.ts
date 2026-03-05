@@ -195,22 +195,21 @@ describe("runner", () => {
       const formatDoctorOutputMock = mock((result: DoctorResult) => result.summary.total.toString())
       const formatJsonOutputMock = mock((result: DoctorResult) => JSON.stringify(result))
 
-      mock.module("./checks", () => ({
-        getAllCheckDefinitions: () => checks,
-        gatherSystemInfo: async () => expectedResult.systemInfo,
-        gatherToolsSummary: async () => expectedResult.tools,
-      }))
-      mock.module("./formatter", () => ({
-        formatDoctorOutput: formatDoctorOutputMock,
-        formatJsonOutput: formatJsonOutputMock,
-      }))
+      const logLineMock = mock(() => {})
 
-      const logSpy = mock(() => {})
-      const originalLog = console.log
-      console.log = logSpy
-
-      const { runDoctor } = await import(`./runner?parallel=${Date.now()}`)
-      const runPromise = runDoctor({ mode: "default" })
+      const { runDoctor } = await import("./runner")
+      const runPromise = runDoctor(
+        { mode: "default" },
+        {
+          getAllCheckDefinitions: () => checks,
+          gatherSystemInfo: async () => expectedResult.systemInfo,
+          gatherToolsSummary: async () => expectedResult.tools,
+          formatDoctorOutput: formatDoctorOutputMock,
+          formatJsonOutput: formatJsonOutputMock,
+          logLine: logLineMock,
+          now: () => 0,
+        },
+      )
 
       //#when
       await Promise.resolve()
@@ -222,7 +221,6 @@ describe("runner", () => {
       const result = await runPromise
 
       //#then
-      console.log = originalLog
       expect(startedBeforeResolve.sort()).toEqual(["config", "models", "system", "tools"])
       expect(result.results.length).toBe(4)
       expect(result.exitCode).toBe(0)

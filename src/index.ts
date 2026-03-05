@@ -65,7 +65,14 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       output: { context: string[] },
     ): Promise<void> => {
       void _input
-      void output
+      output.context.push(
+        [
+          "OhMyOpenCode: Context preserved after compaction.",
+          "- Continue from the most recent user request.",
+          "- Keep tool outputs and JSON strict; do not add prose around tool JSON.",
+          "- If you are mid-task, restate the next concrete step and proceed.",
+        ].join("\n"),
+      )
     },
   }
 }

@@ -35,17 +35,35 @@ export function determineExitCode(results: CheckResult[]): number {
   return results.some((r) => r.status === "fail") ? EXIT_CODES.FAILURE : EXIT_CODES.SUCCESS
 }
 
-export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
-  const start = performance.now()
+type RunDoctorDeps = {
+  getAllCheckDefinitions: typeof getAllCheckDefinitions
+  gatherSystemInfo: typeof gatherSystemInfo
+  gatherToolsSummary: typeof gatherToolsSummary
+  formatDoctorOutput: typeof formatDoctorOutput
+  formatJsonOutput: typeof formatJsonOutput
+  logLine: (line: string) => void
+  now: () => number
+}
 
-  const allChecks = getAllCheckDefinitions()
+export async function runDoctor(options: DoctorOptions, deps?: Partial<RunDoctorDeps>): Promise<DoctorResult> {
+  const getChecks = deps?.getAllCheckDefinitions ?? getAllCheckDefinitions
+  const getSystemInfo = deps?.gatherSystemInfo ?? gatherSystemInfo
+  const getToolsSummary = deps?.gatherToolsSummary ?? gatherToolsSummary
+  const formatOutput = deps?.formatDoctorOutput ?? formatDoctorOutput
+  const formatJson = deps?.formatJsonOutput ?? formatJsonOutput
+  const logLine = deps?.logLine ?? console.log
+  const now = deps?.now ?? (() => performance.now())
+
+  const start = now()
+
+  const allChecks = getChecks()
   const [results, systemInfo, tools] = await Promise.all([
     Promise.all(allChecks.map(runCheck)),
-    gatherSystemInfo(),
-    gatherToolsSummary(),
+    getSystemInfo(),
+    getToolsSummary(),
   ])
 
-  const duration = performance.now() - start
+  const duration = now() - start
   const summary = calculateSummary(results, duration)
   const exitCode = determineExitCode(results)
 
@@ -58,9 +76,9 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
   }
 
   if (options.json) {
-    console.log(formatJsonOutput(doctorResult))
+    logLine(formatJson(doctorResult))
   } else {
-    console.log(formatDoctorOutput(doctorResult, options.mode))
+    logLine(formatOutput(doctorResult, options.mode))
   }
 
   return doctorResult

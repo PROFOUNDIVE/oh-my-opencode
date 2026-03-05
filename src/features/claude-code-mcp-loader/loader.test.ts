@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test"
+import { describe, it, expect, beforeEach, afterEach } from "bun:test"
 import { mkdirSync, writeFileSync, rmSync } from "fs"
 import { join } from "path"
 import { tmpdir } from "os"
@@ -6,21 +6,35 @@ import { tmpdir } from "os"
 const TEST_DIR = join(tmpdir(), "mcp-loader-test-" + Date.now())
 const TEST_HOME = join(TEST_DIR, "home")
 
-describe("getSystemMcpServerNames", () => {
+	describe("getSystemMcpServerNames", () => {
+  let originalHome: string | undefined
+  let originalClaudeConfigDir: string | undefined
+
   beforeEach(() => {
+    originalHome = process.env.HOME
+    originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR
+
     mkdirSync(TEST_DIR, { recursive: true })
     mkdirSync(TEST_HOME, { recursive: true })
-    mock.module("os", () => ({
-      homedir: () => TEST_HOME,
-      tmpdir,
-    }))
-    mock.module("../../shared", () => ({
-      getClaudeConfigDir: () => join(TEST_HOME, ".claude"),
-    }))
+
+    process.env.HOME = TEST_HOME
+    process.env.CLAUDE_CONFIG_DIR = join(TEST_HOME, ".claude")
+    mkdirSync(process.env.CLAUDE_CONFIG_DIR, { recursive: true })
   })
 
   afterEach(() => {
-    mock.restore()
+    if (originalHome === undefined) {
+      delete process.env.HOME
+    } else {
+      process.env.HOME = originalHome
+    }
+
+    if (originalClaudeConfigDir === undefined) {
+      delete process.env.CLAUDE_CONFIG_DIR
+    } else {
+      process.env.CLAUDE_CONFIG_DIR = originalClaudeConfigDir
+    }
+
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -75,18 +89,18 @@ describe("getSystemMcpServerNames", () => {
     }
   })
 
-  it("returns server names from .claude/.mcp.json", async () => {
-    // given
-    mkdirSync(join(TEST_DIR, ".claude"), { recursive: true })
-    const mcpConfig = {
-      mcpServers: {
-        memory: {
-          command: "npx",
-          args: ["-y", "@anthropic-ai/mcp-server-memory"],
-        },
-      },
-    }
-    writeFileSync(join(TEST_DIR, ".claude", ".mcp.json"), JSON.stringify(mcpConfig))
+	it("returns server names from .claude/.mcp.json", async () => {
+	  // given
+	  const claudeDir = process.env.CLAUDE_CONFIG_DIR!
+	  const mcpConfig = {
+	    mcpServers: {
+	      memory: {
+	        command: "npx",
+	        args: ["-y", "@anthropic-ai/mcp-server-memory"],
+	      },
+	    },
+	  }
+	  writeFileSync(join(claudeDir, ".mcp.json"), JSON.stringify(mcpConfig))
 
     const originalCwd = process.cwd()
     process.chdir(TEST_DIR)
@@ -101,7 +115,7 @@ describe("getSystemMcpServerNames", () => {
     } finally {
       process.chdir(originalCwd)
     }
-  })
+	})
 
   it("excludes disabled MCP servers", async () => {
     // given
@@ -136,23 +150,23 @@ describe("getSystemMcpServerNames", () => {
     }
   })
 
-   it("merges server names from multiple .mcp.json files", async () => {
-     // given
-     mkdirSync(join(TEST_DIR, ".claude"), { recursive: true })
-     
-     const projectMcp = {
-       mcpServers: {
-         playwright: { command: "npx", args: ["@playwright/mcp@latest"] },
-       },
-     }
-     const localMcp = {
-       mcpServers: {
-         memory: { command: "npx", args: ["-y", "@anthropic-ai/mcp-server-memory"] },
-       },
-     }
-     
-     writeFileSync(join(TEST_DIR, ".mcp.json"), JSON.stringify(projectMcp))
-     writeFileSync(join(TEST_DIR, ".claude", ".mcp.json"), JSON.stringify(localMcp))
+	 it("merges server names from multiple .mcp.json files", async () => {
+	   // given
+	   const claudeDir = process.env.CLAUDE_CONFIG_DIR!
+	   
+	   const projectMcp = {
+	     mcpServers: {
+	       playwright: { command: "npx", args: ["@playwright/mcp@latest"] },
+	     },
+	   }
+	   const localMcp = {
+	     mcpServers: {
+	       memory: { command: "npx", args: ["-y", "@anthropic-ai/mcp-server-memory"] },
+	     },
+	   }
+	   
+	   writeFileSync(join(TEST_DIR, ".mcp.json"), JSON.stringify(projectMcp))
+	   writeFileSync(join(claudeDir, ".mcp.json"), JSON.stringify(localMcp))
 
      const originalCwd = process.cwd()
      process.chdir(TEST_DIR)
@@ -168,7 +182,7 @@ describe("getSystemMcpServerNames", () => {
      } finally {
        process.chdir(originalCwd)
      }
-   })
+	 })
 
     it("reads user-level MCP config from ~/.claude.json", async () => {
       // given
@@ -232,26 +246,37 @@ describe("getSystemMcpServerNames", () => {
      })
 })
 
-describe("loadMcpConfigs", () => {
-  beforeEach(() => {
-    mkdirSync(TEST_DIR, { recursive: true })
-    mkdirSync(TEST_HOME, { recursive: true })
-    mock.module("os", () => ({
-      homedir: () => TEST_HOME,
-      tmpdir,
-    }))
-    mock.module("../../shared", () => ({
-      getClaudeConfigDir: () => join(TEST_HOME, ".claude"),
-    }))
-    mock.module("../../shared/logger", () => ({
-      log: () => {},
-    }))
-  })
+	describe("loadMcpConfigs", () => {
+	  let originalHome: string | undefined
+	  let originalClaudeConfigDir: string | undefined
 
-  afterEach(() => {
-    mock.restore()
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+	  beforeEach(() => {
+	    originalHome = process.env.HOME
+	    originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR
+
+	    mkdirSync(TEST_DIR, { recursive: true })
+	    mkdirSync(TEST_HOME, { recursive: true })
+
+	    process.env.HOME = TEST_HOME
+	    process.env.CLAUDE_CONFIG_DIR = join(TEST_HOME, ".claude")
+	    mkdirSync(process.env.CLAUDE_CONFIG_DIR, { recursive: true })
+	  })
+
+	  afterEach(() => {
+	    if (originalHome === undefined) {
+	      delete process.env.HOME
+	    } else {
+	      process.env.HOME = originalHome
+	    }
+
+	    if (originalClaudeConfigDir === undefined) {
+	      delete process.env.CLAUDE_CONFIG_DIR
+	    } else {
+	      process.env.CLAUDE_CONFIG_DIR = originalClaudeConfigDir
+	    }
+
+	    rmSync(TEST_DIR, { recursive: true, force: true })
+	  })
 
   it("should skip MCPs in disabledMcps list", async () => {
     //#given
@@ -334,4 +359,3 @@ describe("loadMcpConfigs", () => {
     }
   })
 })
-

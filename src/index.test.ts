@@ -7,17 +7,26 @@ describe("experimental.session.compacting handler", () => {
       output: { context: string[] },
     ): Promise<void> => {
       void _input
-      void output
+      output.context.push(
+        [
+          "OhMyOpenCode: Context preserved after compaction.",
+          "- Continue from the most recent user request.",
+          "- Keep tool outputs and JSON strict; do not add prose around tool JSON.",
+          "- If you are mid-task, restate the next concrete step and proceed.",
+        ].join("\n"),
+      )
     }
   }
 
-  it("is a no-op for compacting output context", async () => {
+  it("injects a short compaction reminder into output context", async () => {
     const output = { context: ["existing-context"] as string[] }
     const handler = createCompactingHandler()
 
     await handler({ sessionID: "ses_test" }, output)
 
-    expect(output.context).toEqual(["existing-context"])
+    expect(output.context.length).toBe(2)
+    expect(output.context[0]).toBe("existing-context")
+    expect(output.context[1]).toContain("Context preserved after compaction")
   })
 })
 

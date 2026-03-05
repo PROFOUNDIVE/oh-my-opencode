@@ -92,6 +92,7 @@ describe("event handling", () => {
     const ctx = createMockContext("my-session")
     const state = createEventState()
     const errorSpy = spyOn(console, "error").mockImplementation(() => {})
+    errorSpy.mockClear()
 
     const payload: EventPayload = {
       type: "custom.event",
@@ -114,6 +115,7 @@ describe("event handling", () => {
     const ctx = { ...createMockContext("my-session"), verbose: true }
     const state = createEventState()
     const errorSpy = spyOn(console, "error").mockImplementation(() => {})
+    errorSpy.mockClear()
 
     const payload: EventPayload = {
       type: "custom.event",
@@ -311,16 +313,8 @@ describe("event handling", () => {
   it("session.status with busy type sets mainSessionIdle to false", async () => {
     // given
     const ctx = createMockContext("my-session")
-    const state: EventState = {
-      mainSessionIdle: true,
-      mainSessionError: false,
-      lastError: null,
-      lastOutput: "",
-      lastPartText: "",
-      currentTool: null,
-      hasReceivedMeaningfulWork: false,
-      messageCount: 0,
-    }
+    const state = createEventState()
+    state.mainSessionIdle = true
 
     const payload: EventPayload = {
       type: "session.status",

@@ -6,6 +6,8 @@ import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
 import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
+import { OPENMATH_SOLVE_ONLY_TEMPLATE } from "./templates/openmath-solve-only"
+import { OPENMATH_EXPORT_TEMPLATE } from "./templates/openmath-export"
 
 const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
@@ -93,6 +95,29 @@ Timestamp: $TIMESTAMP
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[goal]",
+  },
+  "openmath-solve-only": {
+    description: "(builtin) OpenMath solve-only mode: solve+review+freeze artifacts without coaching",
+    template: `<command-instruction>
+${OPENMATH_SOLVE_ONLY_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint:
+      '{"session_id":"root","problems":[{"id":"p1","problem":"x+1=2"}]} | <session_id> <problem_id> "<problem text>"',
+  },
+  "openmath-export": {
+    description: "(builtin) OpenMath export mode: write frozen artifacts to markdown files",
+    template: `<command-instruction>
+${OPENMATH_EXPORT_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: '{"session_id":"root::p1","dir":"./exports","prefix":"algebra-","overwrite":false}',
   },
 }
 

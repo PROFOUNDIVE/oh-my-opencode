@@ -7,6 +7,9 @@ exports[`generateModelConfig no providers available returns ULTIMATE_FALLBACK fo
     "atlas": {
       "model": "opencode/glm-4.7-free",
     },
+    "coach": {
+      "model": "opencode/glm-4.7-free",
+    },
     "explore": {
       "model": "opencode/glm-4.7-free",
     },
@@ -29,6 +32,27 @@ exports[`generateModelConfig no providers available returns ULTIMATE_FALLBACK fo
       "model": "opencode/glm-4.7-free",
     },
     "prometheus": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer-markdown": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer-patch": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver-markdown": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver-markdown-patch": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "verifier": {
       "model": "opencode/glm-4.7-free",
     },
   },
@@ -68,6 +92,10 @@ exports[`generateModelConfig single native provider uses Claude models when only
     "atlas": {
       "model": "anthropic/claude-sonnet-4-6",
     },
+    "coach": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -93,12 +121,40 @@ exports[`generateModelConfig single native provider uses Claude models when only
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "sisyphus": {
       "model": "anthropic/claude-sonnet-4-6",
       "ultrawork": {
         "model": "anthropic/claude-opus-4-6",
         "variant": "max",
       },
+      "variant": "max",
+    },
+    "solver": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "verifier": {
+      "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
   },
@@ -134,6 +190,10 @@ exports[`generateModelConfig single native provider uses Claude models with isMa
     "atlas": {
       "model": "anthropic/claude-sonnet-4-6",
     },
+    "coach": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -159,7 +219,35 @@ exports[`generateModelConfig single native provider uses Claude models with isMa
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "sisyphus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "verifier": {
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
@@ -197,6 +285,10 @@ exports[`generateModelConfig single native provider uses OpenAI models when only
     "atlas": {
       "model": "openai/gpt-5.2",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/gpt-5-nano",
     },
@@ -223,6 +315,34 @@ exports[`generateModelConfig single native provider uses OpenAI models when only
       "variant": "high",
     },
     "prometheus": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
       "model": "openai/gpt-5.2",
       "variant": "high",
     },
@@ -264,6 +384,10 @@ exports[`generateModelConfig single native provider uses OpenAI models with isMa
     "atlas": {
       "model": "openai/gpt-5.2",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/gpt-5-nano",
     },
@@ -290,6 +414,34 @@ exports[`generateModelConfig single native provider uses OpenAI models with isMa
       "variant": "high",
     },
     "prometheus": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
       "model": "openai/gpt-5.2",
       "variant": "high",
     },
@@ -331,6 +483,10 @@ exports[`generateModelConfig single native provider uses Gemini models when only
     "atlas": {
       "model": "google/gemini-3-pro",
     },
+    "coach": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/gpt-5-nano",
     },
@@ -354,6 +510,34 @@ exports[`generateModelConfig single native provider uses Gemini models when only
     },
     "prometheus": {
       "model": "google/gemini-3-pro",
+    },
+    "reference-reviewer": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
     },
   },
   "categories": {
@@ -392,6 +576,10 @@ exports[`generateModelConfig single native provider uses Gemini models with isMa
     "atlas": {
       "model": "google/gemini-3-pro",
     },
+    "coach": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/gpt-5-nano",
     },
@@ -415,6 +603,34 @@ exports[`generateModelConfig single native provider uses Gemini models with isMa
     },
     "prometheus": {
       "model": "google/gemini-3-pro",
+    },
+    "reference-reviewer": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
     },
   },
   "categories": {
@@ -453,6 +669,10 @@ exports[`generateModelConfig all native providers uses preferred models from fal
     "atlas": {
       "model": "anthropic/claude-sonnet-4-6",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -482,6 +702,18 @@ exports[`generateModelConfig all native providers uses preferred models from fal
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "anthropic/claude-sonnet-4-6",
       "ultrawork": {
@@ -489,6 +721,22 @@ exports[`generateModelConfig all native providers uses preferred models from fal
         "variant": "max",
       },
       "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -531,6 +779,10 @@ exports[`generateModelConfig all native providers uses preferred models with isM
     "atlas": {
       "model": "anthropic/claude-sonnet-4-6",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -560,9 +812,37 @@ exports[`generateModelConfig all native providers uses preferred models with isM
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -606,6 +886,10 @@ exports[`generateModelConfig fallback providers uses OpenCode Zen models when on
     "atlas": {
       "model": "opencode/kimi-k2.5-free",
     },
+    "coach": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/claude-haiku-4-5",
     },
@@ -635,9 +919,37 @@ exports[`generateModelConfig fallback providers uses OpenCode Zen models when on
       "model": "opencode/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "opencode/claude-opus-4-6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -680,6 +992,10 @@ exports[`generateModelConfig fallback providers uses OpenCode Zen models with is
     "atlas": {
       "model": "opencode/kimi-k2.5-free",
     },
+    "coach": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/claude-haiku-4-5",
     },
@@ -709,9 +1025,37 @@ exports[`generateModelConfig fallback providers uses OpenCode Zen models with is
       "model": "opencode/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "opencode/claude-opus-4-6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -755,6 +1099,10 @@ exports[`generateModelConfig fallback providers uses GitHub Copilot models when 
     "atlas": {
       "model": "github-copilot/claude-sonnet-4.6",
     },
+    "coach": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "github-copilot/gpt-5-mini",
     },
@@ -784,9 +1132,37 @@ exports[`generateModelConfig fallback providers uses GitHub Copilot models when 
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -829,6 +1205,10 @@ exports[`generateModelConfig fallback providers uses GitHub Copilot models with 
     "atlas": {
       "model": "github-copilot/claude-sonnet-4.6",
     },
+    "coach": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "github-copilot/gpt-5-mini",
     },
@@ -858,9 +1238,37 @@ exports[`generateModelConfig fallback providers uses GitHub Copilot models with 
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -904,6 +1312,9 @@ exports[`generateModelConfig fallback providers uses ZAI model for librarian whe
     "atlas": {
       "model": "opencode/glm-4.7-free",
     },
+    "coach": {
+      "model": "opencode/glm-4.7-free",
+    },
     "explore": {
       "model": "opencode/gpt-5-nano",
     },
@@ -925,8 +1336,29 @@ exports[`generateModelConfig fallback providers uses ZAI model for librarian whe
     "prometheus": {
       "model": "opencode/glm-4.7-free",
     },
+    "reference-reviewer": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer-markdown": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer-patch": {
+      "model": "opencode/glm-4.7-free",
+    },
     "sisyphus": {
       "model": "zai-coding-plan/glm-4.7",
+    },
+    "solver": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver-markdown": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver-markdown-patch": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "verifier": {
+      "model": "opencode/glm-4.7-free",
     },
   },
   "categories": {
@@ -959,6 +1391,9 @@ exports[`generateModelConfig fallback providers uses ZAI model for librarian wit
     "atlas": {
       "model": "opencode/glm-4.7-free",
     },
+    "coach": {
+      "model": "opencode/glm-4.7-free",
+    },
     "explore": {
       "model": "opencode/gpt-5-nano",
     },
@@ -980,8 +1415,29 @@ exports[`generateModelConfig fallback providers uses ZAI model for librarian wit
     "prometheus": {
       "model": "opencode/glm-4.7-free",
     },
+    "reference-reviewer": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer-markdown": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "reference-reviewer-patch": {
+      "model": "opencode/glm-4.7-free",
+    },
     "sisyphus": {
       "model": "zai-coding-plan/glm-4.7",
+    },
+    "solver": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver-markdown": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "solver-markdown-patch": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "verifier": {
+      "model": "opencode/glm-4.7-free",
     },
   },
   "categories": {
@@ -1014,6 +1470,10 @@ exports[`generateModelConfig mixed provider scenarios uses Claude + OpenCode Zen
     "atlas": {
       "model": "opencode/kimi-k2.5-free",
     },
+    "coach": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -1043,6 +1503,18 @@ exports[`generateModelConfig mixed provider scenarios uses Claude + OpenCode Zen
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "anthropic/claude-sonnet-4-6",
       "ultrawork": {
@@ -1050,6 +1522,22 @@ exports[`generateModelConfig mixed provider scenarios uses Claude + OpenCode Zen
         "variant": "max",
       },
       "variant": "max",
+    },
+    "solver": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "opencode/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -1092,6 +1580,10 @@ exports[`generateModelConfig mixed provider scenarios uses OpenAI + Copilot comb
     "atlas": {
       "model": "github-copilot/claude-sonnet-4.6",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "github-copilot/gpt-5-mini",
     },
@@ -1121,9 +1613,37 @@ exports[`generateModelConfig mixed provider scenarios uses OpenAI + Copilot comb
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -1166,6 +1686,10 @@ exports[`generateModelConfig mixed provider scenarios uses Claude + ZAI combinat
     "atlas": {
       "model": "anthropic/claude-sonnet-4-6",
     },
+    "coach": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -1191,12 +1715,40 @@ exports[`generateModelConfig mixed provider scenarios uses Claude + ZAI combinat
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "sisyphus": {
       "model": "anthropic/claude-sonnet-4-6",
       "ultrawork": {
         "model": "anthropic/claude-opus-4-6",
         "variant": "max",
       },
+      "variant": "max",
+    },
+    "solver": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "verifier": {
+      "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
   },
@@ -1231,6 +1783,10 @@ exports[`generateModelConfig mixed provider scenarios uses Gemini + Claude combi
     "atlas": {
       "model": "anthropic/claude-sonnet-4-6",
     },
+    "coach": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -1256,12 +1812,40 @@ exports[`generateModelConfig mixed provider scenarios uses Gemini + Claude combi
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "sisyphus": {
       "model": "anthropic/claude-sonnet-4-6",
       "ultrawork": {
         "model": "anthropic/claude-opus-4-6",
         "variant": "max",
       },
+      "variant": "max",
+    },
+    "solver": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "verifier": {
+      "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
   },
@@ -1301,6 +1885,10 @@ exports[`generateModelConfig mixed provider scenarios uses all fallback provider
     "atlas": {
       "model": "opencode/kimi-k2.5-free",
     },
+    "coach": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "opencode/claude-haiku-4-5",
     },
@@ -1330,9 +1918,37 @@ exports[`generateModelConfig mixed provider scenarios uses all fallback provider
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "github-copilot/claude-opus-4.6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -1375,6 +1991,10 @@ exports[`generateModelConfig mixed provider scenarios uses all providers togethe
     "atlas": {
       "model": "opencode/kimi-k2.5-free",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -1404,6 +2024,18 @@ exports[`generateModelConfig mixed provider scenarios uses all providers togethe
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "anthropic/claude-sonnet-4-6",
       "ultrawork": {
@@ -1411,6 +2043,22 @@ exports[`generateModelConfig mixed provider scenarios uses all providers togethe
         "variant": "max",
       },
       "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
@@ -1453,6 +2101,10 @@ exports[`generateModelConfig mixed provider scenarios uses all providers with is
     "atlas": {
       "model": "opencode/kimi-k2.5-free",
     },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "explore": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -1482,9 +2134,37 @@ exports[`generateModelConfig mixed provider scenarios uses all providers with is
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
     },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
     "sisyphus": {
       "model": "anthropic/claude-opus-4-6",
       "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
     },
   },
   "categories": {
