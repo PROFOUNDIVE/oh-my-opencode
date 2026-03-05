@@ -18,7 +18,8 @@ import * as mcpModule from "../mcp"
 import * as shared from "../shared"
 import * as configDir from "../shared/opencode-config-dir"
 import * as permissionCompat from "../shared/permission-compat"
-import * as modelResolver from "../shared/model-resolver"
+
+describe("config-handler", () => {
 
 beforeEach(() => {
   spyOn(agents, "createBuiltinAgents" as any).mockResolvedValue({
@@ -70,7 +71,6 @@ beforeEach(() => {
 
   spyOn(permissionCompat, "migrateAgentConfig" as any).mockImplementation((config: Record<string, unknown>) => config)
 
-  spyOn(modelResolver, "resolveModelWithFallback" as any).mockReturnValue({ model: "anthropic/claude-opus-4-6" })
 })
 
 afterEach(() => {
@@ -99,7 +99,6 @@ afterEach(() => {
   ;(shared.readConnectedProvidersCache as any)?.mockRestore?.()
   ;(configDir.getOpenCodeConfigPaths as any)?.mockRestore?.()
   ;(permissionCompat.migrateAgentConfig as any)?.mockRestore?.()
-  ;(modelResolver.resolveModelWithFallback as any)?.mockRestore?.()
 })
 
 describe("Sisyphus-Junior model inheritance", () => {
@@ -815,7 +814,7 @@ describe("Prometheus direct override priority over category", () => {
 describe("Plan agent model inheritance from prometheus", () => {
   test("plan agent inherits all model-related settings from resolved prometheus config", async () => {
     //#given - prometheus resolves to claude-opus-4-6 with model settings
-    spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
+    const pipelineSpy = spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
       model: "anthropic/claude-opus-4-6",
       provenance: "provider-fallback",
       variant: "max",
@@ -836,30 +835,37 @@ describe("Plan agent model inheritance from prometheus", () => {
         },
       },
     }
-    const handler = createConfigHandler({
-      ctx: { directory: "/tmp" },
-      pluginConfig,
-      modelCacheState: {
-        anthropicContext1MEnabled: false,
-        modelContextLimitsCache: new Map(),
-      },
-    })
+    try {
+      const handler = createConfigHandler({
+        ctx: { directory: "/tmp" },
+        pluginConfig,
+        modelCacheState: {
+          anthropicContext1MEnabled: false,
+          modelContextLimitsCache: new Map(),
+        },
+      })
 
-    //#when
-    await handler(config)
+      //#when
+      await handler(config)
 
-    //#then - plan inherits model and variant from prometheus, but NOT prompt
-    const agents = config.agent as Record<string, { mode?: string; model?: string; variant?: string; prompt?: string }>
-    expect(agents.plan).toBeDefined()
-    expect(agents.plan.mode).toBe("subagent")
-    expect(agents.plan.model).toBe("anthropic/claude-opus-4-6")
-    expect(agents.plan.variant).toBe("max")
-    expect(agents.plan.prompt).toBeUndefined()
+      //#then - plan inherits model and variant from prometheus, but NOT prompt
+      const agents = config.agent as Record<
+        string,
+        { mode?: string; model?: string; variant?: string; prompt?: string }
+      >
+      expect(agents.plan).toBeDefined()
+      expect(agents.plan.mode).toBe("subagent")
+      expect(agents.plan.model).toBe("anthropic/claude-opus-4-6")
+      expect(agents.plan.variant).toBe("max")
+      expect(agents.plan.prompt).toBeUndefined()
+    } finally {
+      pipelineSpy.mockRestore()
+    }
   })
 
   test("plan agent inherits temperature, reasoningEffort, and other model settings from prometheus", async () => {
     //#given - prometheus configured with category that has temperature and reasoningEffort
-    spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
+    const pipelineSpy = spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
       model: "openai/gpt-5.2",
       provenance: "override",
       variant: "high",
@@ -886,35 +892,39 @@ describe("Plan agent model inheritance from prometheus", () => {
       model: "anthropic/claude-opus-4-6",
       agent: {},
     }
-    const handler = createConfigHandler({
-      ctx: { directory: "/tmp" },
-      pluginConfig,
-      modelCacheState: {
-        anthropicContext1MEnabled: false,
-        modelContextLimitsCache: new Map(),
-      },
-    })
+    try {
+      const handler = createConfigHandler({
+        ctx: { directory: "/tmp" },
+        pluginConfig,
+        modelCacheState: {
+          anthropicContext1MEnabled: false,
+          modelContextLimitsCache: new Map(),
+        },
+      })
 
-    //#when
-    await handler(config)
+      //#when
+      await handler(config)
 
-    //#then - plan inherits ALL model-related settings from resolved prometheus
-    const agents = config.agent as Record<string, Record<string, unknown>>
-    expect(agents.plan).toBeDefined()
-    expect(agents.plan.mode).toBe("subagent")
-    expect(agents.plan.model).toBe("openai/gpt-5.2")
-    expect(agents.plan.variant).toBe("high")
-    expect(agents.plan.temperature).toBe(0.3)
-    expect(agents.plan.top_p).toBe(0.9)
-    expect(agents.plan.maxTokens).toBe(16000)
-    expect(agents.plan.reasoningEffort).toBe("high")
-    expect(agents.plan.textVerbosity).toBe("medium")
-    expect(agents.plan.thinking).toEqual({ type: "enabled", budgetTokens: 8000 })
+      //#then - plan inherits ALL model-related settings from resolved prometheus
+      const agents = config.agent as Record<string, Record<string, unknown>>
+      expect(agents.plan).toBeDefined()
+      expect(agents.plan.mode).toBe("subagent")
+      expect(agents.plan.model).toBe("openai/gpt-5.2")
+      expect(agents.plan.variant).toBe("high")
+      expect(agents.plan.temperature).toBe(0.3)
+      expect(agents.plan.top_p).toBe(0.9)
+      expect(agents.plan.maxTokens).toBe(16000)
+      expect(agents.plan.reasoningEffort).toBe("high")
+      expect(agents.plan.textVerbosity).toBe("medium")
+      expect(agents.plan.thinking).toEqual({ type: "enabled", budgetTokens: 8000 })
+    } finally {
+      pipelineSpy.mockRestore()
+    }
   })
 
   test("plan agent user override takes priority over prometheus inherited settings", async () => {
     //#given - prometheus resolves to opus, but user has plan override for gpt-5.2
-    spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
+    const pipelineSpy = spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
       model: "anthropic/claude-opus-4-6",
       provenance: "provider-fallback",
       variant: "max",
@@ -936,28 +946,32 @@ describe("Plan agent model inheritance from prometheus", () => {
       model: "anthropic/claude-opus-4-6",
       agent: {},
     }
-    const handler = createConfigHandler({
-      ctx: { directory: "/tmp" },
-      pluginConfig,
-      modelCacheState: {
-        anthropicContext1MEnabled: false,
-        modelContextLimitsCache: new Map(),
-      },
-    })
+    try {
+      const handler = createConfigHandler({
+        ctx: { directory: "/tmp" },
+        pluginConfig,
+        modelCacheState: {
+          anthropicContext1MEnabled: false,
+          modelContextLimitsCache: new Map(),
+        },
+      })
 
-    //#when
-    await handler(config)
+      //#when
+      await handler(config)
 
-    //#then - plan uses its own override, not prometheus settings
-    const agents = config.agent as Record<string, Record<string, unknown>>
-    expect(agents.plan.model).toBe("openai/gpt-5.2")
-    expect(agents.plan.variant).toBe("high")
-    expect(agents.plan.temperature).toBe(0.5)
+      //#then - plan uses its own override, not prometheus settings
+      const agents = config.agent as Record<string, Record<string, unknown>>
+      expect(agents.plan.model).toBe("openai/gpt-5.2")
+      expect(agents.plan.variant).toBe("high")
+      expect(agents.plan.temperature).toBe(0.5)
+    } finally {
+      pipelineSpy.mockRestore()
+    }
   })
 
   test("plan agent does NOT inherit prompt, description, or color from prometheus", async () => {
     //#given
-    spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
+    const pipelineSpy = spyOn(shared, "resolveModelPipeline" as any).mockReturnValue({
       model: "anthropic/claude-opus-4-6",
       provenance: "provider-fallback",
       variant: "max",
@@ -972,24 +986,28 @@ describe("Plan agent model inheritance from prometheus", () => {
       model: "anthropic/claude-opus-4-6",
       agent: {},
     }
-    const handler = createConfigHandler({
-      ctx: { directory: "/tmp" },
-      pluginConfig,
-      modelCacheState: {
-        anthropicContext1MEnabled: false,
-        modelContextLimitsCache: new Map(),
-      },
-    })
+    try {
+      const handler = createConfigHandler({
+        ctx: { directory: "/tmp" },
+        pluginConfig,
+        modelCacheState: {
+          anthropicContext1MEnabled: false,
+          modelContextLimitsCache: new Map(),
+        },
+      })
 
-    //#when
-    await handler(config)
+      //#when
+      await handler(config)
 
-    //#then - plan has model settings but NOT prompt/description/color
-    const agents = config.agent as Record<string, Record<string, unknown>>
-    expect(agents.plan.model).toBe("anthropic/claude-opus-4-6")
-    expect(agents.plan.prompt).toBeUndefined()
-    expect(agents.plan.description).toBeUndefined()
-    expect(agents.plan.color).toBeUndefined()
+      //#then - plan has model settings but NOT prompt/description/color
+      const agents = config.agent as Record<string, Record<string, unknown>>
+      expect(agents.plan.model).toBe("anthropic/claude-opus-4-6")
+      expect(agents.plan.prompt).toBeUndefined()
+      expect(agents.plan.description).toBeUndefined()
+      expect(agents.plan.color).toBeUndefined()
+    } finally {
+      pipelineSpy.mockRestore()
+    }
   })
 })
 
@@ -1237,11 +1255,11 @@ describe("per-agent todowrite/todoread deny when task_system enabled", () => {
 
     //#then
     const agentResult = config.agent as Record<string, { permission?: Record<string, unknown> }>
-    expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todowrite).toBeUndefined()
-    expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todoread).toBeUndefined()
-    expect(agentResult[getAgentDisplayName("hephaestus")]?.permission?.todowrite).toBeUndefined()
-    expect(agentResult[getAgentDisplayName("hephaestus")]?.permission?.todoread).toBeUndefined()
-  })
+  expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todowrite).toBeUndefined()
+  expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todoread).toBeUndefined()
+  expect(agentResult[getAgentDisplayName("hephaestus")]?.permission?.todowrite).toBeUndefined()
+  expect(agentResult[getAgentDisplayName("hephaestus")]?.permission?.todoread).toBeUndefined()
+})
 
   test("does not deny todowrite/todoread when task_system is undefined", async () => {
     //#given
@@ -1270,8 +1288,10 @@ describe("per-agent todowrite/todoread deny when task_system enabled", () => {
     await handler(config)
 
     //#then
-    const agentResult = config.agent as Record<string, { permission?: Record<string, unknown> }>
-    expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todowrite).toBeUndefined()
-    expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todoread).toBeUndefined()
-  })
+  const agentResult = config.agent as Record<string, { permission?: Record<string, unknown> }>
+  expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todowrite).toBeUndefined()
+  expect(agentResult[getAgentDisplayName("sisyphus")]?.permission?.todoread).toBeUndefined()
+})
+})
+
 })

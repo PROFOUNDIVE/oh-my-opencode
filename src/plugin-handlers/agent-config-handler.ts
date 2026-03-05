@@ -1,7 +1,7 @@
 import { createBuiltinAgents } from "../agents";
 import { createSisyphusJuniorAgentWithOverrides } from "../agents/sisyphus-junior";
 import type { OhMyOpenCodeConfig } from "../config";
-import { log, migrateAgentConfig } from "../shared";
+import { log, migrateAgentConfig, resolveResponseLanguage } from "../shared";
 import { AGENT_NAME_MAP } from "../shared/migration";
 import { getAgentDisplayName } from "../shared/agent-display-names";
 import {
@@ -76,6 +76,7 @@ export async function applyAgentConfig(params: {
   const currentModel = params.config.model as string | undefined;
   const disabledSkills = new Set<string>(params.pluginConfig.disabled_skills ?? []);
   const useTaskSystem = params.pluginConfig.experimental?.task_system ?? false;
+  const responseLanguage = resolveResponseLanguage(params.pluginConfig);
 
   const builtinAgents = await createBuiltinAgents(
     migratedDisabledAgents,
@@ -90,6 +91,8 @@ export async function applyAgentConfig(params: {
     currentModel,
     disabledSkills,
     useTaskSystem,
+    params.pluginConfig.openmath,
+    responseLanguage,
   );
 
   const includeClaudeAgents = params.pluginConfig.claude_code?.agents ?? true;
@@ -131,6 +134,7 @@ export async function applyAgentConfig(params: {
       params.pluginConfig.agents?.["sisyphus-junior"],
       undefined,
       useTaskSystem,
+      responseLanguage,
     );
 
     if (builderEnabled) {
