@@ -12,7 +12,10 @@ import { BuiltinCommandNameSchema } from "./commands"
 import { ExperimentalConfigSchema } from "./experimental"
 import { GitMasterConfigSchema } from "./git-master"
 import { HookNameSchema } from "./hooks"
+import { LocalizationConfigSchema } from "./localization"
 import { NotificationConfigSchema } from "./notification"
+import { OpenMathConfigSchema } from "./openmath"
+import { PerformanceConfigSchema } from "./performance"
 import { RalphLoopConfigSchema } from "./ralph-loop"
 import { SkillsConfigSchema } from "./skills"
 import { SisyphusConfigSchema } from "./sisyphus"
@@ -39,6 +42,9 @@ export const OhMyOpenCodeConfigSchema = z.object({
   sisyphus_agent: SisyphusAgentConfigSchema.optional(),
   comment_checker: CommentCheckerConfigSchema.optional(),
   experimental: ExperimentalConfigSchema.optional(),
+  openmath: OpenMathConfigSchema.optional(),
+  localization: LocalizationConfigSchema.optional(),
+  performance: PerformanceConfigSchema.optional(),
   skills: SkillsConfigSchema.optional(),
   ralph_loop: RalphLoopConfigSchema.optional(),
   background_task: BackgroundTaskConfigSchema.optional(),
