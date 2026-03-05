@@ -1,3 +1,5 @@
+/// <reference types="bun-types" />
+
 import { describe, expect, test, beforeEach, afterEach } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { join } from "node:path"
@@ -60,6 +62,30 @@ describe("openmath-state tools", () => {
     const parsedAfterReset = JSON.parse(getAfterReset as string)
     expect(parsedReset.ok).toBe(true)
     expect(parsedAfterReset.state).toBeNull()
+  })
+
+  test("bootstraps missing state when init_if_missing is true", async () => {
+    //#given
+    const tools = createOpenMathStateTools(tempDir, { max_review_rounds: 9 })
+
+    //#when
+    const bootstrapResult = await tools.openmath_state_get.execute(
+      { session_id: "ses-bootstrap", init_if_missing: true },
+      mockContext,
+    )
+    const getAfterBootstrap = await tools.openmath_state_get.execute(
+      { session_id: "ses-bootstrap" },
+      mockContext,
+    )
+
+    //#then
+    const parsedBootstrap = JSON.parse(bootstrapResult as string)
+    const parsedAfterBootstrap = JSON.parse(getAfterBootstrap as string)
+    expect(parsedBootstrap.state).not.toBeNull()
+    expect(parsedBootstrap.state.session_id).toBe("ses-bootstrap")
+    expect(parsedBootstrap.state.max_review_rounds).toBe(9)
+    expect(parsedAfterBootstrap.state).not.toBeNull()
+    expect(parsedAfterBootstrap.state.max_review_rounds).toBe(9)
   })
 
   test("returns validation error for invalid state input", async () => {
