@@ -71,7 +71,7 @@ describe("openmath storage", () => {
     const linuxPath = getOpenMathStateFilePath(TEST_DIR, "root::p1", "linux")
 
     expect(writeSuccess).toBe(true)
-    expect(windowsPath.endsWith("root%3A%3Ap1.json")).toBe(true)
+    expect(windowsPath.endsWith("root_x3A__x3A_p1.json")).toBe(true)
     expect(existsSync(windowsPath)).toBe(true)
     expect(existsSync(linuxPath)).toBe(false)
     expect(readFileSync(windowsPath, "utf-8")).toContain('"session_id": "root::p1"')
@@ -86,5 +86,19 @@ describe("openmath storage", () => {
     expect(writeSuccess).toBe(true)
     expect(readBack).not.toBeNull()
     expect(readBack?.session_id).toBe("root::p2")
+  })
+
+  test("reads legacy percent-encoded windows file through fallback", () => {
+    const state = createInitialOpenMathSessionState("root::p3")
+    const parentDir = join(TEST_DIR, ".sisyphus", "openmath-state")
+    const legacyPath = join(parentDir, "root%3A%3Ap3.json")
+
+    mkdirSync(parentDir, { recursive: true })
+    writeFileSync(legacyPath, JSON.stringify(state, null, 2), "utf-8")
+
+    const readBack = readOpenMathSessionState(TEST_DIR, "root::p3", "windows")
+
+    expect(readBack).not.toBeNull()
+    expect(readBack?.session_id).toBe("root::p3")
   })
 })

@@ -87,6 +87,7 @@ Configuration is stored in `.opencode/oh-my-opencode.jsonc`. You can customize a
     // Maximum review rounds (1-20, default 3)
     "max_review_rounds": 5,
     // State storage filename mode: "linux" (default, backward-compatible) or "windows"
+    // In "windows" mode, forbidden filename chars are escaped with underscore tokens (e.g., :: -> _x3A__x3A_)
     "state_filename_mode": "linux",
     // Default mode
     "default_mode": "interactive",

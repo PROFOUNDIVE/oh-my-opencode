@@ -7,15 +7,27 @@ const OPENMATH_STATE_FILENAME_MODE_LINUX = "linux"
 
 export type OpenMathStateFilenameMode = "linux" | "windows"
 
+const WINDOWS_FORBIDDEN_FILENAME_CHARS = /[<>:"/\\|?*%\u0000-\u001F]/g
+
 export function getOpenMathStateDirectory(directory: string): string {
   return join(directory, OPENMATH_STATE_DIR)
 }
 
 function getOpenMathStateFileName(sessionId: string, mode: OpenMathStateFilenameMode): string {
   if (mode === "windows") {
-    return encodeURIComponent(sessionId)
+    return sessionId.replace(WINDOWS_FORBIDDEN_FILENAME_CHARS, (ch) => {
+      const codePoint = ch.codePointAt(0)
+      if (codePoint === undefined) {
+        return "_"
+      }
+      return `_x${codePoint.toString(16).toUpperCase()}_`
+    })
   }
   return sessionId
+}
+
+function getLegacyWindowsFileName(sessionId: string): string {
+  return encodeURIComponent(sessionId)
 }
 
 function getOpenMathStateFilePathByMode(
@@ -42,7 +54,16 @@ function getOpenMathStateFilePathCandidates(
   const preferred = getOpenMathStateFilePathByMode(directory, sessionId, mode)
   const fallbackMode = mode === "windows" ? "linux" : "windows"
   const fallback = getOpenMathStateFilePathByMode(directory, sessionId, fallbackMode)
-  return preferred === fallback ? [preferred] : [preferred, fallback]
+  const legacyWindows = join(getOpenMathStateDirectory(directory), `${getLegacyWindowsFileName(sessionId)}.json`)
+  const seen = new Set<string>()
+  const candidates: string[] = []
+  for (const candidate of [preferred, fallback, legacyWindows]) {
+    if (!seen.has(candidate)) {
+      seen.add(candidate)
+      candidates.push(candidate)
+    }
+  }
+  return candidates
 }
 
 function isStateObject(value: unknown): value is Record<string, unknown> {
