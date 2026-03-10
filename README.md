@@ -86,6 +86,8 @@ Configuration is stored in `.opencode/oh-my-opencode.jsonc`. You can customize a
     },
     // Maximum review rounds (1-20, default 3)
     "max_review_rounds": 5,
+    // State storage filename mode: "linux" (default, backward-compatible) or "windows"
+    "state_filename_mode": "linux",
     // Default mode
     "default_mode": "interactive",
     // Solve-only mode settings

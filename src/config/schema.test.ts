@@ -897,6 +897,28 @@ describe("OpenMathConfigSchema", () => {
     // then
     expect(result.artifacts.format).toBe("json")
   })
+
+  test("defaults state_filename_mode to 'linux'", () => {
+    // given
+    const input = {}
+
+    // when
+    const result = OpenMathConfigSchema.parse(input)
+
+    // then
+    expect(result.state_filename_mode).toBe("linux")
+  })
+
+  test("accepts state_filename_mode='windows'", () => {
+    // given
+    const input = { state_filename_mode: "windows" }
+
+    // when
+    const result = OpenMathConfigSchema.parse(input)
+
+    // then
+    expect(result.state_filename_mode).toBe("windows")
+  })
 })
 
 describe("LocalizationConfigSchema", () => {

@@ -29,6 +29,7 @@ export async function solveOneProblem(args: {
   exportDir?: string
 }): Promise<OpenMathSolveOnlyResult> {
   const problemSessionId = `${args.rootSessionId}::${args.problem.id}`
+  const stateFilenameMode = args.config?.state_filename_mode ?? "linux"
   const artifactsFormat = args.config?.artifacts?.format ?? "markdown"
   const problemText = normalizeProblem(args.problem.prefix, args.problem.problem)
 
@@ -36,6 +37,7 @@ export async function solveOneProblem(args: {
     directory: args.directory,
     sessionId: problemSessionId,
     maxReviewRounds: args.maxReviewRounds,
+    stateFilenameMode,
   })
 
   if (!init.ok) {
@@ -49,7 +51,7 @@ export async function solveOneProblem(args: {
   }
 
   let state = applyOpenMathTransition(init.state, { type: "SOLVE_SUBMITTED" }).state
-  if (!writeOpenMathSessionState(args.directory, state)) {
+  if (!writeOpenMathSessionState(args.directory, state, stateFilenameMode)) {
     return {
       id: args.problem.id,
       session_id: problemSessionId,
@@ -109,7 +111,7 @@ export async function solveOneProblem(args: {
 
     if (!roundResult.ok) {
       state = { ...state, artifact_state: "UNFROZEN", frozen_artifacts: null }
-      writeOpenMathSessionState(args.directory, state)
+      writeOpenMathSessionState(args.directory, state, stateFilenameMode)
       return {
         id: args.problem.id,
         session_id: problemSessionId,
@@ -148,6 +150,7 @@ export async function solveOneProblem(args: {
 
     const persisted = persistAfterReview({
       directory: args.directory,
+      stateFilenameMode,
       state,
       draft,
       verdict,

@@ -2631,6 +2631,14 @@
           ],
           "additionalProperties": false
         },
+        "state_filename_mode": {
+          "default": "linux",
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
         "default_mode": {
           "type": "string",
           "enum": [
@@ -2680,7 +2688,8 @@
       },
       "required": [
         "max_review_rounds",
-        "artifacts"
+        "artifacts",
+        "state_filename_mode"
       ],
       "additionalProperties": false
     },

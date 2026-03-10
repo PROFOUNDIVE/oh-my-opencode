@@ -729,4 +729,56 @@ describe("openmath_solve_only tool", () => {
     const meta = (state!.frozen_artifacts!.hint_ladder as any).__orchestrator_state
     expect(meta.patch_failure_state.consecutive_failures).toBe(0)
   })
+
+  test("persists solve-only state in windows filename mode", async () => {
+    runSyncImpl = async ({ agentToUse, description, prompt }) => {
+      const problemId = parseProblemIdFromDescription(description)
+      const round = parseRoundFromDescription(description)
+
+      if (agentToUse === "solver-markdown") {
+        return { ok: true, sessionID: `ses_${problemId}_${round}`, text: createMarkdownArtifacts(problemId) }
+      }
+
+      if (agentToUse === "reference-reviewer-markdown") {
+        const req = JSON.parse(prompt)
+        return {
+          ok: true,
+          sessionID: `ses_${problemId}_${round}_r`,
+          text: JSON.stringify({
+            verdict: "[CORRECT]",
+            blocking_issues: [],
+            checks_performed: ["spec"],
+            certificate: { artifact_version: "v1", review_round: req.review_round, timestamp: "1970-01-01T00:00:00.000Z" },
+            base_hash: req.base_hash,
+          }),
+        }
+      }
+
+      return { ok: false, error: `unexpected agent: ${agentToUse}` }
+    }
+
+    const tool = createOpenMathSolveOnlyTool({
+      directory: tempDir,
+      client: {} as any,
+      openmathConfig: {
+        max_review_rounds: 3,
+        artifacts: { format: "markdown" },
+        state_filename_mode: "windows",
+      },
+    })
+
+    const out = JSON.parse(
+      (await tool.execute(
+        {
+          session_id: "root",
+          problems: [{ id: "p1", problem: "x+1=2" }],
+        },
+        mockContext,
+      )) as string,
+    )
+
+    expect(out.ok).toBe(true)
+    expect(readOpenMathSessionState(tempDir, "root::p1", "windows")?.artifact_state).toBe("FROZEN")
+    expect(readOpenMathSessionState(tempDir, "root::p1", "linux")?.artifact_state).toBe("FROZEN")
+  })
 })

@@ -1,10 +1,11 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test, beforeEach, afterEach } from "bun:test"
-import { mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import type { ToolContext } from "@opencode-ai/plugin/tool"
+import { getOpenMathStateFilePath } from "../../openmath/storage"
 import { createInitialOpenMathSessionState } from "../../openmath/state"
 import { createOpenMathStateTools } from "./tools"
 
@@ -105,5 +106,30 @@ describe("openmath-state tools", () => {
     //#then
     const parsed = JSON.parse(result as string)
     expect(parsed.error).toBe("validation_error")
+  })
+
+  test("persists and resets using windows-compatible state filename mode", async () => {
+    //#given
+    const tools = createOpenMathStateTools(tempDir, { state_filename_mode: "windows" })
+    const state = createInitialOpenMathSessionState("root::p1")
+
+    //#when
+    const setResult = await tools.openmath_state_set.execute({ state }, mockContext)
+    const windowsPath = getOpenMathStateFilePath(tempDir, "root::p1", "windows")
+    const linuxPath = getOpenMathStateFilePath(tempDir, "root::p1", "linux")
+    const getResult = await tools.openmath_state_get.execute({ session_id: "root::p1" }, mockContext)
+
+    //#then
+    const parsedSet = JSON.parse(setResult as string)
+    const parsedGet = JSON.parse(getResult as string)
+    expect(parsedSet.ok).toBe(true)
+    expect(existsSync(windowsPath)).toBe(true)
+    expect(existsSync(linuxPath)).toBe(false)
+    expect(parsedGet.state.session_id).toBe("root::p1")
+
+    const resetResult = await tools.openmath_state_reset.execute({ session_id: "root::p1" }, mockContext)
+    const parsedReset = JSON.parse(resetResult as string)
+    expect(parsedReset.ok).toBe(true)
+    expect(existsSync(windowsPath)).toBe(false)
   })
 })

@@ -17,6 +17,7 @@ const OpenMathArtifactsConfigSchema = z
   .default({ format: "markdown" })
 
 const OpenMathDefaultModeSchema = z.enum(["interactive", "solve_only", "export"])
+const OpenMathStateFilenameModeSchema = z.enum(["linux", "windows"])
 
 const OpenMathSolveOnlyConfigSchema = z
   .object({
@@ -38,6 +39,7 @@ const OpenMathExportConfigSchema = z
 export const OpenMathConfigSchema = z.object({
   max_review_rounds: z.number().int().min(1).max(20).default(3),
   artifacts: OpenMathArtifactsConfigSchema,
+  state_filename_mode: OpenMathStateFilenameModeSchema.default("linux"),
   default_mode: OpenMathDefaultModeSchema.optional(),
   solve_only: OpenMathSolveOnlyConfigSchema,
   export: OpenMathExportConfigSchema,

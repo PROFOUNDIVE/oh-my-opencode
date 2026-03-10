@@ -56,7 +56,12 @@ export function createToolRegistry(args: {
   const allTools: Record<string, ToolDefinition> = {
     ...createOpenMathStateTools(
       ctx.directory,
-      pluginConfig.openmath ? { max_review_rounds: pluginConfig.openmath.max_review_rounds } : undefined,
+      pluginConfig.openmath
+        ? {
+            max_review_rounds: pluginConfig.openmath.max_review_rounds,
+            state_filename_mode: pluginConfig.openmath.state_filename_mode,
+          }
+        : undefined,
     ),
     openmath_export: createOpenMathExportTool(ctx.directory, pluginConfig.openmath?.export),
     openmath_solve_only: createOpenMathSolveOnlyTool({

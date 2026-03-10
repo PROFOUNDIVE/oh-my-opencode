@@ -2,6 +2,7 @@ import { rmSync } from "node:fs"
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 import {
   getOpenMathStateFilePath,
+  type OpenMathStateFilenameMode,
   readOpenMathSessionState,
   writeOpenMathSessionState,
 } from "../../openmath/storage"
@@ -14,12 +15,15 @@ import {
 
 type OpenMathStateToolDefaults = {
   max_review_rounds?: number
+  state_filename_mode?: OpenMathStateFilenameMode
 }
 
 export function createOpenMathStateTools(
   directory: string,
   defaults?: OpenMathStateToolDefaults
 ): Record<string, ToolDefinition> {
+  const stateFilenameMode = defaults?.state_filename_mode ?? "linux"
+
   const openmath_state_get: ToolDefinition = tool({
     description: "Get persisted OpenMath session state by session_id. Returns null if state is missing.",
     args: {
@@ -35,7 +39,7 @@ export function createOpenMathStateTools(
       try {
         const validatedArgs = OpenMathStateGetInputSchema.parse(args)
 
-        const existingState = readOpenMathSessionState(directory, validatedArgs.session_id)
+        const existingState = readOpenMathSessionState(directory, validatedArgs.session_id, stateFilenameMode)
         if (existingState) {
           return JSON.stringify({ state: existingState })
         }
@@ -47,7 +51,7 @@ export function createOpenMathStateTools(
             3,
             maxReviewRounds,
           )
-          const writeOk = writeOpenMathSessionState(directory, initialState)
+          const writeOk = writeOpenMathSessionState(directory, initialState, stateFilenameMode)
           if (!writeOk) {
             return JSON.stringify({ error: "write_failed" })
           }
@@ -74,7 +78,7 @@ export function createOpenMathStateTools(
     execute: async (args: Record<string, unknown>) => {
       try {
         const validatedArgs = OpenMathStateSetInputSchema.parse(args)
-        const writeOk = writeOpenMathSessionState(directory, validatedArgs.state)
+        const writeOk = writeOpenMathSessionState(directory, validatedArgs.state, stateFilenameMode)
         if (!writeOk) {
           return JSON.stringify({ error: "write_failed" })
         }
@@ -97,8 +101,16 @@ export function createOpenMathStateTools(
     execute: async (args: Record<string, unknown>) => {
       try {
         const validatedArgs = OpenMathStateResetInputSchema.parse(args)
-        const filePath = getOpenMathStateFilePath(directory, validatedArgs.session_id)
+        const filePath = getOpenMathStateFilePath(directory, validatedArgs.session_id, stateFilenameMode)
+        const fallbackPath = getOpenMathStateFilePath(
+          directory,
+          validatedArgs.session_id,
+          stateFilenameMode === "windows" ? "linux" : "windows",
+        )
         rmSync(filePath, { force: true })
+        if (fallbackPath !== filePath) {
+          rmSync(fallbackPath, { force: true })
+        }
         return JSON.stringify({ ok: true })
       } catch (error) {
         if (error instanceof Error) {

@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test"
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { createInitialOpenMathSessionState } from "./state"
@@ -61,5 +61,30 @@ describe("openmath storage", () => {
 
     const result = readOpenMathSessionState(TEST_DIR, "ses-1")
     expect(result).toBeNull()
+  })
+
+  test("writes windows-compatible file name when mode is windows", () => {
+    const state = createInitialOpenMathSessionState("root::p1")
+
+    const writeSuccess = writeOpenMathSessionState(TEST_DIR, state, "windows")
+    const windowsPath = getOpenMathStateFilePath(TEST_DIR, "root::p1", "windows")
+    const linuxPath = getOpenMathStateFilePath(TEST_DIR, "root::p1", "linux")
+
+    expect(writeSuccess).toBe(true)
+    expect(windowsPath.endsWith("root%3A%3Ap1.json")).toBe(true)
+    expect(existsSync(windowsPath)).toBe(true)
+    expect(existsSync(linuxPath)).toBe(false)
+    expect(readFileSync(windowsPath, "utf-8")).toContain('"session_id": "root::p1"')
+  })
+
+  test("reads windows-mode file through fallback when mode is linux", () => {
+    const state = createInitialOpenMathSessionState("root::p2")
+    const writeSuccess = writeOpenMathSessionState(TEST_DIR, state, "windows")
+
+    const readBack = readOpenMathSessionState(TEST_DIR, "root::p2", "linux")
+
+    expect(writeSuccess).toBe(true)
+    expect(readBack).not.toBeNull()
+    expect(readBack?.session_id).toBe("root::p2")
   })
 })
