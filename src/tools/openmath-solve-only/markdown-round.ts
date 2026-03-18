@@ -60,6 +60,17 @@ export async function runMarkdownRound(args: {
   })
 
   if (!reviewed.ok) {
+    if (reviewed.error_code === "REVIEWER_OUTPUT_INVALID") {
+      return {
+        ok: true,
+        draft: prepared.draft,
+        verdict: "[ERROR]",
+        certificate: null,
+        blocking_issues: [],
+        patch_failure: null,
+      }
+    }
+
     return { ok: false, error_code: reviewed.error_code, message: reviewed.message }
   }
 

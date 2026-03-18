@@ -48,6 +48,24 @@ describe("openmath-state tools", () => {
     expect(parsedGet.state.hint_budget_state.hints_used).toBe(2)
   })
 
+  test("preserves original_problem_text through openmath_state_set/get", async () => {
+    //#given
+    const tools = createOpenMathStateTools(tempDir)
+    const state = createInitialOpenMathSessionState("ses-roundtrip-original")
+    state.original_problem_text = "Given equation\nx+1=2"
+
+    //#when
+    const setResult = await tools.openmath_state_set.execute({ state }, mockContext)
+    const getResult = await tools.openmath_state_get.execute({ session_id: "ses-roundtrip-original" }, mockContext)
+
+    //#then
+    const parsedSet = JSON.parse(setResult as string)
+    const parsedGet = JSON.parse(getResult as string)
+    expect(parsedSet.ok).toBe(true)
+    expect(parsedGet.state).not.toBeNull()
+    expect(parsedGet.state.original_problem_text).toBe("Given equation\nx+1=2")
+  })
+
   test("resets persisted state by session id", async () => {
     //#given
     const tools = createOpenMathStateTools(tempDir)

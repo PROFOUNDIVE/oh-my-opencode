@@ -88,6 +88,10 @@ function parseOpenMathSessionState(content: string): OpenMathSessionState | null
     return null
   }
 
+  if (parsed.original_problem_text !== undefined && typeof parsed.original_problem_text !== "string") {
+    return null
+  }
+
   if (
     parsed.artifact_state !== "DRAFT" &&
     parsed.artifact_state !== "FROZEN" &&
@@ -121,6 +125,9 @@ function parseOpenMathSessionState(content: string): OpenMathSessionState | null
 
   return {
     session_id: parsed.session_id,
+    ...(parsed.original_problem_text !== undefined
+      ? { original_problem_text: parsed.original_problem_text }
+      : {}),
     artifact_state: parsed.artifact_state,
     artifact_version: parsed.artifact_version,
     review_round: parsed.review_round,

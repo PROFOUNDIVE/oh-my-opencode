@@ -1,7 +1,7 @@
 import type { OpencodeClient, ToolContextWithMetadata } from "../delegate-task/types"
 import { writeOpenMathSessionState } from "../../openmath/storage"
 import { applyOpenMathTransition } from "../../openmath/transitions"
-import type { ReviewVerdict } from "../../openmath/types"
+import type { OpenMathSessionState, ReviewVerdict } from "../../openmath/types"
 
 import type { OpenMathSolveOnlyResult } from "./types"
 import type { OpenMathToolConfig } from "./tool-config"
@@ -10,6 +10,7 @@ import { ensureOpenMathState } from "./state-bootstrap"
 import { runJsonRound } from "./json-round"
 import { runMarkdownRound } from "./markdown-round"
 import { applyMarkdownRoundOutcomeToDraft, getMarkdownRoundInputs } from "./markdown-round-policy"
+import { shouldConsumeReviewBudgetForMarkdownError } from "./markdown-round-error-policy"
 import { maybeAutoExport } from "./maybe-auto-export"
 import { persistAfterReview } from "./persist-after-review"
 
@@ -50,7 +51,10 @@ export async function solveOneProblem(args: {
     }
   }
 
-  let state = applyOpenMathTransition(init.state, { type: "SOLVE_SUBMITTED" }).state
+  let state: OpenMathSessionState = {
+    ...applyOpenMathTransition(init.state, { type: "SOLVE_SUBMITTED" }).state,
+    original_problem_text: problemText,
+  }
   if (!writeOpenMathSessionState(args.directory, state, stateFilenameMode)) {
     return {
       id: args.problem.id,
@@ -110,6 +114,49 @@ export async function solveOneProblem(args: {
           })
 
     if (!roundResult.ok) {
+      const shouldConsumeBudget =
+        artifactsFormat === "markdown"
+        && shouldConsumeReviewBudgetForMarkdownError(roundResult.error_code)
+
+      if (shouldConsumeBudget) {
+        const transitioned = applyOpenMathTransition(state, {
+          type: "REVIEW_REPORTED",
+          verdict: "[ERROR]",
+        }).state
+        state = {
+          ...transitioned,
+          frozen_artifacts:
+            transitioned.artifact_state === "UNFROZEN"
+              ? null
+              : state.frozen_artifacts,
+        }
+
+        if (!writeOpenMathSessionState(args.directory, state, stateFilenameMode)) {
+          return {
+            id: args.problem.id,
+            session_id: problemSessionId,
+            rounds_used: roundsUsed,
+            verdict: "[ERROR]",
+            error_code: "STATE_WRITE_FAILED",
+            message: "Failed to persist OpenMath state after retryable round error",
+          }
+        }
+
+        lastVerdict = "[ERROR]"
+        if (state.review_round > state.max_review_rounds || state.artifact_state === "UNFROZEN") {
+          return {
+            id: args.problem.id,
+            session_id: problemSessionId,
+            rounds_used: roundsUsed,
+            verdict: "[ERROR]",
+            error_code: roundResult.error_code,
+            message: roundResult.message,
+          }
+        }
+
+        continue
+      }
+
       state = { ...state, artifact_state: "UNFROZEN", frozen_artifacts: null }
       writeOpenMathSessionState(args.directory, state, stateFilenameMode)
       return {

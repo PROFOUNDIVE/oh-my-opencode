@@ -25,6 +25,7 @@ export interface HintBudgetState {
 
 export interface OpenMathSessionState {
   session_id: string
+  original_problem_text?: string
   artifact_state: ArtifactState
   artifact_version: number
   review_round: number

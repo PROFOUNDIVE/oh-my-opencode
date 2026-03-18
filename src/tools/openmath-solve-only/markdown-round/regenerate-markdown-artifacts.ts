@@ -4,6 +4,7 @@ import type { FrozenArtifacts } from "../../../openmath/types"
 import { runSyncSubagentText } from "../run-sync-subagent"
 import { buildJsonPrompt } from "../prompt"
 import { makeFrozenMarkdownDraft } from "./make-frozen-markdown-draft"
+import { extractNormalizedMarkdownArtifacts } from "../subagent-output-normalizer"
 
 export async function regenerateMarkdownArtifacts(args: {
   client: OpencodeClient
@@ -29,11 +30,24 @@ export async function regenerateMarkdownArtifacts(args: {
   })
 
   if (!solverOut.ok) {
-    return { ok: false, error_code: "SOLVER_FAILED", message: solverOut.error }
+    return {
+      ok: false,
+      error_code: solverOut.error_code ?? "SOLVER_FAILED",
+      message: solverOut.error,
+    }
+  }
+
+  const normalizedArtifacts = extractNormalizedMarkdownArtifacts(solverOut.text)
+  if (!normalizedArtifacts) {
+    return {
+      ok: false,
+      error_code: "ARTIFACTS_PARSE_ERROR",
+      message: "Solver markdown output did not contain canonical OMO section blocks",
+    }
   }
 
   const frozen = makeFrozenMarkdownDraft({
-    artifacts_markdown: solverOut.text,
+    artifacts_markdown: normalizedArtifacts,
     artifactVersion: args.artifactVersion,
     reviewRound: args.round,
   })

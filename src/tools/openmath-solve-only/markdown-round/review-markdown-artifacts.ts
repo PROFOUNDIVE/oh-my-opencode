@@ -3,6 +3,7 @@ import type { OpencodeClient, ToolContextWithMetadata } from "../../delegate-tas
 import { runSyncSubagentText } from "../run-sync-subagent"
 import { buildJsonPrompt, safeJsonParse } from "../prompt"
 import { ReviewerMarkdownOutputSchema } from "../subagent-output-schemas"
+import { extractNormalizedJsonPayload } from "../subagent-output-normalizer"
 
 export async function reviewMarkdownArtifacts(args: {
   client: OpencodeClient
@@ -54,7 +55,8 @@ export async function reviewMarkdownArtifacts(args: {
     }
   }
 
-  const reviewerParsed = safeJsonParse(reviewerOut.text)
+  const normalizedReviewerPayload = extractNormalizedJsonPayload(reviewerOut.text)
+  const reviewerParsed = normalizedReviewerPayload ? safeJsonParse(normalizedReviewerPayload) : null
   const out = reviewerParsed ? ReviewerMarkdownOutputSchema.safeParse(reviewerParsed) : null
   if (!out || !out.success) {
     return {

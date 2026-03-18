@@ -9,6 +9,7 @@ import { runSyncSubagentText } from "../run-sync-subagent"
 import { buildJsonPrompt, safeJsonParse } from "../prompt"
 import { makeFrozenMarkdownDraft } from "./make-frozen-markdown-draft"
 import type { OpenMathToolConfig } from "../tool-config"
+import { extractNormalizedJsonPayload } from "../subagent-output-normalizer"
 
 type PatchFailure = { error_code: string; section_id?: string }
 
@@ -80,7 +81,8 @@ export async function applySolverMarkdownPatch(args: {
     excludeReasoningParts: true,
   })
 
-  const patchParsed = patchOut.ok ? safeJsonParse(patchOut.text) : null
+  const normalizedPatchPayload = patchOut.ok ? extractNormalizedJsonPayload(patchOut.text) : null
+  const patchParsed = normalizedPatchPayload ? safeJsonParse(normalizedPatchPayload) : null
   const patchSet = patchParsed ? OpenMathArtifactsPatchSetSchema.safeParse(patchParsed) : null
   if (!patchOut.ok || !patchSet || !patchSet.success) {
     return {

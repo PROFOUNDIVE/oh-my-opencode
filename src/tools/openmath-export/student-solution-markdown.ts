@@ -2,9 +2,15 @@ import type { FrozenArtifacts } from "../../openmath/types"
 import { renderStudentHintLadderMarkdown } from "./hint-ladder-markdown"
 import { stripDoubleUnderscoreKeys } from "./strip-double-underscore-keys"
 
-export function renderStudentSolutionMarkdown(artifacts: FrozenArtifacts): string {
+export function renderStudentSolutionMarkdown(
+  artifacts: FrozenArtifacts,
+  opts?: { originalProblemText?: string },
+): string {
   const safeHints = stripDoubleUnderscoreKeys(artifacts.hint_ladder)
   const hintBlock = renderStudentHintLadderMarkdown(safeHints)
+  const originalProblemBlock = opts?.originalProblemText
+    ? ["## Original problem", "", opts.originalProblemText.trimEnd(), ""]
+    : []
 
-  return ["# OpenMath hints (student)", "", hintBlock.trimEnd(), "", ""].join("\n")
+  return ["# OpenMath hints (student)", "", ...originalProblemBlock, hintBlock.trimEnd(), "", ""].join("\n")
 }

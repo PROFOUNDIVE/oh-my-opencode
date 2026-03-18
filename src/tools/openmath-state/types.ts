@@ -27,6 +27,7 @@ export const HintBudgetStateSchema = z.object({
 
 export const OpenMathSessionStateSchema = z.object({
   session_id: z.string(),
+  original_problem_text: z.string().optional(),
   artifact_state: ArtifactStateSchema,
   artifact_version: z.number(),
   review_round: z.number(),

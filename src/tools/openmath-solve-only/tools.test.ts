@@ -621,7 +621,7 @@ describe("openmath_solve_only tool", () => {
     expect(state!.frozen_artifacts).toBeNull()
   })
 
-  test("fails hard when reviewer output is invalid JSON (markdown mode)", async () => {
+  test("consumes review budget when reviewer output is invalid JSON (markdown mode)", async () => {
     runSyncImpl = async ({ agentToUse, description }) => {
       const problemId = parseProblemIdFromDescription(description)
       const round = parseRoundFromDescription(description)
@@ -652,8 +652,8 @@ describe("openmath_solve_only tool", () => {
     )
 
     expect(out.results[0].verdict).toBe("[ERROR]")
-    expect(out.results[0].error_code).toBe("REVIEWER_OUTPUT_INVALID")
-    expect(out.results[0].rounds_used).toBe(1)
+    expect(out.results[0].error_code).toBeUndefined()
+    expect(out.results[0].rounds_used).toBe(3)
   })
 
   test("falls back to full regen after 2 consecutive patch failures", async () => {
