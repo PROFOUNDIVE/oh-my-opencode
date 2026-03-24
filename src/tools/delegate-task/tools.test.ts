@@ -3457,6 +3457,290 @@ describe("sisyphus-task", () => {
       expect(promptBody.variant).toBe("max")
     }, { timeout: 20000 })
 
+    test("solver-markdown override model takes precedence over fallback", async () => {
+      const { createDelegateTask } = require("./tools")
+      let promptBody: any
+
+      const mockManager = { launch: async () => ({}) }
+
+      const promptMock = async (input: any) => {
+        promptBody = input.body
+        return { data: {} }
+      }
+
+      const mockClient = {
+        app: {
+          agents: async () => ({
+            data: [{ name: "solver-markdown", mode: "subagent" }],
+          }),
+        },
+        config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
+        session: {
+          get: async () => ({ data: { directory: "/project" } }),
+          create: async () => ({ data: { id: "ses_solver_markdown_override_model" } }),
+          prompt: promptMock,
+          promptAsync: promptMock,
+          messages: async () => ({
+            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+          }),
+          status: async () => ({ data: { "ses_solver_markdown_override_model": { type: "idle" } } }),
+        },
+      }
+
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+        agentOverrides: {
+          "solver-markdown": { model: "anthropic/claude-opus-4-6" },
+        },
+      })
+
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "sisyphus",
+        abort: new AbortController().signal,
+      }
+
+      await tool.execute(
+        {
+          description: "Solve markdown with override",
+          prompt: "Solve this problem",
+          subagent_type: "solver-markdown",
+          run_in_background: false,
+          load_skills: [],
+        },
+        toolContext,
+      )
+
+      expect(promptBody.model).toEqual({
+        providerID: "anthropic",
+        modelID: "claude-opus-4-6",
+      })
+    }, { timeout: 20000 })
+
+    test("solver-markdown variant override is applied", async () => {
+      const { createDelegateTask } = require("./tools")
+      let promptBody: any
+
+      const mockManager = { launch: async () => ({}) }
+
+      const promptMock = async (input: any) => {
+        promptBody = input.body
+        return { data: {} }
+      }
+
+      const mockClient = {
+        app: {
+          agents: async () => ({
+            data: [{ name: "solver-markdown", mode: "subagent" }],
+          }),
+        },
+        config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
+        session: {
+          get: async () => ({ data: { directory: "/project" } }),
+          create: async () => ({ data: { id: "ses_solver_markdown_override_variant" } }),
+          prompt: promptMock,
+          promptAsync: promptMock,
+          messages: async () => ({
+            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+          }),
+          status: async () => ({ data: { "ses_solver_markdown_override_variant": { type: "idle" } } }),
+        },
+      }
+
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+        agentOverrides: {
+          "solver-markdown": { model: "openai/gpt-5.2", variant: "high" },
+        },
+      })
+
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "sisyphus",
+        abort: new AbortController().signal,
+      }
+
+      await tool.execute(
+        {
+          description: "Solve markdown with variant override",
+          prompt: "Solve this problem",
+          subagent_type: "solver-markdown",
+          run_in_background: false,
+          load_skills: [],
+        },
+        toolContext,
+      )
+
+      expect(promptBody.variant).toBe("high")
+    }, { timeout: 20000 })
+
+    test("reference-reviewer-markdown override remains independent from solver-markdown override", async () => {
+      const { createDelegateTask } = require("./tools")
+      let promptBody: any
+
+      const mockManager = { launch: async () => ({}) }
+
+      const promptMock = async (input: any) => {
+        promptBody = input.body
+        return { data: {} }
+      }
+
+      const mockClient = {
+        app: {
+          agents: async () => ({
+            data: [{ name: "reference-reviewer-markdown", mode: "subagent" }],
+          }),
+        },
+        config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
+        session: {
+          get: async () => ({ data: { directory: "/project" } }),
+          create: async () => ({ data: { id: "ses_reviewer_markdown_independent_override" } }),
+          prompt: promptMock,
+          promptAsync: promptMock,
+          messages: async () => ({
+            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+          }),
+          status: async () => ({ data: { "ses_reviewer_markdown_independent_override": { type: "idle" } } }),
+        },
+      }
+
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+        agentOverrides: {
+          "solver-markdown": { model: "anthropic/claude-opus-4-6" },
+          "reference-reviewer-markdown": { model: "google/gemini-3-pro" },
+        },
+      })
+
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "sisyphus",
+        abort: new AbortController().signal,
+      }
+
+      await tool.execute(
+        {
+          description: "Review markdown with independent override",
+          prompt: "Review this output",
+          subagent_type: "reference-reviewer-markdown",
+          run_in_background: false,
+          load_skills: [],
+        },
+        toolContext,
+      )
+
+      expect(promptBody.model).toEqual({
+        providerID: "google",
+        modelID: "gemini-3-pro",
+      })
+    }, { timeout: 20000 })
+
+    test("integration: parsed solver-markdown override is applied and noisy markdown is recoverable", async () => {
+      const { createDelegateTask } = require("./tools")
+      const { OhMyOpenCodeConfigSchema } = require("../../config/schema")
+      const { formatOpenMathArtifactsMarkdown } = require("../../openmath/artifacts-markdown/format")
+      const { extractParserValidatedMarkdownCandidate } = require("../openmath-solve-only/markdown-candidate-extractor")
+      let promptBody: any
+
+      const parsedConfig = OhMyOpenCodeConfigSchema.parse({
+        agents: {
+          "solver-markdown": { model: "anthropic/claude-opus-4-6" },
+        },
+      })
+
+      const mockManager = { launch: async () => ({}) }
+
+      const promptMock = async (input: any) => {
+        promptBody = input.body
+        return { data: {} }
+      }
+
+      const mockClient = {
+        app: {
+          agents: async () => ({
+            data: [{ name: "solver-markdown", mode: "subagent" }],
+          }),
+        },
+        config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
+        session: {
+          get: async () => ({ data: { directory: "/project" } }),
+          create: async () => ({ data: { id: "ses_integration_solver_markdown_override" } }),
+          prompt: promptMock,
+          promptAsync: promptMock,
+          messages: async () => ({
+            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+          }),
+          status: async () => ({ data: { "ses_integration_solver_markdown_override": { type: "idle" } } }),
+        },
+      }
+
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+        agentOverrides: parsedConfig.agents,
+      })
+
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "sisyphus",
+        abort: new AbortController().signal,
+      }
+
+      await tool.execute(
+        {
+          description: "Integration solver-markdown override",
+          prompt: "Solve this problem",
+          subagent_type: "solver-markdown",
+          run_in_background: false,
+          load_skills: [],
+        },
+        toolContext,
+      )
+
+      expect(promptBody.model).toEqual({
+        providerID: "anthropic",
+        modelID: "claude-opus-4-6",
+      })
+
+      const canonical = formatOpenMathArtifactsMarkdown({
+        reference_solution: "Let x = 1. Then x^2 = 1.",
+        hint_ladder: {
+          L1_nudge: "Try a simple substitution.",
+          L2_key_theorem: "Use exponent rules.",
+          L3_skeleton: ["Substitute", "Compute", "Compare"],
+          L4_full_solution: "@REFERENCE_SOLUTION",
+        },
+        grading_rubric: {
+          premises_check: ["Uses valid substitution"],
+          logical_steps: ["Substitutes", "Computes", "Concludes"],
+          common_pitfalls: ["Arithmetic mistake"],
+          key_theorem: "Exponentiation definition",
+          key_technique: "Direct computation",
+        },
+        variant_problem: "Compute x^3 when x = 2.",
+      })
+
+      const noisyOutput = [
+        '{"tool":"Read","path":"@book.md"}<|end|>',
+        '<tool_call>{"tool":"Grep","pattern":"OMO"}</tool_call>',
+        canonical,
+        "trailing narration",
+      ].join("\n")
+
+      const extraction = extractParserValidatedMarkdownCandidate(noisyOutput)
+      expect(extraction.ok).toBe(true)
+      if (extraction.ok) {
+        expect(extraction.value).toBe(canonical)
+      }
+    }, { timeout: 20000 })
+
     test("fallback chain resolves model when no override and no matchedAgent.model (#1357)", async () => {
       // given - agent registered without model, no override, but AGENT_MODEL_REQUIREMENTS has fallback
       const { createDelegateTask } = require("./tools")
