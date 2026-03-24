@@ -1,32 +1,4 @@
-const END_MARKER_RE = /<\|end[^|>]*\|>/gi
-
-function stripProtocolNoise(text: string): string {
-  const withoutMarkers = text.replace(END_MARKER_RE, "")
-  const lines = withoutMarkers.split("\n")
-  const filtered = lines.filter((line) => {
-    const trimmed = line.trim()
-    if (trimmed === "") return true
-    if (!trimmed.startsWith("{")) return true
-    if (!trimmed.endsWith("}")) return true
-
-    try {
-      const parsed = JSON.parse(trimmed)
-      if (
-        parsed
-        && typeof parsed === "object"
-        && !Array.isArray(parsed)
-        && typeof (parsed as Record<string, unknown>).tool === "string"
-      ) {
-        return false
-      }
-    } catch {
-      return true
-    }
-
-    return true
-  })
-  return filtered.join("\n")
-}
+import { stripProtocolNoise } from "./protocol-noise-stripper"
 
 export function extractNormalizedMarkdownArtifacts(text: string): string | null {
   const cleaned = stripProtocolNoise(text)
