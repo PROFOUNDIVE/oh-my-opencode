@@ -75,6 +75,13 @@ export async function solveOneProblem(args: {
 
   let roundsUsed = 0
   let lastVerdict: ReviewVerdict | undefined
+  let lastSyntheticError:
+    | {
+        error_code: string
+        stage?: "strip" | "candidate_scan" | "parse" | "schema"
+        source: "reviewer" | "solver" | "patch"
+      }
+    | undefined
 
   while (state.review_round <= state.max_review_rounds) {
     roundsUsed++
@@ -114,6 +121,21 @@ export async function solveOneProblem(args: {
           })
 
     if (!roundResult.ok) {
+      const markdownSyntheticError =
+        artifactsFormat === "markdown" && "synthetic_error" in roundResult
+          ? (roundResult.synthetic_error as
+              | {
+                  error_code: string
+                  stage?: "strip" | "candidate_scan" | "parse" | "schema"
+                  source: "reviewer" | "solver" | "patch"
+                }
+              | undefined)
+          : undefined
+
+      if (markdownSyntheticError) {
+        lastSyntheticError = markdownSyntheticError
+      }
+
       const shouldConsumeBudget =
         artifactsFormat === "markdown"
         && shouldConsumeReviewBudgetForMarkdownError(roundResult.error_code)
@@ -149,8 +171,11 @@ export async function solveOneProblem(args: {
             session_id: problemSessionId,
             rounds_used: roundsUsed,
             verdict: "[ERROR]",
-            error_code: roundResult.error_code,
-            message: roundResult.message,
+            error_code: lastSyntheticError?.error_code ?? roundResult.error_code,
+            message:
+              lastSyntheticError
+                ? `Synthetic ${lastSyntheticError.source} failure${lastSyntheticError.stage ? ` (${lastSyntheticError.stage})` : ""}`
+                : roundResult.message,
           }
         }
 
@@ -164,8 +189,11 @@ export async function solveOneProblem(args: {
         session_id: problemSessionId,
         rounds_used: roundsUsed,
         verdict: "[ERROR]",
-        error_code: roundResult.error_code,
-        message: roundResult.message,
+        error_code: lastSyntheticError?.error_code ?? roundResult.error_code,
+        message:
+          lastSyntheticError
+            ? `Synthetic ${lastSyntheticError.source} failure${lastSyntheticError.stage ? ` (${lastSyntheticError.stage})` : ""}`
+            : roundResult.message,
       }
     }
 
@@ -183,6 +211,13 @@ export async function solveOneProblem(args: {
     if (artifactsFormat === "markdown") {
       const markdownResult =
         roundResult as Extract<Awaited<ReturnType<typeof runMarkdownRound>>, { ok: true }>
+
+      if (markdownResult.synthetic_error) {
+        lastSyntheticError = markdownResult.synthetic_error
+      } else if (verdict !== "[ERROR]") {
+        lastSyntheticError = undefined
+      }
+
       draft = applyMarkdownRoundOutcomeToDraft({
         draft,
         roundResult: {
@@ -235,7 +270,18 @@ export async function solveOneProblem(args: {
     }
 
     if (verdict === "[INCONCLUSIVE]" || state.artifact_state === "UNFROZEN") {
-      return { id: args.problem.id, session_id: problemSessionId, rounds_used: roundsUsed, verdict }
+      return {
+        id: args.problem.id,
+        session_id: problemSessionId,
+        rounds_used: roundsUsed,
+        verdict,
+        ...(verdict === "[ERROR]" && lastSyntheticError
+          ? {
+              error_code: lastSyntheticError.error_code,
+              message: `Synthetic ${lastSyntheticError.source} failure${lastSyntheticError.stage ? ` (${lastSyntheticError.stage})` : ""}`,
+            }
+          : {}),
+      }
     }
   }
 
@@ -244,5 +290,11 @@ export async function solveOneProblem(args: {
     session_id: problemSessionId,
     rounds_used: roundsUsed,
     verdict: lastVerdict ?? "[ERROR]",
+    ...(lastVerdict === "[ERROR]" && lastSyntheticError
+      ? {
+          error_code: lastSyntheticError.error_code,
+          message: `Synthetic ${lastSyntheticError.source} failure${lastSyntheticError.stage ? ` (${lastSyntheticError.stage})` : ""}`,
+        }
+      : {}),
   }
 }

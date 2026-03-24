@@ -23,18 +23,45 @@ export async function runMarkdownRound(args: {
   }
   useSolverPatch?: boolean
 }): Promise<
-  | {
+    | {
       ok: true
       draft: FrozenArtifacts
       verdict: ReviewVerdict
       certificate: { artifact_version: string; review_round: number; timestamp: string; notes?: string } | null
       blocking_issues: unknown[]
       patch_failure: null | { error_code: string; section_id?: string }
+      synthetic_error?: {
+        error_code: string
+        stage?: "strip" | "candidate_scan" | "parse" | "schema"
+        source: "reviewer" | "solver" | "patch"
+      }
     }
-  | { ok: false; error_code: string; message: string }
+  | {
+      ok: false
+      error_code: string
+      message: string
+      synthetic_error?: {
+        error_code: string
+        stage?: "strip" | "candidate_scan" | "parse" | "schema"
+        source: "reviewer" | "solver" | "patch"
+      }
+    }
 > {
   const prepared = await prepareMarkdownArtifacts(args)
-  if (!prepared.ok) return prepared
+  if (!prepared.ok) {
+    const syntheticError = prepared.stage
+      ? {
+          error_code: prepared.error_code,
+          ...(prepared.stage ? { stage: prepared.stage } : {}),
+          source: prepared.source ?? "solver",
+        }
+      : undefined
+
+    return {
+      ...prepared,
+      ...(syntheticError ? { synthetic_error: syntheticError } : {}),
+    }
+  }
 
   if (prepared.patch_failure) {
     return {
@@ -44,6 +71,11 @@ export async function runMarkdownRound(args: {
       certificate: null,
       blocking_issues: [],
       patch_failure: prepared.patch_failure,
+      synthetic_error: {
+        error_code: prepared.patch_failure.error_code,
+        ...(prepared.patch_failure.error_code === "PATCH_OUTPUT_INVALID" ? { stage: "schema" as const } : {}),
+        source: "patch",
+      },
     }
   }
 
@@ -68,6 +100,11 @@ export async function runMarkdownRound(args: {
         certificate: null,
         blocking_issues: [],
         patch_failure: null,
+        synthetic_error: {
+          error_code: reviewed.error_code,
+          ...(reviewed.stage ? { stage: reviewed.stage } : {}),
+          source: "reviewer",
+        },
       }
     }
 

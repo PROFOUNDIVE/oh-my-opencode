@@ -6,10 +6,10 @@ import { applyOpenMathArtifactsPatch } from "../../../openmath/artifacts-patch/a
 import { OpenMathArtifactsPatchSetSchema } from "../../../openmath/artifacts-patch/types"
 
 import { runSyncSubagentText } from "../run-sync-subagent"
-import { buildJsonPrompt, safeJsonParse } from "../prompt"
+import { buildJsonPrompt } from "../prompt"
 import { makeFrozenMarkdownDraft } from "./make-frozen-markdown-draft"
 import type { OpenMathToolConfig } from "../tool-config"
-import { extractNormalizedJsonPayload } from "../subagent-output-normalizer"
+import { extractSchemaValidatedJsonCandidate } from "../json-candidate-extractor"
 
 type PatchFailure = { error_code: string; section_id?: string }
 
@@ -42,7 +42,13 @@ export async function applySolverMarkdownPatch(args: {
       draft: FrozenArtifacts
       patch_failure: null | PatchFailure
     }
-  | { ok: false; error_code: string; message: string }
+  | {
+      ok: false
+      error_code: string
+      message: string
+      stage?: "strip" | "candidate_scan" | "parse" | "schema"
+      source?: "patch"
+    }
 > {
   const normalizedBase = args.baseArtifacts.artifacts_markdown
   const computedBaseHash = hashOpenMathArtifactsMarkdown(normalizedBase)
@@ -51,6 +57,7 @@ export async function applySolverMarkdownPatch(args: {
       ok: false,
       error_code: "BASE_ARTIFACTS_HASH_MISMATCH",
       message: "Persisted base artifacts_hash does not match computed hash",
+      source: "patch",
     }
   }
 
@@ -60,7 +67,7 @@ export async function applySolverMarkdownPatch(args: {
     reviewRound: args.round,
   })
   if (!baseDraft.ok) {
-    return { ok: false, error_code: baseDraft.error_code, message: baseDraft.message }
+    return { ok: false, error_code: baseDraft.error_code, message: baseDraft.message, source: "patch" }
   }
 
   const patchOut = await runSyncSubagentText({
@@ -81,22 +88,39 @@ export async function applySolverMarkdownPatch(args: {
     excludeReasoningParts: true,
   })
 
-  const normalizedPatchPayload = patchOut.ok ? extractNormalizedJsonPayload(patchOut.text) : null
-  const patchParsed = normalizedPatchPayload ? safeJsonParse(normalizedPatchPayload) : null
-  const patchSet = patchParsed ? OpenMathArtifactsPatchSetSchema.safeParse(patchParsed) : null
-  if (!patchOut.ok || !patchSet || !patchSet.success) {
+  if (!patchOut.ok) {
     return {
       ok: true,
       artifacts_markdown: baseDraft.artifacts_markdown,
       artifacts_hash: baseDraft.artifacts_hash,
       draft: baseDraft.draft,
-      patch_failure: { error_code: patchOut.ok ? "PATCH_OUTPUT_INVALID" : "SOLVER_PATCH_FAILED" },
+      patch_failure: { error_code: "SOLVER_PATCH_FAILED" },
+    }
+  }
+
+  const patchSet = extractSchemaValidatedJsonCandidate({
+    text: patchOut.text,
+    validate: (value) => {
+      const parsed = OpenMathArtifactsPatchSetSchema.safeParse(value)
+      if (parsed.success) {
+        return { success: true as const, data: parsed.data }
+      }
+      return { success: false as const, message: "Patch output is not schema-valid" }
+    },
+  })
+  if (!patchSet.ok) {
+    return {
+      ok: true,
+      artifacts_markdown: baseDraft.artifacts_markdown,
+      artifacts_hash: baseDraft.artifacts_hash,
+      draft: baseDraft.draft,
+      patch_failure: { error_code: "PATCH_OUTPUT_INVALID" },
     }
   }
 
   const patchApply = applyOpenMathArtifactsPatch({
     base_markdown: normalizedBase,
-    patch_set: patchSet.data,
+    patch_set: patchSet.value,
     opts: {
       max_ops: args.config?.artifacts?.patch?.max_ops,
       allow_unique_substring_replace: args.config?.artifacts?.patch?.allow_unique_substring_replace,
@@ -120,7 +144,7 @@ export async function applySolverMarkdownPatch(args: {
     reviewRound: args.round,
   })
   if (!patchedDraft.ok) {
-    return { ok: false, error_code: patchedDraft.error_code, message: patchedDraft.message }
+    return { ok: false, error_code: patchedDraft.error_code, message: patchedDraft.message, source: "patch" }
   }
 
   return {

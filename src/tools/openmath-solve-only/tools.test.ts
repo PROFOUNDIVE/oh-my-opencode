@@ -579,7 +579,7 @@ describe("openmath_solve_only tool", () => {
   })
 
   test("fails hard when reviewer agent is missing (markdown mode)", async () => {
-    runSyncImpl = async ({ agentToUse, description }) => {
+    runSyncImpl = async ({ agentToUse, description, prompt }) => {
       const problemId = parseProblemIdFromDescription(description)
       const round = parseRoundFromDescription(description)
 
@@ -622,12 +622,20 @@ describe("openmath_solve_only tool", () => {
   })
 
   test("consumes review budget when reviewer output is invalid JSON (markdown mode)", async () => {
-    runSyncImpl = async ({ agentToUse, description }) => {
+    runSyncImpl = async ({ agentToUse, description, prompt }) => {
       const problemId = parseProblemIdFromDescription(description)
       const round = parseRoundFromDescription(description)
 
       if (agentToUse === "solver-markdown") {
         return { ok: true, sessionID: `ses_${problemId}_${round}`, text: createMarkdownArtifacts(problemId) }
+      }
+      if (agentToUse === "solver-markdown-patch") {
+        const req = JSON.parse(prompt)
+        return {
+          ok: true,
+          sessionID: `ses_${problemId}_${round}_p`,
+          text: JSON.stringify({ base_hash: req.base_hash, ops: [] }),
+        }
       }
       if (agentToUse === "reference-reviewer-markdown") {
         return { ok: true, sessionID: `ses_${problemId}_${round}_r`, text: "not-json" }
@@ -652,7 +660,9 @@ describe("openmath_solve_only tool", () => {
     )
 
     expect(out.results[0].verdict).toBe("[ERROR]")
-    expect(out.results[0].error_code).toBeUndefined()
+    expect(out.results[0].error_code).toBe("REVIEWER_OUTPUT_INVALID")
+    expect(out.results[0].message).toContain("Synthetic reviewer failure")
+    expect(out.results[0].message).toContain("candidate_scan")
     expect(out.results[0].rounds_used).toBe(3)
   })
 

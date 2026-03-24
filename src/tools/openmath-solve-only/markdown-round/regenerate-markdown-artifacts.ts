@@ -4,7 +4,7 @@ import type { FrozenArtifacts } from "../../../openmath/types"
 import { runSyncSubagentText } from "../run-sync-subagent"
 import { buildJsonPrompt } from "../prompt"
 import { makeFrozenMarkdownDraft } from "./make-frozen-markdown-draft"
-import { extractNormalizedMarkdownArtifacts } from "../subagent-output-normalizer"
+import { extractParserValidatedMarkdownCandidate } from "../markdown-candidate-extractor"
 
 export async function regenerateMarkdownArtifacts(args: {
   client: OpencodeClient
@@ -16,7 +16,13 @@ export async function regenerateMarkdownArtifacts(args: {
   artifactVersion: number
 }): Promise<
   | { ok: true; artifacts_markdown: string; artifacts_hash: string; draft: FrozenArtifacts }
-  | { ok: false; error_code: string; message: string }
+  | {
+      ok: false
+      error_code: string
+      message: string
+      stage?: "strip" | "candidate_scan" | "parse" | "schema"
+      source?: "solver"
+    }
 > {
   const solverOut = await runSyncSubagentText({
     client: args.client,
@@ -37,17 +43,19 @@ export async function regenerateMarkdownArtifacts(args: {
     }
   }
 
-  const normalizedArtifacts = extractNormalizedMarkdownArtifacts(solverOut.text)
-  if (!normalizedArtifacts) {
+  const extraction = extractParserValidatedMarkdownCandidate(solverOut.text)
+  if (!extraction.ok) {
     return {
       ok: false,
       error_code: "ARTIFACTS_PARSE_ERROR",
-      message: "Solver markdown output did not contain canonical OMO section blocks",
+      message: extraction.message,
+      stage: extraction.stage,
+      source: "solver",
     }
   }
 
   const frozen = makeFrozenMarkdownDraft({
-    artifacts_markdown: normalizedArtifacts,
+    artifacts_markdown: extraction.value,
     artifactVersion: args.artifactVersion,
     reviewRound: args.round,
   })

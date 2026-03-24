@@ -30,7 +30,13 @@ export async function prepareMarkdownArtifacts(args: {
       draft: FrozenArtifacts
       patch_failure: null | { error_code: string; section_id?: string }
     }
-  | { ok: false; error_code: string; message: string }
+  | {
+      ok: false
+      error_code: string
+      message: string
+      stage?: "strip" | "candidate_scan" | "parse" | "schema"
+      source?: "solver" | "patch"
+    }
 > {
   const shouldUsePatch = args.round > 1 && (args.useSolverPatch ?? true)
   const shouldRegenerate = args.round === 1 || !shouldUsePatch
@@ -54,6 +60,7 @@ export async function prepareMarkdownArtifacts(args: {
       ok: false,
       error_code: "MISSING_BASE_ARTIFACTS",
       message: "Round > 1 requires base artifacts_markdown/artifacts_hash for patching",
+      source: "patch",
     }
   }
 

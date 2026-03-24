@@ -1,9 +1,9 @@
 import type { OpencodeClient, ToolContextWithMetadata } from "../../delegate-task/types"
 
 import { runSyncSubagentText } from "../run-sync-subagent"
-import { buildJsonPrompt, safeJsonParse } from "../prompt"
+import { buildJsonPrompt } from "../prompt"
+import { extractSchemaValidatedJsonCandidate } from "../json-candidate-extractor"
 import { ReviewerMarkdownOutputSchema } from "../subagent-output-schemas"
-import { extractNormalizedJsonPayload } from "../subagent-output-normalizer"
 
 export async function reviewMarkdownArtifacts(args: {
   client: OpencodeClient
@@ -22,7 +22,13 @@ export async function reviewMarkdownArtifacts(args: {
       certificate: { artifact_version: string; review_round: number; timestamp: string; notes?: string } | null
       blocking_issues: unknown[]
     }
-  | { ok: false; error_code: string; message: string }
+  | {
+      ok: false
+      error_code: string
+      message: string
+      stage?: "strip" | "candidate_scan" | "parse" | "schema"
+      source?: "reviewer"
+    }
 > {
   function inferErrorCodeFromError(error: string): string {
     const lowered = error.toLowerCase()
@@ -55,21 +61,30 @@ export async function reviewMarkdownArtifacts(args: {
     }
   }
 
-  const normalizedReviewerPayload = extractNormalizedJsonPayload(reviewerOut.text)
-  const reviewerParsed = normalizedReviewerPayload ? safeJsonParse(normalizedReviewerPayload) : null
-  const out = reviewerParsed ? ReviewerMarkdownOutputSchema.safeParse(reviewerParsed) : null
-  if (!out || !out.success) {
+  const out = extractSchemaValidatedJsonCandidate({
+    text: reviewerOut.text,
+    validate: (value) => {
+      const parsed = ReviewerMarkdownOutputSchema.safeParse(value)
+      if (parsed.success) {
+        return { success: true as const, data: parsed.data }
+      }
+      return { success: false as const, message: "Reviewer did not return valid JSON output" }
+    },
+  })
+  if (!out.ok) {
     return {
       ok: false,
       error_code: "REVIEWER_OUTPUT_INVALID",
-      message: "Reviewer did not return valid JSON output",
+      message: out.message,
+      stage: out.stage,
+      source: "reviewer",
     }
   }
 
   return {
     ok: true,
-    verdict: out.data.verdict,
-    certificate: out.data.certificate,
-    blocking_issues: out.data.blocking_issues,
+    verdict: out.value.verdict,
+    certificate: out.value.certificate,
+    blocking_issues: out.value.blocking_issues,
   }
 }
