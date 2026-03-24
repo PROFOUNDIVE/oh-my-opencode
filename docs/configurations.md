@@ -211,6 +211,36 @@ Use `prompt_append` to add extra instructions without replacing the default syst
 
 You can also override settings for `Sisyphus` (the main orchestrator) and `build` (the default agent) using the same options.
 
+### OpenMath Agent Override Names
+
+When OpenMath runs in the default markdown artifacts mode (`"openmath": { "artifacts": { "format": "markdown" } }`), use these agent keys:
+
+```json
+{
+  "openmath": {
+    "artifacts": {
+      "format": "markdown"
+    }
+  },
+  "agents": {
+    "solver-markdown": {
+      "model": "openai/gpt-5.2"
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2"
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6"
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6"
+    }
+  }
+}
+```
+
+`solver` and `reference-reviewer` are legacy JSON-mode agent keys only. Use them when `"openmath": { "artifacts": { "format": "json" } }` is explicitly configured.
+
 ### Permission Options
 
 Fine-grained control over what agents can do:

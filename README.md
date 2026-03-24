@@ -116,13 +116,24 @@ Configuration is stored in `.opencode/oh-my-opencode.jsonc`. You can customize a
   }
 }
 ```
+
+```jsonc
 {
+  // Default markdown-mode agent overrides
+  "openmath": {
+    "artifacts": { "format": "markdown" }
+  },
   "agents": {
-    "solver": { "model": "claude-3-5-sonnet" },
+    "solver-markdown": { "model": "openai/gpt-5.2" },
+    "solver-markdown-patch": { "model": "openai/gpt-5.2" },
+    "reference-reviewer-markdown": { "model": "anthropic/claude-opus-4-6" },
+    "reference-reviewer-patch": { "model": "anthropic/claude-opus-4-6" },
     "verifier": { "model": "gpt-4o" }
   }
 }
 ```
+
+For legacy JSON mode (`"artifacts": { "format": "json" }`), use `solver` and `reference-reviewer` overrides instead of markdown-mode agent keys.
 
 ## Usage
 
