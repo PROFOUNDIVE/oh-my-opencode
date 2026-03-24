@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   AgentOverrideConfigSchema,
+  AgentOverridesSchema,
   BrowserAutomationConfigSchema,
   BrowserAutomationProviderSchema,
   BuiltinCategoryNameSchema,
@@ -10,6 +11,7 @@ import {
   LocalizationConfigSchema,
   OpenMathConfigSchema,
   OhMyOpenCodeConfigSchema,
+  OverridableAgentNameSchema,
   PerformanceConfigSchema,
 } from "./schema"
 
@@ -518,6 +520,96 @@ describe("Sisyphus-Junior agent override", () => {
       expect(result.data.agents?.["reference-reviewer"]?.category).toBe("ultrabrain")
       expect(result.data.agents?.coach?.category).toBe("quick")
     }
+  })
+})
+
+describe("OpenMath markdown-mode agent overrides", () => {
+  const markdownModeAgentKeys = [
+    "solver-markdown",
+    "solver-markdown-patch",
+    "reference-reviewer-markdown",
+    "reference-reviewer-patch",
+  ] as const
+
+  test("schema accepts and preserves all markdown-mode OpenMath agent overrides", () => {
+    // given
+    const config = {
+      agents: {
+        "solver-markdown": {
+          model: "openai/gpt-5.4",
+          variant: "high",
+          category: "unspecified-high",
+          temperature: 0.2,
+        },
+        "solver-markdown-patch": {
+          model: "openai/gpt-5.4-mini",
+          variant: "medium",
+          category: "quick",
+          temperature: 0.1,
+        },
+        "reference-reviewer-markdown": {
+          model: "anthropic/claude-sonnet-4-6",
+          variant: "max",
+          category: "ultrabrain",
+          temperature: 0.3,
+        },
+        "reference-reviewer-patch": {
+          model: "google/gemini-3-pro",
+          variant: "high",
+          category: "deep",
+          temperature: 0.25,
+        },
+      },
+    }
+
+    // when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      for (const key of markdownModeAgentKeys) {
+        expect(result.data.agents?.[key]).toBeDefined()
+      }
+
+      expect(result.data.agents?.["solver-markdown"]?.model).toBe("openai/gpt-5.4")
+      expect(result.data.agents?.["solver-markdown"]?.variant).toBe("high")
+      expect(result.data.agents?.["solver-markdown"]?.category).toBe("unspecified-high")
+      expect(result.data.agents?.["solver-markdown"]?.temperature).toBe(0.2)
+
+      expect(result.data.agents?.["solver-markdown-patch"]?.model).toBe("openai/gpt-5.4-mini")
+      expect(result.data.agents?.["solver-markdown-patch"]?.variant).toBe("medium")
+      expect(result.data.agents?.["solver-markdown-patch"]?.category).toBe("quick")
+      expect(result.data.agents?.["solver-markdown-patch"]?.temperature).toBe(0.1)
+
+      expect(result.data.agents?.["reference-reviewer-markdown"]?.model).toBe("anthropic/claude-sonnet-4-6")
+      expect(result.data.agents?.["reference-reviewer-markdown"]?.variant).toBe("max")
+      expect(result.data.agents?.["reference-reviewer-markdown"]?.category).toBe("ultrabrain")
+      expect(result.data.agents?.["reference-reviewer-markdown"]?.temperature).toBe(0.3)
+
+      expect(result.data.agents?.["reference-reviewer-patch"]?.model).toBe("google/gemini-3-pro")
+      expect(result.data.agents?.["reference-reviewer-patch"]?.variant).toBe("high")
+      expect(result.data.agents?.["reference-reviewer-patch"]?.category).toBe("deep")
+      expect(result.data.agents?.["reference-reviewer-patch"]?.temperature).toBe(0.25)
+    }
+  })
+
+  test("agent override schema and overridable-name schema stay aligned for markdown-mode OpenMath keys", () => {
+    // given
+    const expectedKeys = [...markdownModeAgentKeys].sort()
+
+    // when
+    const overrideSchemaMarkdownKeys = Object.keys(AgentOverridesSchema.shape)
+      .filter((name) => name.includes("-markdown") || name === "reference-reviewer-patch")
+      .sort()
+
+    const overridableNameSchemaMarkdownKeys = OverridableAgentNameSchema.options
+      .filter((name) => name.includes("-markdown") || name === "reference-reviewer-patch")
+      .sort()
+
+    // then
+    expect(overrideSchemaMarkdownKeys).toEqual(expectedKeys)
+    expect(overridableNameSchemaMarkdownKeys).toEqual(expectedKeys)
   })
 })
 

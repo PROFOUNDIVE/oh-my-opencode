@@ -54,7 +54,11 @@ export const AgentOverridesSchema = z.object({
   prometheus: AgentOverrideConfigSchema.optional(),
   "multimodal-looker": AgentOverrideConfigSchema.optional(),
   solver: AgentOverrideConfigSchema.optional(),
+  "solver-markdown": AgentOverrideConfigSchema.optional(),
+  "solver-markdown-patch": AgentOverrideConfigSchema.optional(),
   "reference-reviewer": AgentOverrideConfigSchema.optional(),
+  "reference-reviewer-markdown": AgentOverrideConfigSchema.optional(),
+  "reference-reviewer-patch": AgentOverrideConfigSchema.optional(),
   verifier: AgentOverrideConfigSchema.optional(),
   coach: AgentOverrideConfigSchema.optional(),
 })

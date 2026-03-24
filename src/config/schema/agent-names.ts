@@ -26,7 +26,11 @@ export const OverridableAgentNameSchema = z.enum([
   "prometheus",
   "multimodal-looker",
   "solver",
+  "solver-markdown",
+  "solver-markdown-patch",
   "reference-reviewer",
+  "reference-reviewer-markdown",
+  "reference-reviewer-patch",
   "verifier",
   "coach",
 ])
