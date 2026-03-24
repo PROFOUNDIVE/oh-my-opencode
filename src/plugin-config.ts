@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { OhMyOpenCodeConfigSchema, type OhMyOpenCodeConfig } from "./config";
 import { applyOpenMathOnlyDefaults } from "./config/openmath-only-defaults";
+import { warnUnsupportedAgentKeys } from "./config/unsupported-agent-keys";
 import {
   log,
   deepMerge,
@@ -58,6 +59,9 @@ export function loadConfigFromPath(
       const rawConfig = parseJsonc<Record<string, unknown>>(content);
 
       migrateConfigFile(configPath, rawConfig);
+
+      const configSource = configPath.includes(".config/opencode") ? "user" : "project";
+      warnUnsupportedAgentKeys(rawConfig.agents as Record<string, unknown> | undefined, configSource);
 
       const result = OhMyOpenCodeConfigSchema.safeParse(rawConfig);
 

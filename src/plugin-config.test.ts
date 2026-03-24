@@ -1,8 +1,14 @@
 import { describe, expect, it } from "bun:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { mergeConfigs, parseConfigPartially } from "./plugin-config";
+import { loadConfigFromPath } from "./plugin-config";
 import { applyOpenMathOnlyDefaults } from "./config/openmath-only-defaults";
+import { warnUnsupportedAgentKeys } from "./config/unsupported-agent-keys";
 import { HookNameSchema } from "./config";
 import type { OhMyOpenCodeConfig } from "./config";
+import { clearConfigLoadErrors, getConfigLoadErrors } from "./shared";
 
 describe("mergeConfigs", () => {
   describe("categories merging", () => {
@@ -141,6 +147,25 @@ describe("parseConfigPartially", () => {
       expect(result!.agents?.solver?.model).toBe("openai/gpt-5.2");
       expect(result!.agents?.verifier?.model).toBe("openai/gpt-5.2");
       expect(result!.disabled_hooks).toEqual(["comment-checker"]);
+    });
+
+    it("preserves markdown-mode OpenMath agent overrides unchanged", () => {
+      const rawConfig = {
+        agents: {
+          "solver-markdown": { model: "openai/gpt-5.4", variant: "high", category: "unspecified-high" },
+          "solver-markdown-patch": { model: "openai/gpt-5.4-mini", variant: "medium", category: "quick" },
+          "reference-reviewer-markdown": { model: "anthropic/claude-opus-4-6", variant: "max" },
+          "reference-reviewer-patch": { model: "google/gemini-3-pro", variant: "high" },
+        },
+      };
+
+      const result = parseConfigPartially(rawConfig);
+
+      expect(result).not.toBeNull();
+      expect(result!.agents?.["solver-markdown"]?.model).toBe("openai/gpt-5.4");
+      expect(result!.agents?.["solver-markdown-patch"]?.model).toBe("openai/gpt-5.4-mini");
+      expect(result!.agents?.["reference-reviewer-markdown"]?.model).toBe("anthropic/claude-opus-4-6");
+      expect(result!.agents?.["reference-reviewer-patch"]?.model).toBe("google/gemini-3-pro");
     });
   });
 
@@ -296,5 +321,103 @@ describe("applyOpenMathOnlyDefaults", () => {
     expect(result.disabled_agents).not.toContain("oracle");
     expect(result.disabled_tools).toContain("call_omo_agent");
     expect(result.disabled_hooks).toContain("think-mode");
+  });
+});
+
+describe("warnUnsupportedAgentKeys", () => {
+  describe("valid agent keys", () => {
+    it("returns no warnings for valid agent keys", () => {
+      const rawAgents = {
+        solver: { model: "openai/gpt-5.2" },
+        verifier: { model: "anthropic/claude-haiku-4-5" },
+        prometheus: { category: "orchestrator" },
+        "sisyphus-junior": { model: "gpt-4o" },
+        "solver-markdown": { model: "openai/gpt-5.2" },
+        "solver-markdown-patch": { model: "openai/gpt-5.2" },
+        "reference-reviewer-markdown": { model: "anthropic/claude-opus-4-6" },
+        "reference-reviewer-patch": { model: "anthropic/claude-opus-4-6" },
+      };
+
+      const warnings = warnUnsupportedAgentKeys(rawAgents, "test");
+      expect(warnings).toEqual([]);
+    });
+
+    it("returns casing warnings for case-mismatched keys", () => {
+      const rawAgents = {
+        SOLVER: { model: "openai/gpt-5.2" },
+        Verifier: { model: "anthropic/claude-haiku-4-5" },
+        "Sisyphus-Junior": { model: "gpt-4o" },
+      };
+
+      const warnings = warnUnsupportedAgentKeys(rawAgents, "test");
+      expect(warnings).toHaveLength(3);
+      expect(warnings[0]).toContain("incorrect casing");
+      expect(warnings.join("\n")).toContain("Use \"solver\"");
+    });
+  });
+
+  describe("invalid agent keys", () => {
+    it("returns warnings naming typo agent keys", () => {
+      const rawAgents = {
+        "solver-markdownx": { model: "openai/gpt-5.2" },
+        solve: { model: "openai/gpt-5.2" },
+      };
+
+      const warnings = warnUnsupportedAgentKeys(rawAgents, "project");
+      expect(warnings).toHaveLength(2);
+      expect(warnings.join("\n")).toContain("solver-markdownx");
+      expect(warnings.join("\n")).toContain("solve");
+    });
+
+    it("should handle undefined agents", () => {
+      expect(warnUnsupportedAgentKeys(undefined, "project")).toEqual([]);
+    });
+
+    it("should handle empty agents object", () => {
+      expect(warnUnsupportedAgentKeys({}, "user")).toEqual([]);
+    });
+
+    it("returns warnings for completely unknown agent keys", () => {
+      const rawAgents = {
+        unknownAgent: { model: "gpt-4" },
+        myCustomAgent: { temperature: 0.5 },
+      };
+
+      const warnings = warnUnsupportedAgentKeys(rawAgents, "user");
+      expect(warnings).toHaveLength(2);
+      expect(warnings.join("\n")).toContain("unknownAgent");
+      expect(warnings.join("\n")).toContain("myCustomAgent");
+    });
+  });
+});
+
+describe("loadConfigFromPath unsupported-agent warnings", () => {
+  it("keeps valid agent overrides and does not raise config load errors for typo keys", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "oh-my-opencode-config-warning-test-"));
+    const configPath = join(tempDir, "oh-my-opencode.json");
+
+    try {
+      writeFileSync(
+        configPath,
+        JSON.stringify({
+          agents: {
+            "solver-markdown": { model: "openai/gpt-5.4" },
+            "solver-markdownx": { model: "openai/gpt-5.4" },
+          },
+        }),
+        "utf-8",
+      );
+
+      clearConfigLoadErrors();
+      const result = loadConfigFromPath(configPath, {});
+      const errors = getConfigLoadErrors();
+
+      expect(result).not.toBeNull();
+      expect(result!.agents?.["solver-markdown"]?.model).toBe("openai/gpt-5.4");
+      expect((result!.agents as Record<string, unknown>)["solver-markdownx"]).toBeUndefined();
+      expect(errors).toEqual([]);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });
