@@ -1,7 +1,7 @@
 {
-  "name": "oh-my-opencode-linux-x64",
+  "name": "oh-my-openmath-linux-x64",
   "version": "3.7.3",
-  "description": "Platform-specific binary for oh-my-opencode (linux-x64)",
+  "description": "Platform-specific binary for oh-my-openmath (linux-x64)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,6 +20,6 @@
     "bin"
   ],
   "bin": {
-    "oh-my-opencode": "./bin/oh-my-opencode"
+    "oh-my-openmath": "./bin/oh-my-openmath"
   }
 }
