@@ -1,12 +1,12 @@
 {
-  "name": "oh-my-opencode",
+  "name": "oh-my-openmath",
   "version": "3.7.3",
   "description": "OpenMath Orchestrator - OpenCode Plugin for guided math problem-solving with solver, reviewer, verifier, and coach agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "oh-my-opencode": "./bin/oh-my-opencode.js"
+    "oh-my-openmath": "./bin/oh-my-openmath.js"
   },
   "files": [
     "dist",
@@ -18,7 +18,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema.json": "./dist/oh-my-opencode.schema.json"
+    "./schema.json": "./dist/oh-my-openmath.schema.json"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm --external @ast-grep/napi && tsc --emitDeclarationOnly && bun build src/cli/index.ts --outdir dist/cli --target bun --format esm --external @ast-grep/napi && bun run build:schema",
@@ -73,13 +73,13 @@
     "typescript": "^5.7.3"
   },
   "optionalDependencies": {
-    "oh-my-opencode-darwin-arm64": "3.7.3",
-    "oh-my-opencode-darwin-x64": "3.7.3",
-    "oh-my-opencode-linux-arm64": "3.7.3",
-    "oh-my-opencode-linux-arm64-musl": "3.7.3",
-    "oh-my-opencode-linux-x64": "3.7.3",
-    "oh-my-opencode-linux-x64-musl": "3.7.3",
-    "oh-my-opencode-windows-x64": "3.7.3"
+    "oh-my-openmath-darwin-arm64": "3.7.3",
+    "oh-my-openmath-darwin-x64": "3.7.3",
+    "oh-my-openmath-linux-arm64": "3.7.3",
+    "oh-my-openmath-linux-arm64-musl": "3.7.3",
+    "oh-my-openmath-linux-x64": "3.7.3",
+    "oh-my-openmath-linux-x64-musl": "3.7.3",
+    "oh-my-openmath-windows-x64": "3.7.3"
   },
   "trustedDependencies": [
     "@ast-grep/cli",

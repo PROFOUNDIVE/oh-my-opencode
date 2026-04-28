@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// bin/oh-my-opencode.js
-// Wrapper script that detects platform and spawns the correct binary
 
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
@@ -35,7 +33,7 @@ function main() {
   try {
     pkg = getPlatformPackage({ platform, arch, libcFamily });
   } catch (error) {
-    console.error(`\noh-my-opencode: ${error.message}\n`);
+    console.error(`\noh-my-openmath: ${error.message}\n`);
     process.exit(1);
   }
   
@@ -46,7 +44,7 @@ function main() {
   try {
     binPath = require.resolve(binRelPath);
   } catch {
-    console.error(`\noh-my-opencode: Platform binary not installed.`);
+    console.error(`\noh-my-openmath: Platform binary not installed.`);
     console.error(`\nYour platform: ${platform}-${arch}${libcFamily === "musl" ? "-musl" : ""}`);
     console.error(`Expected package: ${pkg}`);
     console.error(`\nTo fix, run:`);
@@ -61,7 +59,7 @@ function main() {
   
   // Handle spawn errors
   if (result.error) {
-    console.error(`\noh-my-opencode: Failed to execute binary.`);
+    console.error(`\noh-my-openmath: Failed to execute binary.`);
     console.error(`Error: ${result.error.message}\n`);
     process.exit(2);
   }

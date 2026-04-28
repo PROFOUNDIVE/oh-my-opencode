@@ -13,7 +13,7 @@ import { createFirstMessageVariantGate } from "./shared/first-message-variant"
 import { injectServerAuthIntoClient, log } from "./shared"
 
 const OhMyOpenCodePlugin: Plugin = async (ctx) => {
-  log("[OhMyOpenCodePlugin] ENTRY - plugin loading", {
+  log("[OhMyOpenMathPlugin] ENTRY - plugin loading", {
     directory: ctx.directory,
   })
 
@@ -66,8 +66,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ): Promise<void> => {
       void _input
       output.context.push(
-        [
-          "OhMyOpenCode: Context preserved after compaction.",
+          [
+          "OhMyOpenMath: Context preserved after compaction.",
           "- Continue from the most recent user request.",
           "- Keep tool outputs and JSON strict; do not add prose around tool JSON.",
           "- If you are mid-task, restate the next concrete step and proceed.",

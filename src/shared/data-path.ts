@@ -1,5 +1,6 @@
 import * as path from "node:path"
 import * as os from "node:os"
+import { PLUGIN_CACHE_DIR_NAME } from "./plugin-identity"
 
 /**
  * Returns the user-level data directory.
@@ -31,11 +32,11 @@ export function getCacheDir(): string {
 }
 
 /**
- * Returns the oh-my-opencode cache directory.
- * All platforms: ~/.cache/oh-my-opencode
+ * Returns the plugin cache directory.
+ * All platforms: ~/.cache/oh-my-openmath
  */
 export function getOmoOpenCodeCacheDir(): string {
-  return path.join(getCacheDir(), "oh-my-opencode")
+  return path.join(getCacheDir(), PLUGIN_CACHE_DIR_NAME)
 }
 
 /**

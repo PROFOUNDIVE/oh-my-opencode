@@ -3,8 +3,9 @@
 import * as fs from "fs"
 import * as os from "os"
 import * as path from "path"
+import { PLUGIN_LOG_FILE_NAME } from "./plugin-identity"
 
-const logFile = path.join(os.tmpdir(), "oh-my-opencode.log")
+const logFile = path.join(os.tmpdir(), PLUGIN_LOG_FILE_NAME)
 
 export function log(message: string, data?: unknown): void {
   try {
