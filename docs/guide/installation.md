@@ -4,7 +4,7 @@
 
 Paste this into your llm agent session:
 ```
-Install and configure oh-my-opencode by following the instructions here:
+Install and configure oh-my-openmath by following the instructions here:
 https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/docs/guide/installation.md
 ```
 
@@ -13,8 +13,8 @@ https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/
 Run the interactive installer:
 
 ```bash
-bunx oh-my-opencode install # recommended
-npx oh-my-opencode install # alternative
+bunx oh-my-openmath install # recommended
+npx oh-my-openmath install # alternative
 ```
 
 > **Note**: The CLI ships with standalone binaries for all major platforms. No runtime (Bun/Node.js) is required for CLI execution after installation.
@@ -32,7 +32,7 @@ After you install it, you can read this [overview guide](./overview.md) to under
 > curl -fsSL https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/docs/guide/installation.md
 > ```
 
-If you're an LLM Agent helping set up oh-my-opencode, Welcome! You'll now help your user to install the best agent harness, OhMyOpenCode. Tell user this with greetings, with test 'oMoMoMoMo...'
+If you're an LLM Agent helping set up oh-my-openmath, welcome. You'll now help your user install OpenMath Orchestrator. Tell the user this with greetings, with text 'oMoMoMoMo...'
 
 follow these steps:
 
@@ -98,28 +98,34 @@ Spawn a subagent to handle installation and report back - to save context.
 Based on user's answers, run the CLI installer with appropriate flags:
 
 ```bash
-bunx oh-my-opencode install --no-tui --claude=<yes|no|max20> --gemini=<yes|no> --copilot=<yes|no> [--openai=<yes|no>] [--opencode-zen=<yes|no>] [--zai-coding-plan=<yes|no>]
+bunx oh-my-openmath install --no-tui --claude=<yes|no|max20> --gemini=<yes|no> --copilot=<yes|no> [--openai=<yes|no>] [--opencode-zen=<yes|no>] [--zai-coding-plan=<yes|no>]
 ```
 
 **Examples:**
-- User has all native subscriptions: `bunx oh-my-opencode install --no-tui --claude=max20 --openai=yes --gemini=yes --copilot=no`
-- User has only Claude: `bunx oh-my-opencode install --no-tui --claude=yes --gemini=no --copilot=no`
-- User has Claude + OpenAI: `bunx oh-my-opencode install --no-tui --claude=yes --openai=yes --gemini=no --copilot=no`
-- User has only GitHub Copilot: `bunx oh-my-opencode install --no-tui --claude=no --gemini=no --copilot=yes`
-- User has Z.ai for Librarian: `bunx oh-my-opencode install --no-tui --claude=yes --gemini=no --copilot=no --zai-coding-plan=yes`
-- User has only OpenCode Zen: `bunx oh-my-opencode install --no-tui --claude=no --gemini=no --copilot=no --opencode-zen=yes`
-- User has no subscriptions: `bunx oh-my-opencode install --no-tui --claude=no --gemini=no --copilot=no`
+- User has all native subscriptions: `bunx oh-my-openmath install --no-tui --claude=max20 --openai=yes --gemini=yes --copilot=no`
+- User has only Claude: `bunx oh-my-openmath install --no-tui --claude=yes --gemini=no --copilot=no`
+- User has Claude + OpenAI: `bunx oh-my-openmath install --no-tui --claude=yes --openai=yes --gemini=no --copilot=no`
+- User has only GitHub Copilot: `bunx oh-my-openmath install --no-tui --claude=no --gemini=no --copilot=yes`
+- User has Z.ai for Librarian: `bunx oh-my-openmath install --no-tui --claude=yes --gemini=no --copilot=no --zai-coding-plan=yes`
+- User has only OpenCode Zen: `bunx oh-my-openmath install --no-tui --claude=no --gemini=no --copilot=no --opencode-zen=yes`
+- User has no subscriptions: `bunx oh-my-openmath install --no-tui --claude=no --gemini=no --copilot=no`
 
 The CLI will:
 - Register the plugin in `opencode.json`
 - Configure agent models based on subscription flags
 - Show which auth steps are needed
 
+> [!NOTE]
+> **Canonical naming after the rename**
+> - Use `oh-my-openmath` in the plugin array
+> - Use `oh-my-openmath.jsonc` / `oh-my-openmath.json` for plugin config
+> - Treat `oh-my-opencode` names as legacy migration leftovers only
+
 ### Step 3: Verify Setup
 
 ```bash
 opencode --version  # Should be 1.0.150 or higher
-cat ~/.config/opencode/opencode.json  # Should contain "oh-my-opencode" in plugin array
+cat ~/.config/opencode/opencode.json  # Should contain "oh-my-openmath" in plugin array
 ```
 
 ### Step 4: Configure Authentication
@@ -145,7 +151,7 @@ First, add the opencode-antigravity-auth plugin:
 ```json
 {
   "plugin": [
-    "oh-my-opencode",
+    "oh-my-openmath",
     "opencode-antigravity-auth@latest"
   ]
 }
@@ -156,9 +162,9 @@ First, add the opencode-antigravity-auth plugin:
 You'll also need full model settings in `opencode.json`.
 Read the [opencode-antigravity-auth documentation](https://github.com/NoeFabris/opencode-antigravity-auth), copy the full model configuration from the README, and merge carefully to avoid breaking the user's existing setup. The plugin now uses a **variant system** — models like `antigravity-gemini-3-pro` support `low`/`high` variants instead of separate `-low`/`-high` model entries.
 
-##### oh-my-opencode Agent Model Override
+##### oh-my-openmath Agent Model Override
 
-The `opencode-antigravity-auth` plugin uses different model names than the built-in Google auth. Override the agent models in `oh-my-opencode.json` (or `.opencode/oh-my-opencode.json`):
+The `opencode-antigravity-auth` plugin uses different model names than the built-in Google auth. Override the agent models in `oh-my-openmath.json` (or `.opencode/oh-my-openmath.json`):
 
 ```json
 {
@@ -201,7 +207,7 @@ GitHub Copilot is supported as a **fallback provider** when native providers are
 
 ##### Model Mappings
 
-When GitHub Copilot is the best available provider, oh-my-opencode uses these model assignments:
+When GitHub Copilot is the best available provider, OpenMath Orchestrator uses these model assignments:
 
 | Agent         | Model                            |
 | ------------- | -------------------------------- |
@@ -243,7 +249,7 @@ When OpenCode Zen is the best available provider (no native or Copilot), these m
 Run the installer and select "Yes" for GitHub Copilot:
 
 ```bash
-bunx oh-my-opencode install
+bunx oh-my-openmath install
 # Select your subscriptions (Claude, ChatGPT, Gemini)
 # When prompted: "Do you have a GitHub Copilot subscription?" → Select "Yes"
 ```
@@ -251,7 +257,7 @@ bunx oh-my-opencode install
 Or use non-interactive mode:
 
 ```bash
-bunx oh-my-opencode install --no-tui --claude=no --openai=no --gemini=no --copilot=yes
+bunx oh-my-openmath install --no-tui --claude=no --openai=no --gemini=no --copilot=yes
 ```
 
 Then authenticate with GitHub:
@@ -274,7 +280,7 @@ Read this document again, think about you have done everything correctly.
 
 ### Say 'Congratulations! 🎉' to the user
 
-Say to user: Congratulations! 🎉 You have successfully set up OhMyOpenCode! Type `opencode` in your terminal to start using it.
+Say to user: Congratulations! 🎉 You have successfully set up OpenMath Orchestrator! Type `opencode` in your terminal to start using it.
 
 ### Free advertising
 

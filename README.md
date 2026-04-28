@@ -3,7 +3,7 @@
 >
 > **ohmyopencode.com is NOT affiliated with this project.** We do not operate or endorse that site.
 >
-> OhMyOpenCode is **free and open-source**. Do **not** download installers or enter payment details on third-party sites that claim to be "official."
+> OpenMath Orchestrator is **free and open-source**. Do **not** download installers or enter payment details on third-party sites that claim to be "official."
 >
 > Because the impersonation site is behind a paywall, we **cannot verify what it distributes**. Treat any downloads from it as **potentially unsafe**.
 >
@@ -12,7 +12,7 @@
 <div align="center">
 
 [![GitHub Release](https://img.shields.io/github/v/release/code-yeongyu/oh-my-opencode?color=369eff&labelColor=black&logo=github&style=flat-square)](https://github.com/code-yeongyu/oh-my-opencode/releases)
-[![npm downloads](https://img.shields.io/npm/dt/oh-my-opencode?color=ff6b35&labelColor=black&style=flat-square)](https://www.npmjs.com/package/oh-my-opencode)
+[![npm downloads](https://img.shields.io/npm/dt/oh-my-openmath?color=ff6b35&labelColor=black&style=flat-square)](https://www.npmjs.com/package/oh-my-openmath)
 [![License](https://img.shields.io/badge/license-SUL--1.0-white?labelColor=black&style=flat-square)](https://github.com/code-yeongyu/oh-my-opencode/blob/master/LICENSE.md)
 
 </div>
@@ -20,6 +20,21 @@
 # OpenMath Orchestrator
 
 **OpenMath Orchestrator** is an OpenCode plugin designed for guided math problem-solving. It transforms OpenCode into a rigorous mathematical reasoning engine by orchestrating specialized agents to solve, review, verify, and coach through complex problems.
+
+> [!IMPORTANT]
+> **Canonical package/config name**
+>
+> Use `oh-my-openmath` going forward.
+>
+> - Install with `oh-my-openmath`
+> - Configure `.opencode/oh-my-openmath.jsonc` or `~/.config/opencode/oh-my-openmath.jsonc`
+> - Treat `oh-my-opencode` / `oh-my-opencode.json[c]` as **legacy compatibility names only** where older setups still mention them
+>
+> **Q: Should I create `oh-my-openmath.jsonc` instead of `oh-my-opencode.jsonc`?**
+> Yes. `oh-my-openmath.jsonc` is the canonical filename for new setups.
+>
+> **Q: Can this coexist with `oh-my-openagent`?**
+> That is the goal of the rename: keep `oh-my-openmath` on its own package/config namespace so it does not collide with `oh-my-openagent` migration behavior.
 
 ## Overview
 
@@ -59,19 +74,19 @@ Provides guidance and hints without giving away the answer directly. Useful for 
 - **File Reference Support**: Reference problems from `@filename.md` or `@filename.tex`
 - **State Management**: Durable state tools to track progress across sessions
 - **Export Mode**: Generate student/teacher markdown artifacts
-- **Configurable Review Rounds**: Set `max_review_rounds` (default 3, max 20)
+- **Configurable Review Rounds**: Set `max_review_rounds` (default 3, minimum 1)
 - **State Management**: Durable state tools (`openmath_state_get`, `openmath_state_set`, `openmath_state_reset`) to track progress across sessions.
 - **Specialized Roles**: Distinct prompts and contexts for each agent role.
 
 ## Installation
 
 ```bash
-npx oh-my-opencode install
+npx oh-my-openmath install
 ```
 
 ## Configuration
 
-Configuration is stored in `.opencode/oh-my-opencode.jsonc`. You can customize agent models and parameters there.
+Configuration is stored in `.opencode/oh-my-openmath.jsonc` or `~/.config/opencode/oh-my-openmath.jsonc`. You can customize agent models and parameters there. If you are migrating from an older setup, `oh-my-opencode.json[c]` should be treated as a legacy compatibility filename, not the default for new installs.
 
 ```jsonc
 {
@@ -84,8 +99,10 @@ Configuration is stored in `.opencode/oh-my-opencode.jsonc`. You can customize a
         "allow_unique_substring_replace": true
       }
     },
-    // Maximum review rounds (1-20, default 3)
+    // Maximum review rounds (minimum 1, default 3)
     "max_review_rounds": 5,
+    // Consecutive markdown patch failures before full regeneration (minimum 1, default 2)
+    "max_consecutive_patch_failures": 3,
     // State storage filename mode: "linux" (default, backward-compatible) or "windows"
     // In "windows" mode, forbidden filename chars are escaped with underscore tokens (e.g., :: -> _x3A__x3A_)
     "state_filename_mode": "linux",
@@ -203,7 +220,7 @@ Access and manage OpenMath session state:
 4. **Apply**: Patch is applied deterministically with base-hash verification
 5. **Repeat** until `[CORRECT]` or `max_review_rounds` reached
 
-**Fallback**: If patch application fails 2 rounds in a row with the same error, a full regeneration occurs.
+**Fallback**: If patch application fails `max_consecutive_patch_failures` rounds in a row with the same error, a full regeneration occurs. Default: `2`.
 
 ### Legacy JSON Mode
 

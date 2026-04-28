@@ -1,17 +1,17 @@
-# Oh-My-OpenCode CLI Guide
+# OpenMath Orchestrator CLI Guide
 
-This document provides a comprehensive guide to using the Oh-My-OpenCode CLI tools.
+This document provides a comprehensive guide to using the OpenMath Orchestrator CLI tools.
 
 ## 1. Overview
 
-Oh-My-OpenCode provides CLI tools accessible via the `bunx oh-my-opencode` command. The CLI supports various features including plugin installation, environment diagnostics, and session execution.
+OpenMath Orchestrator provides CLI tools accessible via the `bunx oh-my-openmath` command. The CLI supports various features including plugin installation, environment diagnostics, and session execution.
 
 ```bash
 # Basic execution (displays help)
-bunx oh-my-opencode
+bunx oh-my-openmath
 
 # Or run with npx
-npx oh-my-opencode
+npx oh-my-openmath
 ```
 
 ---
@@ -30,20 +30,23 @@ npx oh-my-opencode
 
 ## 3. `install` - Interactive Setup Wizard
 
-An interactive installation tool for initial Oh-My-OpenCode setup. Provides a beautiful TUI (Text User Interface) based on `@clack/prompts`.
+An interactive installation tool for initial OpenMath Orchestrator setup. Provides a beautiful TUI (Text User Interface) based on `@clack/prompts`.
 
 ### Usage
 
 ```bash
-bunx oh-my-opencode install
+bunx oh-my-openmath install
 ```
 
 ### Installation Process
 
 1. **Provider Selection**: Choose your AI provider from Claude, ChatGPT, or Gemini.
 2. **API Key Input**: Enter the API key for your selected provider.
-3. **Configuration File Creation**: Generates `opencode.json` or `oh-my-opencode.json` files.
-4. **Plugin Registration**: Automatically registers the oh-my-opencode plugin in OpenCode settings.
+3. **Configuration File Creation**: Generates `opencode.json` and `oh-my-openmath.json[c]` files.
+4. **Plugin Registration**: Automatically registers the `oh-my-openmath` plugin in OpenCode settings.
+
+> [!NOTE]
+> Use `oh-my-openmath` and `oh-my-openmath.jsonc` for new setups. `oh-my-opencode` names are legacy compatibility references only.
 
 ### Options
 
@@ -56,12 +59,12 @@ bunx oh-my-opencode install
 
 ## 4. `doctor` - Environment Diagnostics
 
-Diagnoses your environment to ensure Oh-My-OpenCode is functioning correctly. Performs 17+ health checks.
+Diagnoses your environment to ensure OpenMath Orchestrator is functioning correctly. Performs 17+ health checks.
 
 ### Usage
 
 ```bash
-bunx oh-my-opencode doctor
+bunx oh-my-openmath doctor
 ```
 
 ### Diagnostic Categories
@@ -86,10 +89,10 @@ bunx oh-my-opencode doctor
 ### Example Output
 
 ```
-oh-my-opencode doctor
+oh-my-openmath doctor
 
 ┌──────────────────────────────────────────────────┐
-│  Oh-My-OpenCode Doctor                           │
+│  OpenMath Orchestrator Doctor                    │
 └──────────────────────────────────────────────────┘
 
 Installation
@@ -97,7 +100,7 @@ Installation
   ✓ Plugin registered in opencode.json
 
 Configuration
-  ✓ oh-my-opencode.json is valid
+  ✓ oh-my-openmath.json is valid
   ⚠ categories.visual-engineering: using default model
 
 Authentication
@@ -122,7 +125,7 @@ Executes OpenCode sessions and monitors task completion.
 ### Usage
 
 ```bash
-bunx oh-my-opencode run [prompt]
+bunx oh-my-openmath run [prompt]
 ```
 
 ### Options
@@ -142,16 +145,16 @@ Manages OAuth 2.1 authentication for remote MCP servers.
 
 ```bash
 # Login to an OAuth-protected MCP server
-bunx oh-my-opencode mcp oauth login <server-name> --server-url https://api.example.com
+bunx oh-my-openmath mcp oauth login <server-name> --server-url https://api.example.com
 
 # Login with explicit client ID and scopes
-bunx oh-my-opencode mcp oauth login my-api --server-url https://api.example.com --client-id my-client --scopes "read,write"
+bunx oh-my-openmath mcp oauth login my-api --server-url https://api.example.com --client-id my-client --scopes "read,write"
 
 # Remove stored OAuth tokens
-bunx oh-my-opencode mcp oauth logout <server-name>
+bunx oh-my-openmath mcp oauth logout <server-name>
 
 # Check OAuth token status
-bunx oh-my-opencode mcp oauth status [server-name]
+bunx oh-my-openmath mcp oauth status [server-name]
 ```
 
 ### Options
@@ -176,13 +179,13 @@ Manages Google Antigravity OAuth authentication. Required for using Gemini model
 
 ```bash
 # Login
-bunx oh-my-opencode auth login
+bunx oh-my-openmath auth login
 
 # Logout
-bunx oh-my-opencode auth logout
+bunx oh-my-openmath auth logout
 
 # Check current status
-bunx oh-my-opencode auth status
+bunx oh-my-openmath auth status
 ```
 
 ---
@@ -191,8 +194,8 @@ bunx oh-my-opencode auth status
 
 The CLI searches for configuration files in the following locations (in priority order):
 
-1. **Project Level**: `.opencode/oh-my-opencode.json`
-2. **User Level**: `~/.config/opencode/oh-my-opencode.json`
+1. **Project Level**: `.opencode/oh-my-openmath.jsonc` or `.opencode/oh-my-openmath.json`
+2. **User Level**: `~/.config/opencode/oh-my-openmath.jsonc` or `~/.config/opencode/oh-my-openmath.json`
 
 ### JSONC Support
 
@@ -232,17 +235,17 @@ bun install -g opencode@latest
 
 ```bash
 # Reinstall plugin
-bunx oh-my-opencode install
+bunx oh-my-openmath install
 ```
 
 ### Doctor Check Failures
 
 ```bash
 # Diagnose with detailed information
-bunx oh-my-opencode doctor --verbose
+bunx oh-my-openmath doctor --verbose
 
 # Check specific category only
-bunx oh-my-opencode doctor --category authentication
+bunx oh-my-openmath doctor --category authentication
 ```
 
 ---
@@ -253,10 +256,10 @@ Use the `--no-tui` option for CI/CD environments.
 
 ```bash
 # Run doctor in CI environment
-bunx oh-my-opencode doctor --no-tui --json
+bunx oh-my-openmath doctor --no-tui --json
 
 # Save results to file
-bunx oh-my-opencode doctor --json > doctor-report.json
+bunx oh-my-openmath doctor --json > doctor-report.json
 ```
 
 ---
