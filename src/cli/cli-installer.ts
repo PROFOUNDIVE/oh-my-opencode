@@ -32,10 +32,10 @@ export async function runCliInstaller(args: InstallArgs, version: string): Promi
     for (const err of validation.errors) {
       console.log(`  ${SYMBOLS.bullet} ${err}`)
     }
-    console.log()
-    printInfo(
-      "Usage: bunx oh-my-opencode install --no-tui --claude=<no|yes|max20> --gemini=<no|yes> --copilot=<no|yes>",
-    )
+      console.log()
+      printInfo(
+      "Usage: bunx oh-my-openmath install --no-tui --claude=<no|yes|max20> --gemini=<no|yes> --copilot=<no|yes>",
+      )
     console.log()
     return 1
   }
@@ -67,7 +67,7 @@ export async function runCliInstaller(args: InstallArgs, version: string): Promi
 
   const config = argsToConfig(args)
 
-  printStep(step++, totalSteps, "Adding oh-my-opencode plugin...")
+  printStep(step++, totalSteps, "Adding oh-my-openmath plugin...")
   const pluginResult = await addPluginToOpenCodeConfig(version)
   if (!pluginResult.success) {
     printError(`Failed: ${pluginResult.error}`)
@@ -99,7 +99,7 @@ export async function runCliInstaller(args: InstallArgs, version: string): Promi
     step += 2
   }
 
-  printStep(step++, totalSteps, "Writing oh-my-opencode configuration...")
+  printStep(step++, totalSteps, "Writing oh-my-openmath configuration...")
   const omoResult = writeOmoConfig(config)
   if (!omoResult.success) {
     printError(`Failed: ${omoResult.error}`)

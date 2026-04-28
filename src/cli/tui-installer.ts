@@ -45,7 +45,7 @@ export async function runTuiInstaller(args: InstallArgs, version: string): Promi
   const config = await promptInstallConfig(detected)
   if (!config) return 1
 
-  spinner.start("Adding oh-my-opencode to OpenCode config")
+  spinner.start("Adding oh-my-openmath to OpenCode config")
   const pluginResult = await addPluginToOpenCodeConfig(version)
   if (!pluginResult.success) {
     spinner.stop(`Failed to add plugin: ${pluginResult.error}`)
@@ -74,7 +74,7 @@ export async function runTuiInstaller(args: InstallArgs, version: string): Promi
     spinner.stop(`Provider config added to ${color.cyan(providerResult.configPath)}`)
   }
 
-  spinner.start("Writing oh-my-opencode configuration")
+  spinner.start("Writing oh-my-openmath configuration")
   const omoResult = writeOmoConfig(config)
   if (!omoResult.success) {
     spinner.stop(`Failed to write config: ${omoResult.error}`)

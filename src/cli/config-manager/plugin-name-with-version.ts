@@ -1,6 +1,7 @@
 import { fetchNpmDistTags } from "./npm-dist-tags"
+import { CURRENT_PLUGIN_PACKAGE_NAME } from "../../shared/plugin-identity"
 
-const PACKAGE_NAME = "oh-my-opencode"
+const PACKAGE_NAME = CURRENT_PLUGIN_PACKAGE_NAME
 const PRIORITIZED_TAGS = ["latest", "beta", "next"] as const
 
 export async function getPluginNameWithVersion(currentVersion: string): Promise<string> {

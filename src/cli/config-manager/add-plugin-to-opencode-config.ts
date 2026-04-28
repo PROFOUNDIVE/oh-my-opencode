@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs"
+import { CURRENT_PLUGIN_PACKAGE_NAME, matchesPluginSpecifier } from "../../shared/plugin-identity"
 import type { ConfigMergeResult } from "../types"
 import { getConfigDir } from "./config-context"
 import { ensureConfigDirectoryExists } from "./ensure-config-directory-exists"
@@ -7,7 +8,7 @@ import { detectConfigFormat } from "./opencode-config-format"
 import { parseOpenCodeConfigFileWithError, type OpenCodeConfig } from "./parse-opencode-config-file"
 import { getPluginNameWithVersion } from "./plugin-name-with-version"
 
-const PACKAGE_NAME = "oh-my-opencode"
+const PACKAGE_NAME = CURRENT_PLUGIN_PACKAGE_NAME
 
 export async function addPluginToOpenCodeConfig(currentVersion: string): Promise<ConfigMergeResult> {
   try {
@@ -41,7 +42,7 @@ export async function addPluginToOpenCodeConfig(currentVersion: string): Promise
 
     const config = parseResult.config
     const plugins = config.plugin ?? []
-    const existingIndex = plugins.findIndex((p) => p === PACKAGE_NAME || p.startsWith(`${PACKAGE_NAME}@`))
+    const existingIndex = plugins.findIndex(matchesPluginSpecifier)
 
     if (existingIndex !== -1) {
       if (plugins[existingIndex] === pluginEntry) {
