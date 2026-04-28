@@ -34,7 +34,7 @@ export const OpenMathSolveOnlyInputSchema = z.object({
   supplementary_refs: z.array(z.string()).optional(),
 
   max_concurrency: z.number().int().min(1).optional(),
-  max_review_rounds: z.number().int().min(1).max(20).optional(),
+  max_review_rounds: z.number().int().min(1).optional(),
 
   auto_export: z.boolean().optional(),
   export_dir: z.string().optional(),

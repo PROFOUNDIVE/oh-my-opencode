@@ -1,5 +1,6 @@
 export type OpenMathToolConfig = {
   max_review_rounds?: number
+  max_consecutive_patch_failures?: number
   state_filename_mode?: "linux" | "windows"
   artifacts?: {
     format?: "json" | "markdown"

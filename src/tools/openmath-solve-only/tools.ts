@@ -47,13 +47,13 @@ export function createOpenMathSolveOnlyTool(args: {
         )
 
         const maxRounds = validated.max_review_rounds ?? args.openmathConfig?.max_review_rounds ?? 3
-        const effectiveMaxReviewRounds = Math.max(1, Math.min(maxRounds, 20))
+        const effectiveMaxReviewRounds = Math.max(1, maxRounds)
+        const maxConsecutivePatchFailures = Math.max(1, args.openmathConfig?.max_consecutive_patch_failures ?? 2)
 
         const configConcurrency = args.openmathConfig?.solve_only?.max_concurrency
         const requested = Math.min(
           validated.max_concurrency ?? Number.POSITIVE_INFINITY,
           configConcurrency ?? Number.POSITIVE_INFINITY,
-          20,
         )
         const effectiveMaxConcurrency = Number.isFinite(requested) ? Math.max(1, requested) : 1
 
@@ -78,6 +78,7 @@ export function createOpenMathSolveOnlyTool(args: {
                 supplementary_refs: validated.supplementary_refs,
                 problem,
                 maxReviewRounds: effectiveMaxReviewRounds,
+                maxConsecutivePatchFailures,
                 autoExport,
                 exportDir,
               })

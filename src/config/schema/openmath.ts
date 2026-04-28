@@ -37,7 +37,8 @@ const OpenMathExportConfigSchema = z
   .optional()
 
 export const OpenMathConfigSchema = z.object({
-  max_review_rounds: z.number().int().min(1).max(20).default(3),
+  max_review_rounds: z.number().int().min(1).default(3),
+  max_consecutive_patch_failures: z.number().int().min(1).default(2),
   artifacts: OpenMathArtifactsConfigSchema,
   state_filename_mode: OpenMathStateFilenameModeSchema.default("linux"),
   default_mode: OpenMathDefaultModeSchema.optional(),

@@ -19,6 +19,7 @@ You MUST call this tool (exact name): openmath_solve_only
 - supplementary_refs?: string[]
 - max_concurrency?: number
 - max_review_rounds?: number
+- note: consecutive patch-failure fallback is configured via openmath.max_consecutive_patch_failures in project config
 - auto_export?: boolean
 - export_dir?: string
 

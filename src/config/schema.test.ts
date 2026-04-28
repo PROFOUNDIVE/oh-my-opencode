@@ -946,6 +946,17 @@ describe("OpenMathConfigSchema", () => {
     expect(result.max_review_rounds).toBe(3)
   })
 
+  test("defaults max_consecutive_patch_failures to 2", () => {
+    // given
+    const input = {}
+
+    // when
+    const result = OpenMathConfigSchema.parse(input)
+
+    // then
+    expect(result.max_consecutive_patch_failures).toBe(2)
+  })
+
   test("defaults artifacts.format to 'markdown'", () => {
     // given
     const input = {}
@@ -968,9 +979,48 @@ describe("OpenMathConfigSchema", () => {
     expect(result.success).toBe(false)
   })
 
-  test("rejects max_review_rounds above 20", () => {
+  test("rejects max_consecutive_patch_failures below 1", () => {
+    // given
+    const input = { max_consecutive_patch_failures: 0 }
+
+    // when
+    const result = OpenMathConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+
+  test("accepts max_review_rounds above 20", () => {
     // given
     const input = { max_review_rounds: 21 }
+
+    // when
+    const result = OpenMathConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.max_review_rounds).toBe(21)
+    }
+  })
+
+  test("accepts max_concurrency above 20 in solve_only", () => {
+    // given
+    const input = { solve_only: { max_concurrency: 25 } }
+
+    // when
+    const result = OpenMathConfigSchema.safeParse(input)
+
+    // then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.solve_only?.max_concurrency).toBe(25)
+    }
+  })
+
+  test("rejects max_concurrency below 1 in solve_only", () => {
+    // given
+    const input = { solve_only: { max_concurrency: 0 } }
 
     // when
     const result = OpenMathConfigSchema.safeParse(input)

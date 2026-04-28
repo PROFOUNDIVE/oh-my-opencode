@@ -26,6 +26,7 @@ export async function solveOneProblem(args: {
   supplementary_refs?: string[]
   problem: { id: string; problem: string; prefix?: string }
   maxReviewRounds: number
+  maxConsecutivePatchFailures: number
   autoExport: boolean
   exportDir?: string
 }): Promise<OpenMathSolveOnlyResult> {
@@ -89,7 +90,11 @@ export async function solveOneProblem(args: {
 
     const markdownInputs =
       artifactsFormat === "markdown"
-        ? getMarkdownRoundInputs({ round, frozen_artifacts: state.frozen_artifacts })
+        ? getMarkdownRoundInputs({
+            round,
+            frozen_artifacts: state.frozen_artifacts,
+            maxConsecutivePatchFailures: args.maxConsecutivePatchFailures,
+          })
         : null
 
     const roundResult =

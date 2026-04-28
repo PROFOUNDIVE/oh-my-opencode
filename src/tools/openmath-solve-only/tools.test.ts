@@ -385,7 +385,7 @@ describe("openmath_solve_only tool", () => {
     expect(state!.frozen_artifacts).toBeNull()
   })
 
-  test("caps concurrency using min(args, config, 20) and preserves input order", async () => {
+  test("uses the lower of args and config concurrency and preserves input order", async () => {
     let active = 0
     let maxActive = 0
 
@@ -738,6 +738,79 @@ describe("openmath_solve_only tool", () => {
     const state = readOpenMathSessionState(tempDir, "root::p1")
     const meta = (state!.frozen_artifacts!.hint_ladder as any).__orchestrator_state
     expect(meta.patch_failure_state.consecutive_failures).toBe(0)
+  })
+
+  test("allows tuning consecutive patch failures before full regen", async () => {
+    let solverMarkdownCalls = 0
+    let solverPatchCalls = 0
+
+    runSyncImpl = async ({ agentToUse, description, prompt }) => {
+      const problemId = parseProblemIdFromDescription(description)
+      const round = parseRoundFromDescription(description)
+
+      if (agentToUse === "solver-markdown") {
+        solverMarkdownCalls++
+        return { ok: true, sessionID: `ses_${problemId}_${round}`, text: createMarkdownArtifacts(problemId) }
+      }
+
+      if (agentToUse === "reference-reviewer-markdown") {
+        const req = JSON.parse(prompt)
+        const verdict = req.review_round === 5 ? "[CORRECT]" : "[ERROR]"
+        return {
+          ok: true,
+          sessionID: `ses_${problemId}_${round}_r`,
+          text: JSON.stringify({
+            verdict,
+            blocking_issues:
+              verdict === "[ERROR]"
+                ? [
+                    {
+                      location: "reference_solution: step 1",
+                      type: "logic_error",
+                      fix_direction: "Fix the incorrect algebra step.",
+                      evidence: "x+1=2 implies x=1.",
+                    },
+                  ]
+                : [],
+            checks_performed: ["spec"],
+            certificate: { artifact_version: "v1", review_round: req.review_round, timestamp: "1970-01-01T00:00:00.000Z" },
+            base_hash: req.base_hash,
+          }),
+        }
+      }
+
+      if (agentToUse === "solver-markdown-patch") {
+        solverPatchCalls++
+        return { ok: true, sessionID: `ses_${problemId}_${round}_p`, text: "not-json" }
+      }
+
+      return { ok: false, error: `unexpected agent: ${agentToUse}` }
+    }
+
+    const tool = createOpenMathSolveOnlyTool({
+      directory: tempDir,
+      client: {} as any,
+      openmathConfig: {
+        artifacts: { format: "markdown" },
+        max_review_rounds: 5,
+        max_consecutive_patch_failures: 3,
+      },
+    })
+
+    const out = JSON.parse(
+      (await tool.execute(
+        {
+          session_id: "root",
+          problems: [{ id: "p1", problem: "x+1=2" }],
+        },
+        mockContext,
+      )) as string,
+    )
+
+    expect(out.results[0].verdict).toBe("[CORRECT]")
+    expect(out.results[0].rounds_used).toBe(5)
+    expect(solverMarkdownCalls).toBe(2)
+    expect(solverPatchCalls).toBe(3)
   })
 
   test("persists solve-only state in windows filename mode", async () => {

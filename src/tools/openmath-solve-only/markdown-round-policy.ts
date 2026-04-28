@@ -10,6 +10,7 @@ import {
 export function getMarkdownRoundInputs(args: {
   round: number
   frozen_artifacts: FrozenArtifacts | null
+  maxConsecutivePatchFailures: number
 }): {
   baseArtifacts:
     | {
@@ -38,7 +39,9 @@ export function getMarkdownRoundInputs(args: {
     : undefined
 
   const useSolverPatch =
-    args.round > 1 ? (prevPatchFailureState?.consecutive_failures ?? 0) < 2 && !!baseArtifacts : undefined
+    args.round > 1
+      ? (prevPatchFailureState?.consecutive_failures ?? 0) < args.maxConsecutivePatchFailures && !!baseArtifacts
+      : undefined
 
   return { baseArtifacts, useSolverPatch, prevBlockingIssues, prevPatchFailureState }
 }
