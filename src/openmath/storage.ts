@@ -167,17 +167,29 @@ export function writeOpenMathSessionState(
   state: OpenMathSessionState,
   mode: OpenMathStateFilenameMode = OPENMATH_STATE_FILENAME_MODE_LINUX,
 ): boolean {
-  const filePath = getOpenMathStateFilePath(directory, state.session_id, mode)
+  const writeToPath = (filePath: string): boolean => {
+    try {
+      const parentDir = dirname(filePath)
+      if (!existsSync(parentDir)) {
+        mkdirSync(parentDir, { recursive: true })
+      }
 
-  try {
-    const parentDir = dirname(filePath)
-    if (!existsSync(parentDir)) {
-      mkdirSync(parentDir, { recursive: true })
+      writeFileSync(filePath, JSON.stringify(state, null, 2), "utf-8")
+      return true
+    } catch {
+      return false
     }
-
-    writeFileSync(filePath, JSON.stringify(state, null, 2), "utf-8")
-    return true
-  } catch {
-    return false
   }
+
+  const filePath = getOpenMathStateFilePath(directory, state.session_id, mode)
+  if (writeToPath(filePath)) {
+    return true
+  }
+
+  const fallbackPath = getOpenMathStateFilePath(
+    directory,
+    state.session_id,
+    mode === "windows" ? "linux" : "windows",
+  )
+  return fallbackPath !== filePath ? writeToPath(fallbackPath) : false
 }
