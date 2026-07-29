@@ -4,7 +4,7 @@ export const WorkflowCheckpointPolicySchema = z.enum([
   "none",
   "after_solve",
   "after_review",
-  "after_revise",
+  "every_stage",
 ])
 
 export type WorkflowCheckpointPolicy = z.infer<typeof WorkflowCheckpointPolicySchema>
