@@ -85,7 +85,7 @@ describe("resolvePromptAppend", () => {
     expect(resolved).toBe("encoded-content")
   })
 
-  test("returns warning for malformed percent-encoding", () => {
+  test("preserves the exact prompt_append warning for malformed percent-encoding", () => {
     //#given
     const input = "file://%E0%A4%A"
 
@@ -93,10 +93,10 @@ describe("resolvePromptAppend", () => {
     const resolved = resolvePromptAppend(input)
 
     //#then
-    expect(resolved).toContain("[WARNING: Malformed file URI")
+    expect(resolved).toBe("[WARNING: Malformed file URI (invalid percent-encoding): file://%E0%A4%A]")
   })
 
-  test("returns warning when file does not exist", () => {
+  test("preserves the exact prompt_append warning when the file does not exist", () => {
     //#given
     const input = "file:///path/does/not/exist.txt"
 
@@ -104,6 +104,6 @@ describe("resolvePromptAppend", () => {
     const resolved = resolvePromptAppend(input)
 
     //#then
-    expect(resolved).toContain("[WARNING: Could not resolve file URI")
+    expect(resolved).toBe("[WARNING: Could not resolve file URI: file:///path/does/not/exist.txt]")
   })
 })
