@@ -1,4 +1,8 @@
 import { z } from "zod"
+import {
+  WorkflowProfileNameSchema,
+  WorkflowProfilesSchema,
+} from "../../openmath/workflow/profile-schema"
 
 const OpenMathArtifactsFormatSchema = z.enum(["json", "markdown"])
 
@@ -40,6 +44,13 @@ export const OpenMathConfigSchema = z.object({
   max_review_rounds: z.number().int().min(1).default(3),
   max_consecutive_patch_failures: z.number().int().min(1).default(2),
   artifacts: OpenMathArtifactsConfigSchema,
+  workflow_profiles: WorkflowProfilesSchema.default({}),
+  default_workflow_profile: WorkflowProfileNameSchema.optional(),
+  workflow_allowed_roots: z.array(z.string().refine((value) => value.trim().length > 0, {
+    message: "workflow_allowed_roots entries must not be blank",
+  })).min(1, {
+    message: "workflow_allowed_roots must contain at least one root",
+  }).default(["."]),
   state_filename_mode: OpenMathStateFilenameModeSchema.default("linux"),
   default_mode: OpenMathDefaultModeSchema.optional(),
   solve_only: OpenMathSolveOnlyConfigSchema,

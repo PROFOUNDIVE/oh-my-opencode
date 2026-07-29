@@ -3,6 +3,8 @@ import * as path from "path";
 import { OhMyOpenCodeConfigSchema, type OhMyOpenCodeConfig } from "./config";
 import { applyOpenMathOnlyDefaults } from "./config/openmath-only-defaults";
 import { resolveFileBackedPromptSources } from "./config/file-backed-prompt-sources";
+import { resolveWorkflowProfileConfigSources } from "./config/workflow-profile-config-sources";
+import { mergeOpenMathConfig } from "./config/workflow-profile-merge";
 import {
   mergePromptSourceDirectories,
   recordPromptSourceDirectories,
@@ -71,9 +73,10 @@ export function loadConfigFromPath(
       const result = OhMyOpenCodeConfigSchema.safeParse(rawConfig);
 
       if (result.success) {
-        recordPromptSourceDirectories(result.data, path.dirname(configPath));
-        log(`Config loaded from ${configPath}`, { agents: result.data.agents });
-        return result.data;
+        const config = resolveWorkflowProfileConfigSources(result.data, path.dirname(configPath));
+        recordPromptSourceDirectories(config, path.dirname(configPath));
+        log(`Config loaded from ${configPath}`, { agents: config.agents });
+        return config;
       }
 
       const errorMsg = result.error.issues
@@ -87,9 +90,10 @@ export function loadConfigFromPath(
 
       const partialResult = parseConfigPartially(rawConfig);
       if (partialResult) {
-        recordPromptSourceDirectories(partialResult, path.dirname(configPath));
-        log(`Partial config loaded from ${configPath}`, { agents: partialResult.agents });
-        return partialResult;
+        const config = resolveWorkflowProfileConfigSources(partialResult, path.dirname(configPath));
+        recordPromptSourceDirectories(config, path.dirname(configPath));
+        log(`Partial config loaded from ${configPath}`, { agents: config.agents });
+        return config;
       }
 
       return null;
@@ -111,6 +115,7 @@ export function mergeConfigs(
     ...override,
     agents: deepMerge(base.agents, override.agents),
     categories: deepMerge(base.categories, override.categories),
+    openmath: mergeOpenMathConfig(base.openmath, override.openmath),
     disabled_agents: [
       ...new Set([
         ...(base.disabled_agents ?? []),
