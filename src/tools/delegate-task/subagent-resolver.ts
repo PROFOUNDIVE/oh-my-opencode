@@ -10,9 +10,11 @@ import { log } from "../../shared/logger"
 import { getAvailableModelsForDelegateTask } from "./available-models"
 import { resolveModelForDelegateTask } from "./model-selection"
 
+export type SubagentResolutionContext = Pick<ExecutorContext, "client" | "agentOverrides">
+
 export async function resolveSubagentExecution(
   args: DelegateTaskArgs,
-  executorCtx: ExecutorContext,
+  executorCtx: SubagentResolutionContext,
   parentAgent: string | undefined,
   categoryExamples: string
 ): Promise<{ agentToUse: string; categoryModel: { providerID: string; modelID: string; variant?: string } | undefined; error?: string }> {
