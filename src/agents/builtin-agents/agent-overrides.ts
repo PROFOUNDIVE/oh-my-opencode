@@ -1,8 +1,9 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrideConfig } from "../types"
 import type { CategoryConfig } from "../../config/schema"
+import { getPromptSourceDirectory } from "../../config/prompt-source-directories"
 import { deepMerge, migrateAgentConfig } from "../../shared"
-import { resolvePromptAppend } from "./resolve-file-uri"
+import { resolvePromptAppend, resolveReplacementPrompt } from "./resolve-file-uri"
 
 /**
  * Expands a category reference from an agent override into concrete config properties.
@@ -29,7 +30,10 @@ export function applyCategoryOverride(
   if (categoryConfig.maxTokens !== undefined) result.maxTokens = categoryConfig.maxTokens
 
   if (categoryConfig.prompt_append && typeof result.prompt === "string") {
-    result.prompt = result.prompt + "\n" + resolvePromptAppend(categoryConfig.prompt_append)
+    result.prompt = result.prompt + "\n" + resolvePromptAppend(
+      categoryConfig.prompt_append,
+      getPromptSourceDirectory(categoryConfig, "prompt_append"),
+    )
   }
 
   return result as AgentConfig
@@ -44,8 +48,18 @@ export function mergeAgentConfig(
   const { prompt_append, ...rest } = migratedOverride
   const merged = deepMerge(base, rest as Partial<AgentConfig>)
 
+  if (typeof migratedOverride.prompt === "string" && migratedOverride.prompt.startsWith("file://")) {
+    merged.prompt = resolveReplacementPrompt(
+      migratedOverride.prompt,
+      getPromptSourceDirectory(override, "prompt") ?? directory,
+    ).content
+  }
+
   if (prompt_append && merged.prompt) {
-    merged.prompt = merged.prompt + "\n" + resolvePromptAppend(prompt_append, directory)
+    merged.prompt = merged.prompt + "\n" + resolvePromptAppend(
+      prompt_append,
+      getPromptSourceDirectory(override, "prompt_append") ?? directory,
+    )
   }
 
   return merged

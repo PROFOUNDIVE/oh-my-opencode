@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
-import { resolvePromptAppend } from "./resolve-file-uri"
+import { resolvePromptAppend } from "./prompt-append-resolver"
+import { resolveReplacementPrompt } from "./replacement-prompt-resolver"
 
 describe("resolvePromptAppend", () => {
   const fixtureRoot = join(tmpdir(), `resolve-file-uri-${Date.now()}`)
@@ -50,6 +52,21 @@ describe("resolvePromptAppend", () => {
 
     //#then
     expect(resolved).toBe("absolute-content")
+  })
+
+  test("returns canonical metadata and a byte-exact hash for replacement files", () => {
+    //#given
+    const input = `file://${absoluteFilePath}`
+
+    //#when
+    const resolved = resolveReplacementPrompt(input)
+
+    //#then
+    expect(resolved.content).toBe("absolute-content")
+    expect(resolved.canonicalPath).toBe(absoluteFilePath)
+    expect(resolved.sha256).toBe(
+      createHash("sha256").update("absolute-content", "utf8").digest("hex"),
+    )
   })
 
   test("resolves relative file URI using configDir", () => {

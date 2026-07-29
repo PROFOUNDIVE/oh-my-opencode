@@ -2,6 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { OhMyOpenCodeConfigSchema, type OhMyOpenCodeConfig } from "./config";
 import { applyOpenMathOnlyDefaults } from "./config/openmath-only-defaults";
+import { resolveFileBackedPromptSources } from "./config/file-backed-prompt-sources";
+import {
+  mergePromptSourceDirectories,
+  recordPromptSourceDirectories,
+} from "./config/prompt-source-directories";
 import { warnUnsupportedAgentKeys } from "./config/unsupported-agent-keys";
 import {
   log,
@@ -66,6 +71,7 @@ export function loadConfigFromPath(
       const result = OhMyOpenCodeConfigSchema.safeParse(rawConfig);
 
       if (result.success) {
+        recordPromptSourceDirectories(result.data, path.dirname(configPath));
         log(`Config loaded from ${configPath}`, { agents: result.data.agents });
         return result.data;
       }
@@ -81,6 +87,7 @@ export function loadConfigFromPath(
 
       const partialResult = parseConfigPartially(rawConfig);
       if (partialResult) {
+        recordPromptSourceDirectories(partialResult, path.dirname(configPath));
         log(`Partial config loaded from ${configPath}`, { agents: partialResult.agents });
         return partialResult;
       }
@@ -99,7 +106,7 @@ export function mergeConfigs(
   base: OhMyOpenCodeConfig,
   override: OhMyOpenCodeConfig
 ): OhMyOpenCodeConfig {
-  return {
+  const merged = {
     ...base,
     ...override,
     agents: deepMerge(base.agents, override.agents),
@@ -136,6 +143,8 @@ export function mergeConfigs(
     ],
     claude_code: deepMerge(base.claude_code, override.claude_code),
   };
+  mergePromptSourceDirectories(base, override, merged);
+  return merged;
 }
 
 export function loadPluginConfig(
@@ -162,6 +171,7 @@ export function loadPluginConfig(
   };
 
   config = applyOpenMathOnlyDefaults(config);
+  config = resolveFileBackedPromptSources(config);
 
   log("Final merged config", {
     agents: config.agents,
