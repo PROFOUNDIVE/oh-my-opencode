@@ -34,6 +34,7 @@ const ResolvedWorkflowRoleSnapshotSchema = z.object({
 }).strict()
 
 export const WorkflowProfileSnapshotSchema = z.object({
+  snapshot_version: z.number().int().positive().default(1),
   name: WorkflowProfileNameSchema,
   solve: ResolvedWorkflowRoleSnapshotSchema,
   review: ResolvedWorkflowRoleSnapshotSchema,
@@ -64,7 +65,7 @@ const ReferenceSourceSchema = z.discriminatedUnion("kind", [
 ])
 
 export const ReferenceSnapshotSchema = z.object({
-  version: z.literal(1),
+  version: z.number().int().positive(),
   manifest: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("file"),

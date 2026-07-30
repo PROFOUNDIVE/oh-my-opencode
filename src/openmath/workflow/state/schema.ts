@@ -5,6 +5,7 @@ import { ArtifactDtoSchema, ReviewDtoSchema } from "./contracts"
 import { AwaitingReasonSchema, HashSchema, WorkflowStageSchema } from "./literals"
 import { ReferenceSnapshotSchema, WorkflowProfileSnapshotSchema } from "./snapshots"
 import { StageAttemptSchema, StageRecordSchema } from "./stage-contracts"
+import { WorkflowRequestSnapshotSchema } from "./request-snapshot"
 
 const NonBlankSchema = z.string().refine((value) => value.trim().length > 0)
 
@@ -34,6 +35,7 @@ const WorkflowStateCoreSchema = z.object({
   completed_review_rounds: z.number().int().nonnegative(),
   consecutive_passes: z.number().int().nonnegative(),
   artifact_version: z.number().int().positive(),
+  request_snapshot: WorkflowRequestSnapshotSchema.optional(),
   profile_snapshot: WorkflowProfileSnapshotSchema,
   reference_snapshot: ReferenceSnapshotSchema,
   artifact: ArtifactDtoSchema.nullable(),

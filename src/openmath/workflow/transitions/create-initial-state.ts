@@ -5,6 +5,7 @@ export type InitialWorkflowStateInput = {
   readonly parent_session_id: string
   readonly profile_snapshot: WorkflowStateV1["profile_snapshot"]
   readonly reference_snapshot: WorkflowStateV1["reference_snapshot"]
+  readonly request_snapshot?: NonNullable<WorkflowStateV1["request_snapshot"]>
   readonly artifact?: NonNullable<WorkflowStateV1["artifact"]>
 }
 
@@ -25,6 +26,7 @@ export function createInitialWorkflowState(input: InitialWorkflowStateInput): Wo
     completed_review_rounds: 0,
     consecutive_passes: 0,
     artifact_version: input.artifact?.version ?? 1,
+    ...(input.request_snapshot === undefined ? {} : { request_snapshot: input.request_snapshot }),
     profile_snapshot: input.profile_snapshot,
     reference_snapshot: input.reference_snapshot,
     artifact: input.artifact ?? null,

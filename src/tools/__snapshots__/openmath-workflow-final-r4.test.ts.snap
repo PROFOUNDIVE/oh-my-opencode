@@ -1,0 +1,261 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Task 12 final R4 execution coverage snapshots actual envelopes from all six tool factories 1`] = `
+[
+  {
+    "artifact": null,
+    "latest_review": null,
+    "next_actions": [
+      {
+        "action": "step_one_stage",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 0,
+      },
+      {
+        "action": "step_to_checkpoint",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 0,
+      },
+      {
+        "action": "amend",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 0,
+      },
+      {
+        "action": "reload_prompts",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 0,
+      },
+      {
+        "action": "reload_references",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 0,
+      },
+      {
+        "action": "abort",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 0,
+      },
+    ],
+    "ok": true,
+    "run_id": "six",
+    "stage": "SOLVE",
+    "state_revision": 0,
+    "status": "READY",
+  },
+  {
+    "artifact": {
+      "content": 
+"# artifact
+"
+,
+      "media_type": "text/markdown",
+      "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
+      "version": 1,
+    },
+    "latest_review": null,
+    "next_actions": [
+      {
+        "action": "step_one_stage",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "step_to_checkpoint",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "amend",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "reload_prompts",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "reload_references",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "abort",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+    ],
+    "ok": true,
+    "run_id": "six",
+    "stage": "REVIEW",
+    "state_revision": 6,
+    "status": "READY",
+  },
+  {
+    "artifact": {
+      "content": 
+"# artifact
+"
+,
+      "media_type": "text/markdown",
+      "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
+      "version": 1,
+    },
+    "latest_review": null,
+    "next_actions": [
+      {
+        "action": "step_one_stage",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "step_to_checkpoint",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "amend",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "reload_prompts",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "reload_references",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+      {
+        "action": "abort",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 6,
+      },
+    ],
+    "ok": true,
+    "run_id": "six",
+    "stage": "REVIEW",
+    "state_revision": 6,
+    "status": "READY",
+  },
+  {
+    "artifact": {
+      "content": 
+"# artifact
+"
+,
+      "media_type": "text/markdown",
+      "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
+      "version": 1,
+    },
+    "latest_review": null,
+    "next_actions": [
+      {
+        "action": "step_one_stage",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 7,
+      },
+      {
+        "action": "step_to_checkpoint",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 7,
+      },
+      {
+        "action": "amend",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 7,
+      },
+      {
+        "action": "reload_prompts",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 7,
+      },
+      {
+        "action": "reload_references",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 7,
+      },
+      {
+        "action": "abort",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 7,
+      },
+    ],
+    "ok": true,
+    "run_id": "six",
+    "stage": "REVIEW",
+    "state_revision": 7,
+    "status": "READY",
+  },
+  {
+    "artifact": {
+      "content": 
+"# artifact
+"
+,
+      "media_type": "text/markdown",
+      "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
+      "version": 1,
+    },
+    "latest_review": null,
+    "next_actions": [
+      {
+        "action": "step_one_stage",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 8,
+      },
+      {
+        "action": "step_to_checkpoint",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 8,
+      },
+      {
+        "action": "amend",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 8,
+      },
+      {
+        "action": "reload_prompts",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 8,
+      },
+      {
+        "action": "reload_references",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 8,
+      },
+      {
+        "action": "abort",
+        "reason": "READY_TO_RUN",
+        "required_state_revision": 8,
+      },
+    ],
+    "ok": true,
+    "run_id": "six",
+    "stage": "REVIEW",
+    "state_revision": 8,
+    "status": "READY",
+  },
+  {
+    "artifact": {
+      "content": 
+"# artifact
+"
+,
+      "media_type": "text/markdown",
+      "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
+      "version": 1,
+    },
+    "latest_review": null,
+    "next_actions": [],
+    "ok": true,
+    "run_id": "six",
+    "stage": null,
+    "state_revision": 9,
+    "status": "ABORTED",
+  },
+]
+`;

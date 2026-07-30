@@ -72,7 +72,7 @@ export type ReferenceDiagnostic = {
 }
 
 export type ReferenceSnapshot = {
-  readonly version: 1
+  readonly version: number
   readonly manifest:
     | {
       readonly kind: "file"

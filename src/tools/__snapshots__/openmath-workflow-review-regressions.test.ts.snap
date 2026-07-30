@@ -1,0 +1,276 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Task 12 public tool schemas snapshots advertised schemas for all six tools 1`] = `
+[
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "reference_manifest_path": {
+        "type": "string",
+      },
+      "request": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "chapter_context": {
+                "type": "string",
+              },
+              "kind": {
+                "const": "problem",
+                "type": "string",
+              },
+              "source": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "text",
+                        "type": "string",
+                      },
+                      "text": {
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "kind",
+                      "text",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "file_path": {
+                        "type": "string",
+                      },
+                      "kind": {
+                        "const": "file",
+                        "type": "string",
+                      },
+                      "problem_number": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "kind",
+                      "file_path",
+                      "problem_number",
+                    ],
+                    "type": "object",
+                  },
+                ],
+              },
+              "subject": {
+                "type": "string",
+              },
+              "supplementary_refs": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "textbook_markdown": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "kind",
+              "source",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "initial_artifact": {
+                "type": "string",
+              },
+              "instruction": {
+                "type": "string",
+              },
+              "kind": {
+                "const": "markdown",
+                "type": "string",
+              },
+            },
+            "required": [
+              "kind",
+              "instruction",
+            ],
+            "type": "object",
+          },
+        ],
+      },
+      "run_id": {
+        "type": "string",
+      },
+      "workflow_profile": {
+        "type": "string",
+      },
+    },
+    "required": [
+      "run_id",
+      "request",
+    ],
+    "type": "object",
+  },
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expected_state_revision": {
+        "maximum": 9007199254740991,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "mode": {
+        "enum": [
+          "one_stage",
+          "to_checkpoint",
+        ],
+        "type": "string",
+      },
+      "run_id": {
+        "type": "string",
+      },
+    },
+    "required": [
+      "run_id",
+      "expected_state_revision",
+    ],
+    "type": "object",
+  },
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "run_id": {
+        "type": "string",
+      },
+    },
+    "required": [
+      "run_id",
+    ],
+    "type": "object",
+  },
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "amendment_id": {
+        "pattern": "\\S",
+        "type": "string",
+      },
+      "content": {
+        "pattern": "\\S",
+        "type": "string",
+      },
+      "expected_state_revision": {
+        "maximum": 9007199254740991,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "kind": {
+        "enum": [
+          "question",
+          "required_check",
+          "suspected_blocker",
+          "scope_change",
+        ],
+        "type": "string",
+      },
+      "operation": {
+        "enum": [
+          "add",
+          "retract",
+        ],
+        "type": "string",
+      },
+      "run_id": {
+        "pattern": "\\S",
+        "type": "string",
+      },
+      "scope": {
+        "anyOf": [
+          {
+            "const": "next_review",
+            "type": "string",
+          },
+          {
+            "const": "all_remaining",
+            "type": "string",
+          },
+          {
+            "pattern": "^round:[1-9][0-9]*$",
+            "type": "string",
+          },
+        ],
+      },
+    },
+    "required": [
+      "run_id",
+      "expected_state_revision",
+      "operation",
+    ],
+    "type": "object",
+  },
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expected_state_revision": {
+        "maximum": 9007199254740991,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "run_id": {
+        "type": "string",
+      },
+      "targets": {
+        "items": {
+          "enum": [
+            "prompts",
+            "references",
+          ],
+          "type": "string",
+        },
+        "minItems": 1,
+        "type": "array",
+      },
+    },
+    "required": [
+      "run_id",
+      "expected_state_revision",
+      "targets",
+    ],
+    "type": "object",
+  },
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expected_state_revision": {
+        "maximum": 9007199254740991,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "reason": {
+        "type": "string",
+      },
+      "run_id": {
+        "type": "string",
+      },
+    },
+    "required": [
+      "run_id",
+      "expected_state_revision",
+    ],
+    "type": "object",
+  },
+]
+`;
