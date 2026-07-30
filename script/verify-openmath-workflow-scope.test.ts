@@ -27,7 +27,53 @@ describe("OpenMath workflow scope verification", () => {
       "User-owned untracked file changed: failurecase.md",
     ])
   })
+
+  test("accepts only the exact F4 corrective test paths", () => {
+    expect(verifyOpenMathWorkflowScope(facts({
+      diffNameStatus: F4_CORRECTIVE_TEST_PATHS.map((path) => `M\t${path}`).join("\n"),
+    }))).toEqual([])
+  })
+
+  test("rejects neighboring paths outside the exact F4 corrective set", () => {
+    expect(verifyOpenMathWorkflowScope(facts({
+      diffNameStatus: ["bin/foreign.test.ts", "src/cli/foreign.test.ts", "src/shared/foreign.test.ts", "src/hooks/foreign.test.ts"].map((path) => `A\t${path}`).join("\n"),
+    }))).toEqual([
+      "Path is outside the Task 1-15 allowlist: bin/foreign.test.ts",
+      "Path is outside the Task 1-15 allowlist: src/cli/foreign.test.ts",
+      "Path is outside the Task 1-15 allowlist: src/shared/foreign.test.ts",
+      "Path is outside the Task 1-15 allowlist: src/hooks/foreign.test.ts",
+    ])
+  })
 })
+
+const F4_CORRECTIVE_TEST_PATHS = [
+  "bin/platform.test.ts",
+  "script/build-schema.test.ts",
+  "src/cli/__snapshots__/model-fallback-native-providers.test.ts.snap",
+  "src/cli/__snapshots__/model-fallback-provider-scenarios.test.ts.snap",
+  "src/cli/__snapshots__/model-fallback.test.ts.snap",
+  "src/cli/config-manager-model-fallback.test.ts",
+  "src/cli/config-manager-provider-config.test.ts",
+  "src/cli/config-manager.test.ts",
+  "src/cli/install-config.test-fixture.ts",
+  "src/cli/install.test.ts",
+  "src/cli/model-fallback-agent-special-cases.test.ts",
+  "src/cli/model-fallback-native-providers.test.ts",
+  "src/cli/model-fallback-provider-scenarios.test.ts",
+  "src/cli/model-fallback.test.ts",
+  "src/cli/run/session-resolver.test.ts",
+  "src/hooks/auto-update-checker/checker/pinned-version-updater.test.ts",
+  "src/shared/model-availability-availability.test.ts",
+  "src/shared/model-availability-connected-provider-filtering.test.ts",
+  "src/shared/model-availability-connected-providers.test.ts",
+  "src/shared/model-availability-fallback.test.ts",
+  "src/shared/model-availability-fetch.test.ts",
+  "src/shared/model-availability-fuzzy-match.test.ts",
+  "src/shared/model-availability-provider-models-cache.test.ts",
+  "src/shared/model-availability.test-fixture.ts",
+  "src/shared/model-availability.test.ts",
+  "src/shared/opencode-config-dir.test.ts",
+] as const
 
 function facts(overrides: Partial<OpenMathWorkflowScopeFacts> = {}): OpenMathWorkflowScopeFacts {
   const stableHash = "56d78008da99dbaf5f115e9bf6314749c2d1617207990f505f413f2f6e907568"
