@@ -1,0 +1,30 @@
+{
+  "immutable_base": "e3dba8329718052e672ebddea9b89caa3e207582",
+  "requirements": [
+    { "id": "task-1", "test_files": ["src/openmath/storage-write-fallback.test.ts"], "evidence_artifacts": ["task-1-happy.log"] },
+    { "id": "task-2", "test_files": ["src/openmath/storage-legacy-compatibility.test.ts"], "evidence_artifacts": ["task-2-happy.log"] },
+    { "id": "task-3", "test_files": ["script/check-modular-code.test.ts"], "evidence_artifacts": ["task-3-final-happy.log"] },
+    { "id": "task-4", "test_files": ["src/config/file-backed-prompt-sources.test.ts"], "evidence_artifacts": ["task-4-happy.log"] },
+    { "id": "task-5", "test_files": ["src/openmath/workflow/profile-schema.test.ts"], "evidence_artifacts": ["task-5-happy.log"] },
+    { "id": "task-6", "test_files": ["src/openmath/references/snapshot.test.ts"], "evidence_artifacts": ["task-6-reviewer.json"] },
+    { "id": "task-7", "test_files": ["src/openmath/workflow/adapters/adapter-dispatch.test.ts"], "evidence_artifacts": ["task-7-reviewer.json"] },
+    { "id": "task-8", "test_files": ["src/openmath/workflow/state-schema.test.ts"], "evidence_artifacts": ["task-8-happy.log"] },
+    { "id": "task-9", "test_files": ["src/openmath/workflow/storage/failure.test.ts"], "evidence_artifacts": ["task-9-happy.log"] },
+    { "id": "task-10", "test_files": ["src/openmath/workflow/transitions/legality-matrix.test.ts"], "evidence_artifacts": ["task-10-happy.log"] },
+    { "id": "task-11", "test_files": ["src/openmath/workflow/stage-runner/run-workflow-step.test.ts"], "evidence_artifacts": ["task-11-happy.log"] },
+    { "id": "task-12", "test_files": ["src/tools/openmath-workflow-contracts.test.ts"], "evidence_artifacts": ["task-12-happy.log"] },
+    { "id": "task-13", "test_files": ["src/plugin/tool-registry.test.ts"], "evidence_artifacts": ["task-13-reviewer.json"] },
+    { "id": "task-14", "test_files": ["src/tools/openmath-solve-only/workflow-engine-compatibility.test.ts"], "evidence_artifacts": ["task-14-happy.log"] },
+    { "id": "task-15", "test_files": ["src/openmath/workflow/docs-examples.test.ts", "src/openmath/workflow/docs-examples-failure.test.ts", "script/verify-openmath-workflow-evidence.test.ts", "script/verify-openmath-workflow-scope.test.ts"], "evidence_artifacts": ["task-15-happy.log", "task-15-failure.log"] },
+    { "id": "success-1", "criterion": "External replacement prompt files work without TypeScript edits; legacy inline and append behavior remains compatible.", "test_files": ["src/config/file-backed-prompt-sources.test.ts"], "evidence_artifacts": ["task-4-happy.log"] },
+    { "id": "success-2", "criterion": "A named profile deterministically selects agents, models, prompt snapshots, adapters, stop policy, and checkpoint policy.", "test_files": ["src/openmath/workflow/profile-schema.test.ts"], "evidence_artifacts": ["task-5-happy.log"] },
+    { "id": "success-3", "criterion": "Solver, reviewer, and reviser receive their declared immutable reference snapshot; explicit reload alone changes snapshot version/hash.", "test_files": ["src/tools/openmath-solve-only/reference-propagation.test.ts"], "evidence_artifacts": ["task-14-contract-green.log"] },
+    { "id": "success-4", "criterion": "Generic markdown and legacy educational artifacts both complete SOLVE→REVIEW→REVISE through built-in adapters.", "test_files": ["src/openmath/workflow/adapters/adapter-dispatch.test.ts"], "evidence_artifacts": ["task-7-reviewer.json"] },
+    { "id": "success-5", "criterion": "Every stage and amendment is persisted with concrete versioned types, hashes, revisions, history, and session receipts.", "test_files": ["src/openmath/workflow/state-schema.test.ts"], "evidence_artifacts": ["task-8-happy.log"] },
+    { "id": "success-6", "criterion": "Workflow tools pause/resume at deterministic checkpoints, reject stale revisions, return `next_actions`, and never require raw-state mutation.", "test_files": ["src/tools/openmath-workflow-happy.test.ts"], "evidence_artifacts": ["task-12-happy.log"] },
+    { "id": "success-7", "criterion": "Minimum review rounds, maximum rounds, and consecutive PASS rules match the fixed contracts in this plan.", "test_files": ["src/openmath/workflow/stop-policy.ts"], "evidence_artifacts": ["task-10-happy.log"] },
+    { "id": "success-8", "criterion": "Restart/crash fixtures reconcile recorded attempts without duplicate commit and block safely when identity is ambiguous.", "test_files": ["src/openmath/workflow/stage-runner/crash-reconciliation.test.ts"], "evidence_artifacts": ["task-11-failure.log"] },
+    { "id": "success-9", "criterion": "Existing solve-only inputs/results, state tools/files, educational patches, exports, config defaults, Windows/Linux compatibility, and independent-run concurrency pass regression tests.", "test_files": ["src/tools/openmath-solve-only/workflow-engine-compatibility.test.ts"], "evidence_artifacts": ["task-14-happy.log"] },
+    { "id": "success-10", "criterion": "F1-F4 approve in parallel and F5 closes their receipts; full tests, typecheck, and build exit 0; no forbidden code-quality or scope violations remain.", "test_files": ["script/verify-openmath-workflow-evidence.test.ts", "script/verify-openmath-workflow-scope.test.ts"], "evidence_artifacts": ["task-15-happy.log"] }
+  ]
+}

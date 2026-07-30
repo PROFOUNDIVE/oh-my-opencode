@@ -1,0 +1,30 @@
+{
+  "default_workflow_profile": "openmath-documentation-example",
+  "workflow_allowed_roots": ["."],
+  "workflow_profiles": {
+    "openmath-documentation-example": {
+      "solve": {
+        "agent": "solver-markdown",
+        "model": "openai/gpt-5.3-codex",
+        "prompt": { "kind": "file", "uri": "file://./SOLVER_MARKDOWN.md" },
+        "output_adapter": "opaque_markdown"
+      },
+      "review": {
+        "agent": "reference-reviewer-markdown",
+        "model": "anthropic/claude-opus-4-6",
+        "prompt": { "kind": "file", "uri": "file://./REFERENCE_REVIEWER.md" },
+        "output_adapter": "review_verdict_markdown"
+      },
+      "revise": {
+        "agent": "solver-markdown-patch",
+        "model": "openai/gpt-5.3-codex",
+        "prompt": { "kind": "file", "uri": "file://./SOLVER_MARKDOWN_PATCH.md" },
+        "output_adapter": "full_replace_markdown"
+      },
+      "min_review_rounds": 5,
+      "max_review_rounds": 7,
+      "required_consecutive_passes": 2,
+      "checkpoint": "after_review"
+    }
+  }
+}

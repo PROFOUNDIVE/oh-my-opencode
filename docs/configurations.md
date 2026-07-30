@@ -249,6 +249,18 @@ When OpenMath runs in the default markdown artifacts mode (`"openmath": { "artif
 
 `solver` and `reference-reviewer` are legacy JSON-mode agent keys only. Use them when `"openmath": { "artifacts": { "format": "json" } }` is explicitly configured.
 
+### Interruptible OpenMath Workflow Profiles
+
+Use the canonical `.opencode/oh-my-openmath.jsonc` filename for a new workflow profile. The older `oh-my-opencode.json[c]` filename is compatibility-only for migration. The repository-owned [OpenMath workflow example](examples/openmath-workflow/profile.jsonc) is parsed by the same Zod schemas as runtime config.
+
+The `openmath` block accepts `workflow_profiles`, `default_workflow_profile`, and nonempty `workflow_allowed_roots`. A profile name uses lowercase letters, numbers, and hyphens. Each `solve`, `review`, and `revise` role has `agent`, optional `model` and `variant`, `prompt`, and `output_adapter`. Models use exactly `provider/model`; `variant` requires that explicit model. Valid checkpoint policies are `none`, `after_solve`, `after_review`, and `every_stage`.
+
+The stage adapter sets are fixed: SOLVE uses `legacy_omo_sections`, `legacy_json_artifacts`, or `opaque_markdown`; REVIEW uses `review_verdict_json` or `review_verdict_markdown`; REVISE uses `patch_set_json`, `full_replace_markdown`, or `legacy_json_artifacts`. The example's REVISE role intentionally selects `full_replace_markdown`, so it returns complete replacement Markdown rather than patch JSON.
+
+For file prompts, use `{ "kind": "file", "uri": "file://./prompt.md" }`. The URI is resolved relative to the configuration layer and captured as immutable content plus a hash. Reference manifests are YAML, JSON, or JSONC documents with `version: 1` and a `references` array of `{ id, path, role, stages, required }`; see [references.yaml](examples/openmath-workflow/references.yaml). Manifest entries are relative, regular files inside `workflow_allowed_roots`.
+
+Use `openmath_workflow_status` after every interruption. Its `next_actions` are the authority for whether to step, amend, reload prompts/references, or abort, and each action supplies its required revision. `openmath_state_get`, `openmath_state_set`, and `openmath_state_reset` are retained only for legacy raw-state compatibility, not workflow mutation. The README documents the five-review restart/resume example and exact recovery codes.
+
 ### Permission Options
 
 Fine-grained control over what agents can do:

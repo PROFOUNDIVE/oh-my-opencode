@@ -1,0 +1,10 @@
+version: 1
+references:
+  - id: solver-contract
+    path: SOLVER_MARKDOWN.md
+    role: authoritative
+    stages: [solve, revise]
+  - id: reviewer-contract
+    path: REFERENCE_REVIEWER.md
+    role: accepted_prior
+    stages: [review]
