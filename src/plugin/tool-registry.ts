@@ -1,6 +1,6 @@
 import type { ToolDefinition } from "@opencode-ai/plugin"
 
-import type { OhMyOpenCodeConfig } from "../config"
+import { OpenMathConfigSchema, type OhMyOpenCodeConfig } from "../config"
 import type { PluginContext, ToolsRecord } from "./types"
 
 import {
@@ -11,6 +11,7 @@ import {
   createOpenMathExportTool,
   createOpenMathSolveOnlyTool,
   createOpenMathStateTools,
+  createOpenMathWorkflowTools,
 } from "../tools"
 import { filterDisabledTools } from "../shared/disabled-tools"
 
@@ -52,6 +53,12 @@ export function createToolRegistry(args: {
     allow_unique_substring_replace:
       pluginConfig.openmath?.artifacts?.patch?.allow_unique_substring_replace ?? true,
   })
+  const openMathWorkflowTools = createOpenMathWorkflowTools({
+    directory: ctx.directory,
+    client: ctx.client,
+    openmathConfig: pluginConfig.openmath ?? OpenMathConfigSchema.parse({}),
+    pluginAgents: pluginConfig.agents,
+  })
 
   const allTools: Record<string, ToolDefinition> = {
     ...createOpenMathStateTools(
@@ -69,6 +76,7 @@ export function createToolRegistry(args: {
       client: ctx.client,
       openmathConfig: pluginConfig.openmath,
     }),
+    ...openMathWorkflowTools,
     ...openMathArtifactsTools,
     ...backgroundTools,
     ...(lookAt ? { look_at: lookAt } : {}),

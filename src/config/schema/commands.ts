@@ -8,6 +8,15 @@ export const BuiltinCommandNameSchema = z.enum([
   "refactor",
   "start-work",
   "stop-continuation",
+  "handoff",
+  "openmath-solve-only",
+  "openmath-export",
+  "openmath-workflow-start",
+  "openmath-workflow-step",
+  "openmath-workflow-status",
+  "openmath-workflow-amend",
+  "openmath-workflow-reload",
+  "openmath-workflow-abort",
 ])
 
 export type BuiltinCommandName = z.infer<typeof BuiltinCommandNameSchema>

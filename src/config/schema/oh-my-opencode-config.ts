@@ -21,6 +21,7 @@ import { SkillsConfigSchema } from "./skills"
 import { SisyphusConfigSchema } from "./sisyphus"
 import { SisyphusAgentConfigSchema } from "./sisyphus-agent"
 import { TmuxConfigSchema } from "./tmux"
+import { DisabledToolNameSchema } from "./tools"
 import { WebsearchConfigSchema } from "./websearch"
 
 export const OhMyOpenCodeConfigSchema = z.object({
@@ -35,7 +36,7 @@ export const OhMyOpenCodeConfigSchema = z.object({
   disabled_hooks: z.array(HookNameSchema).optional(),
   disabled_commands: z.array(BuiltinCommandNameSchema).optional(),
   /** Disable specific tools by name (e.g., ["todowrite", "todoread"]) */
-  disabled_tools: z.array(z.string()).optional(),
+  disabled_tools: z.array(DisabledToolNameSchema).optional(),
   agents: AgentOverridesSchema.optional(),
   categories: CategoriesConfigSchema.optional(),
   claude_code: ClaudeCodeConfigSchema.optional(),

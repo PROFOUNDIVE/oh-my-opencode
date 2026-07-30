@@ -1,5 +1,13 @@
 import type { CommandDefinition } from "../claude-code-command-loader"
 
+export type OpenMathWorkflowCommandName =
+  | "openmath-workflow-start"
+  | "openmath-workflow-step"
+  | "openmath-workflow-status"
+  | "openmath-workflow-amend"
+  | "openmath-workflow-reload"
+  | "openmath-workflow-abort"
+
 export type BuiltinCommandName =
   | "init-deep"
   | "ralph-loop"
@@ -11,6 +19,7 @@ export type BuiltinCommandName =
   | "handoff"
   | "openmath-solve-only"
   | "openmath-export"
+  | OpenMathWorkflowCommandName
 
 export interface BuiltinCommandConfig {
   disabled_commands?: BuiltinCommandName[]

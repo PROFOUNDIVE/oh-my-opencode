@@ -1,28 +1,8 @@
-import type { PluginInput, ToolDefinition } from "@opencode-ai/plugin"
-import type { BackgroundManager } from "../features/background-agent"
-
-import { createBackgroundCancel, createBackgroundOutput } from "./background-task"
-import { createDelegateTask } from "./delegate-task"
-import { createLookAt } from "./look-at"
-import { createOpenMathArtifactsTools } from "./openmath-artifacts"
-import { createOpenMathExportTool } from "./openmath-export"
-import { createOpenMathSolveOnlyTool } from "./openmath-solve-only"
-import { createOpenMathStateTools } from "./openmath-state"
-
-type OpencodeClient = PluginInput["client"]
-
-export {
-  createDelegateTask,
-  createLookAt,
-  createOpenMathArtifactsTools,
-  createOpenMathExportTool,
-  createOpenMathSolveOnlyTool,
-  createOpenMathStateTools,
-}
-
-export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
-  return {
-    background_output: createBackgroundOutput(manager, client),
-    background_cancel: createBackgroundCancel(manager, client),
-  }
-}
+export { createBackgroundTools } from "./background-task"
+export { createDelegateTask } from "./delegate-task"
+export { createLookAt } from "./look-at"
+export { createOpenMathArtifactsTools } from "./openmath-artifacts"
+export { createOpenMathExportTool } from "./openmath-export"
+export { createOpenMathSolveOnlyTool } from "./openmath-solve-only"
+export { createOpenMathStateTools } from "./openmath-state"
+export { createOpenMathWorkflowTools } from "./openmath-workflow-tools"

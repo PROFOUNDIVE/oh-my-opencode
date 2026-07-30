@@ -4,6 +4,27 @@ import { HANDOFF_TEMPLATE } from "./templates/handoff"
 import type { BuiltinCommandName } from "./types"
 
 describe("loadBuiltinCommands", () => {
+  test("loads exact OpenMath workflow command wrappers", () => {
+    const workflowCommands = {
+      "openmath-workflow-start": "openmath_workflow_start",
+      "openmath-workflow-step": "openmath_workflow_step",
+      "openmath-workflow-status": "openmath_workflow_status",
+      "openmath-workflow-amend": "openmath_workflow_amend",
+      "openmath-workflow-reload": "openmath_workflow_reload",
+      "openmath-workflow-abort": "openmath_workflow_abort",
+    } as const
+
+    const commands = loadBuiltinCommands()
+
+    expect(Object.keys(commands).filter((name) => name.startsWith("openmath-workflow-")).sort()).toEqual(
+      Object.keys(workflowCommands).sort(),
+    )
+    for (const [commandName, toolName] of Object.entries(workflowCommands)) {
+      expect(commands[commandName]).toBeDefined()
+      expect(commands[commandName]?.template).toContain(toolName)
+    }
+  })
+
   test("should include handoff command in loaded commands", () => {
     //#given
     const disabledCommands: BuiltinCommandName[] = []

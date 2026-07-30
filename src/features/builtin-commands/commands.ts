@@ -1,5 +1,5 @@
 import type { CommandDefinition } from "../claude-code-command-loader"
-import type { BuiltinCommandName, BuiltinCommands } from "./types"
+import type { BuiltinCommandName, BuiltinCommands, OpenMathWorkflowCommandName } from "./types"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
 import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
@@ -8,8 +8,9 @@ import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
 import { OPENMATH_SOLVE_ONLY_TEMPLATE } from "./templates/openmath-solve-only"
 import { OPENMATH_EXPORT_TEMPLATE } from "./templates/openmath-export"
+import { OPENMATH_WORKFLOW_COMMAND_DEFINITIONS } from "./workflow-command-definitions"
 
-const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
+const BUILTIN_COMMAND_DEFINITIONS: Record<Exclude<BuiltinCommandName, OpenMathWorkflowCommandName>, Omit<CommandDefinition, "name">> = {
   "init-deep": {
     description: "(builtin) Initialize hierarchical AGENTS.md knowledge base",
     template: `<command-instruction>
@@ -127,7 +128,10 @@ export function loadBuiltinCommands(
   const disabled = new Set(disabledCommands ?? [])
   const commands: BuiltinCommands = {}
 
-  for (const [name, definition] of Object.entries(BUILTIN_COMMAND_DEFINITIONS)) {
+  for (const [name, definition] of Object.entries({
+    ...BUILTIN_COMMAND_DEFINITIONS,
+    ...OPENMATH_WORKFLOW_COMMAND_DEFINITIONS,
+  })) {
     if (!disabled.has(name as BuiltinCommandName)) {
       const { argumentHint: _argumentHint, ...openCodeCompatible } = definition
       commands[name] = { ...openCodeCompatible, name } as CommandDefinition
