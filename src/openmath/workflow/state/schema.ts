@@ -22,6 +22,22 @@ const LegacyProjectionSchema = z.discriminatedUnion("kind", [
       hints_used: z.number().int().nonnegative(),
       hint_budget: z.number().int().nonnegative(),
     }).strict(),
+    markdown_fallback: z.object({
+      max_consecutive_patch_failures: z.number().int().positive(),
+      max_ops: z.number().int().positive().nullable(),
+      allow_unique_substring_replace: z.boolean().nullable(),
+      consecutive_failures: z.number().int().nonnegative(),
+      last_error_code: z.string().nullable(),
+      last_section_id: z.string().nullable(),
+      regenerate_next: z.boolean(),
+      sub_attempt_history: z.array(z.object({
+        kind: z.enum(["patch", "regeneration"]),
+        review_round: z.number().int().positive(),
+        outcome: z.enum(["FAILED", "COMPLETED"]),
+        error_code: z.string().nullable(),
+        section_id: z.string().nullable(),
+      }).strict()),
+    }).strict().nullable().default(null),
   }).strict(),
 ])
 

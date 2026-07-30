@@ -7,6 +7,8 @@ export type InitialWorkflowStateInput = {
   readonly reference_snapshot: WorkflowStateV1["reference_snapshot"]
   readonly request_snapshot?: NonNullable<WorkflowStateV1["request_snapshot"]>
   readonly artifact?: NonNullable<WorkflowStateV1["artifact"]>
+  readonly legacy_projection?: WorkflowStateV1["legacy_projection"]
+  readonly legacy_source_hash?: WorkflowStateV1["legacy_source_hash"]
 }
 
 export function createInitialWorkflowState(input: InitialWorkflowStateInput): WorkflowStateV1 {
@@ -35,7 +37,7 @@ export function createInitialWorkflowState(input: InitialWorkflowStateInput): Wo
     amendments: [],
     stage_history: [],
     dispatch_attempts: [],
-    legacy_projection: { kind: "none" },
-    legacy_source_hash: null,
+    legacy_projection: input.legacy_projection ?? { kind: "none" },
+    legacy_source_hash: input.legacy_source_hash ?? null,
   })
 }

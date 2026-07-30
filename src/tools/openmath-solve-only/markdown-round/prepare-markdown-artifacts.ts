@@ -74,6 +74,7 @@ export async function prepareMarkdownArtifacts(args: {
     round: args.round,
     artifactVersion: args.artifactVersion,
     textbook_markdown: args.textbook_markdown,
+    supplementary_refs: args.solveInput.supplementary_refs,
     baseArtifacts: args.baseArtifacts,
   })
 }

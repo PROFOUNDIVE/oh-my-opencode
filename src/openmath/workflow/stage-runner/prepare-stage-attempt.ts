@@ -4,6 +4,7 @@ import type { WorkflowStage } from "../state/literals"
 import { buildReviewStageInput } from "./build-review-stage-input"
 import { buildReviseStageInput } from "./build-revise-stage-input"
 import { buildSolveStageInput } from "./build-solve-stage-input"
+import { buildLegacyStageInput } from "./build-legacy-stage-input"
 import type { WorkflowStageInput } from "./stage-input"
 import { referenceStageForWorkflowStage, roleForWorkflowStage } from "./stage-role"
 import { sha256 } from "./sha256"
@@ -61,6 +62,8 @@ export function prepareStageAttempt(input: Readonly<{
 }
 
 function buildInput(stage: WorkflowStage, state: RunningState, workflowInput: string): WorkflowStageInput {
+  const legacy = buildLegacyStageInput(state, stage)
+  if (legacy !== null) return legacy
   switch (stage) {
     case "SOLVE":
       return buildSolveStageInput({ state, workflow_input: workflowInput })

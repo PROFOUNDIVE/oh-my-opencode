@@ -162,6 +162,22 @@ export function readOpenMathSessionState(
   return null
 }
 
+export function readOpenMathSessionStateBytes(
+  directory: string,
+  sessionId: string,
+  mode: OpenMathStateFilenameMode = OPENMATH_STATE_FILENAME_MODE_LINUX,
+): Uint8Array | null {
+  for (const filePath of getOpenMathStateFilePathCandidates(directory, sessionId, mode)) {
+    if (!existsSync(filePath)) continue
+    try {
+      return readFileSync(filePath)
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
 export function writeOpenMathSessionState(
   directory: string,
   state: OpenMathSessionState,

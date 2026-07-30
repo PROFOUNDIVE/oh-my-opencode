@@ -1,7 +1,9 @@
 import { LegacyFrozenArtifactsSchema } from "./contracts"
 import { parseOpenMathArtifactsMarkdown } from "../../artifacts-markdown/parse"
+import { hashOpenMathArtifactsMarkdown } from "../../artifacts-markdown/hash"
 import type { OpenMathSessionState } from "../../types"
 import type { WorkflowStateV1 } from "./schema"
+import { SolverArtifactsSchema } from "../../../tools/openmath-solve-only/subagent-output-schemas"
 
 export type LegacyProjectionResult =
   | { readonly kind: "projected"; readonly state: OpenMathSessionState }
@@ -21,19 +23,43 @@ function projectSolveOnlyWorkflowState(state: WorkflowStateV1): LegacyProjection
   if (frozenArtifacts.kind === "error") return frozenArtifacts
   const legacy = state.legacy_projection
   if (legacy.kind !== "solve_only") return { kind: "error", error_code: "STORAGE_READ_FAILED", message: "Workflow has no legacy projection" }
+  const artifactState = legacyArtifactState(state)
   return {
     kind: "projected",
     state: {
       session_id: legacy.session_id,
       ...(legacy.original_problem_text === null ? {} : { original_problem_text: legacy.original_problem_text }),
-      artifact_state: legacy.artifact_state,
+      artifact_state: artifactState,
       artifact_version: state.artifact_version,
       review_round: state.review_round,
       max_review_rounds: legacy.max_review_rounds,
       hint_budget_state: legacy.hint_budget_state,
-      frozen_artifacts: frozenArtifacts.artifacts,
+      frozen_artifacts: artifactState === "UNFROZEN" ? null : frozenArtifacts.artifacts,
     },
   }
+}
+
+function legacyArtifactState(state: WorkflowStateV1): OpenMathSessionState["artifact_state"] {
+  switch (state.status) {
+    case "PASSED":
+      return "FROZEN"
+    case "EXHAUSTED":
+    case "ABORTED":
+      return "UNFROZEN"
+    case "READY":
+    case "RUNNING":
+    case "AWAITING_HUMAN":
+      if (state.awaiting_reason === "INCONCLUSIVE") return "UNFROZEN"
+      return state.artifact === null ? legacyProjectionArtifactState(state) : "DRAFT"
+    case "BLOCKED":
+      return state.dispatch_attempts.some((attempt) => attempt.phase === "COMMITTED" && attempt.receipt.kind === "ERROR")
+        ? "UNFROZEN"
+        : state.artifact === null ? legacyProjectionArtifactState(state) : "DRAFT"
+  }
+}
+
+function legacyProjectionArtifactState(state: WorkflowStateV1): OpenMathSessionState["artifact_state"] {
+  return state.legacy_projection.kind === "solve_only" ? state.legacy_projection.artifact_state : "DRAFT"
 }
 
 function parseLegacyFrozenArtifacts(state: WorkflowStateV1):
@@ -44,14 +70,30 @@ function parseLegacyFrozenArtifacts(state: WorkflowStateV1):
     return parseMarkdownArtifacts(state)
   }
   try {
-    const parsed = LegacyFrozenArtifactsSchema.safeParse(JSON.parse(state.artifact.content))
-    if (!parsed.success) {
-      return { kind: "error", error_code: "STORAGE_READ_FAILED", message: "Legacy artifact content is invalid" }
-    }
-    return { kind: "parsed", artifacts: parsed.data }
+    const content: unknown = JSON.parse(state.artifact.content)
+    const parsed = LegacyFrozenArtifactsSchema.safeParse(content)
+    if (parsed.success) return { kind: "parsed", artifacts: parsed.data }
+    const draft = SolverArtifactsSchema.safeParse(content)
+    if (!draft.success) return { kind: "error", error_code: "STORAGE_READ_FAILED", message: "Legacy artifact content is invalid" }
+    return { kind: "parsed", artifacts: {
+      ...draft.data,
+      review_certificate: {
+        artifact_version: `v${state.artifact.version}`,
+        review_round: state.latest_review?.round ?? state.review_round,
+        timestamp: new Date(0).toISOString(),
+        verdict: legacyVerdict(state.latest_review?.verdict),
+        notes: state.latest_review?.raw_report ?? "DRAFT",
+      },
+    } }
   } catch {
     return { kind: "error", error_code: "STORAGE_READ_FAILED", message: "Legacy artifact content is not valid JSON" }
   }
+}
+
+function legacyVerdict(verdict: "PASS" | "REVISE" | "INCONCLUSIVE" | undefined) {
+  if (verdict === "PASS") return "[CORRECT]" as const
+  if (verdict === "REVISE") return "[ERROR]" as const
+  return "[INCONCLUSIVE]" as const
 }
 
 function parseMarkdownArtifacts(state: WorkflowStateV1):
@@ -83,11 +125,12 @@ function parseMarkdownArtifacts(state: WorkflowStateV1):
         L2_key_theorem: parsed.draft.hint_ladder.L2_key_theorem,
         L3_skeleton: parsed.draft.hint_ladder.L3_skeleton,
         L4_full_solution: parsed.draft.hint_ladder.L4_full_solution,
-        __orchestrator_state: {
-          artifacts_format: "markdown",
-          artifacts_markdown: parsed.normalizedMarkdown,
-          artifacts_hash: artifact.sha256,
-        },
+          __orchestrator_state: {
+            artifacts_format: "markdown",
+            artifacts_markdown: parsed.normalizedMarkdown,
+            artifacts_hash: hashOpenMathArtifactsMarkdown(artifact.content),
+            ...legacyMarkdownFallback(state),
+          },
       },
       grading_rubric: {
         premises_check: parsed.draft.grading_rubric.premises_check,
@@ -105,5 +148,27 @@ function parseMarkdownArtifacts(state: WorkflowStateV1):
         notes,
       },
     },
+  }
+}
+
+function legacyMarkdownFallback(state: WorkflowStateV1): Record<string, unknown> {
+  if (state.legacy_projection.kind !== "solve_only" || state.legacy_projection.markdown_fallback === null) return {}
+  const fallback = state.legacy_projection.markdown_fallback
+  const patchFailureState = {
+    consecutive_failures: fallback.consecutive_failures,
+    ...(fallback.last_error_code === null ? {} : { last_error_code: fallback.last_error_code }),
+    ...(fallback.last_section_id === null ? {} : { last_section_id: fallback.last_section_id }),
+  }
+  const lastFailure = fallback.sub_attempt_history.findLast((attempt) => attempt.outcome === "FAILED")
+  return {
+    max_consecutive_patch_failures: fallback.max_consecutive_patch_failures,
+    max_ops: fallback.max_ops,
+    allow_unique_substring_replace: fallback.allow_unique_substring_replace,
+    patch_failure_state: patchFailureState,
+    last_patch_failure: lastFailure === undefined ? null : {
+      error_code: lastFailure.error_code,
+      ...(lastFailure.section_id === null ? {} : { section_id: lastFailure.section_id }),
+    },
+    sub_attempt_history: fallback.sub_attempt_history,
   }
 }

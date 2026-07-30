@@ -15,6 +15,7 @@ export async function reviewMarkdownArtifacts(args: {
   artifacts_hash: string
   textbook_markdown?: string
   round: number
+  supplementary_refs?: unknown
 }): Promise<
   | {
       ok: true
@@ -49,6 +50,7 @@ export async function reviewMarkdownArtifacts(args: {
       base_hash: args.artifacts_hash,
       textbook_markdown: args.textbook_markdown ?? null,
       review_round: args.round,
+      supplementary_refs: args.supplementary_refs ?? null,
     }),
     excludeReasoningParts: true,
   })

@@ -98,6 +98,7 @@ export function importLegacySolveOnlyState(input: LegacyImportInput): LegacyImpo
       artifact_state: legacy.data.artifact_state,
       max_review_rounds: legacy.data.max_review_rounds,
       hint_budget_state: legacy.data.hint_budget_state,
+      markdown_fallback: null,
     },
     legacy_source_hash: sourceHash,
   })

@@ -8,7 +8,10 @@ export function roleForWorkflowStage(state: WorkflowStateV1, stage: WorkflowStag
     case "REVIEW":
       return state.profile_snapshot.review
     case "REVISE":
-      return state.profile_snapshot.revise
+      return state.legacy_projection.kind === "solve_only"
+        && state.legacy_projection.markdown_fallback?.regenerate_next === true
+        ? state.profile_snapshot.solve
+        : state.profile_snapshot.revise
     default:
       return assertNever(stage)
   }

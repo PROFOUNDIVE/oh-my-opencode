@@ -89,6 +89,7 @@ export async function runMarkdownRound(args: {
     artifacts_hash: prepared.artifacts_hash,
     textbook_markdown: args.textbook_markdown,
     round: args.round,
+    supplementary_refs: args.solveInput.supplementary_refs,
   })
 
   if (!reviewed.ok) {

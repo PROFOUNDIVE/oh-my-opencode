@@ -15,7 +15,8 @@ type PatchFailure = { error_code: string; section_id?: string }
 
 function readSectionId(details: unknown): string | undefined {
   if (!details || typeof details !== "object") return undefined
-  const maybe = (details as any).section_id
+  if (!("section_id" in details)) return undefined
+  const maybe = details.section_id
   return typeof maybe === "string" ? maybe : undefined
 }
 
@@ -29,6 +30,7 @@ export async function applySolverMarkdownPatch(args: {
   round: number
   artifactVersion: number
   textbook_markdown?: string
+  supplementary_refs?: unknown
   baseArtifacts: {
     artifacts_markdown: string
     artifacts_hash: string
@@ -84,6 +86,7 @@ export async function applySolverMarkdownPatch(args: {
       blocking_issues: args.baseArtifacts.last_blocking_issues ?? [],
       textbook_markdown: args.textbook_markdown ?? null,
       review_round: args.round,
+      supplementary_refs: args.supplementary_refs ?? null,
     }),
     excludeReasoningParts: true,
   })

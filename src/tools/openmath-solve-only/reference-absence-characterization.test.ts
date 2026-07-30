@@ -42,7 +42,7 @@ describe("solve-only supplementary reference compatibility", () => {
     rmSync(directory, { recursive: true, force: true })
   })
 
-  test("sends supplementary_refs only to SOLVE while one call consumes SOLVE REVIEW REVISE rounds", async () => {
+  test("sends supplementary_refs to every legacy stage while one call consumes SOLVE REVIEW REVISE rounds", async () => {
     //#given
     const dispatchedPayloads = new Map<string, Record<string, unknown>[]>()
     dispatchSubagent = async (call) => {
@@ -83,8 +83,11 @@ describe("solve-only supplementary reference compatibility", () => {
     //#then
     expect(dispatchedPayloads.get("solver-markdown")?.[0]?.supplementary_refs).toEqual(CHARACTERIZATION_REFS)
     expect(dispatchedPayloads.get("reference-reviewer-markdown")).toHaveLength(2)
-    expect(dispatchedPayloads.get("reference-reviewer-markdown")?.every((payload) => !("supplementary_refs" in payload))).toBe(true)
-    expect(dispatchedPayloads.get("solver-markdown-patch")?.[0]).not.toHaveProperty("supplementary_refs")
+    expect(dispatchedPayloads.get("reference-reviewer-markdown")?.map((payload) => payload.supplementary_refs)).toEqual([
+      CHARACTERIZATION_REFS,
+      CHARACTERIZATION_REFS,
+    ])
+    expect(dispatchedPayloads.get("solver-markdown-patch")?.[0]?.supplementary_refs).toEqual(CHARACTERIZATION_REFS)
     expect(result).toEqual({
       ok: true,
       results: [{ id: "p1", session_id: "root::p1", rounds_used: 2, verdict: "[CORRECT]" }],

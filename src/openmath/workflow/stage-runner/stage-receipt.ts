@@ -13,7 +13,7 @@ export function stageReceiptFromOutput(input: Readonly<{
   readonly raw_output: string
 }>): StageReceipt {
   const role = roleForWorkflowStage(input.state, input.attempt.stage)
-  const adapted = adaptWorkflowOutput(adapterInput(role.output_adapter, input.raw_output, input.state.artifact?.content))
+  const adapted = adaptWorkflowOutput(adapterInput(role.output_adapter, input.raw_output, input.state))
   if (!adapted.ok) {
     return {
       kind: "ERROR",
@@ -30,7 +30,7 @@ export function stageReceiptFromOutput(input: Readonly<{
           version: nextArtifactVersion(input.state, input.attempt.stage),
           media_type: "text/markdown",
           content: adapted.artifact.content,
-          sha256: adapted.artifact.hash,
+          sha256: sha256(adapted.artifact.content),
         },
       }
     case "legacy_json_artifacts": {
@@ -70,7 +70,7 @@ export function subagentFailureReceipt(message: string): StageReceipt {
   return { kind: "ERROR", error_code: "SUBAGENT_FAILED", message }
 }
 
-function adapterInput(adapter: RunningState["profile_snapshot"]["solve"]["output_adapter"], rawOutput: string, baseMarkdown: string | undefined) {
+function adapterInput(adapter: RunningState["profile_snapshot"]["solve"]["output_adapter"], rawOutput: string, state: RunningState) {
   switch (adapter) {
     case "legacy_omo_sections":
       return { adapter, raw_output: rawOutput } as const
@@ -83,11 +83,26 @@ function adapterInput(adapter: RunningState["profile_snapshot"]["solve"]["output
     case "review_verdict_markdown":
       return { adapter, raw_output: rawOutput } as const
     case "patch_set_json":
-      return { adapter, raw_output: rawOutput, base_markdown: baseMarkdown ?? "" } as const
+      return {
+        adapter,
+        raw_output: rawOutput,
+        base_markdown: state.artifact?.content ?? "",
+        ...(legacyPatchOptions(state) ? { patch_options: legacyPatchOptions(state) } : {}),
+      } as const
     case "full_replace_markdown":
       return { adapter, raw_output: rawOutput } as const
     default:
       return assertNever(adapter)
+  }
+}
+
+function legacyPatchOptions(state: RunningState) {
+  if (state.legacy_projection.kind !== "solve_only" || state.legacy_projection.markdown_fallback === null) return undefined
+  const fallback = state.legacy_projection.markdown_fallback
+  if (fallback.max_ops === null && fallback.allow_unique_substring_replace === null) return undefined
+  return {
+    ...(fallback.max_ops === null ? {} : { max_ops: fallback.max_ops }),
+    ...(fallback.allow_unique_substring_replace === null ? {} : { allow_unique_substring_replace: fallback.allow_unique_substring_replace }),
   }
 }
 

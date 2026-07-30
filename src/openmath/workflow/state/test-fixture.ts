@@ -116,6 +116,7 @@ export function createWorkflowStateFixture() {
       artifact_state: "FROZEN",
       max_review_rounds: 3,
       hint_budget_state: { hints_used: 1, hint_budget: 3 },
+      markdown_fallback: null,
     },
     legacy_source_hash: null,
   }
