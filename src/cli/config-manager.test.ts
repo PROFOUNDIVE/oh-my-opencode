@@ -23,7 +23,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("2.14.0")
 
     // #then should use @latest tag
-    expect(result).toBe("oh-my-opencode@latest")
+    expect(result).toBe("oh-my-openmath@latest")
   })
 
   test("returns @beta when current version matches beta tag", async () => {
@@ -39,7 +39,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("3.0.0-beta.3")
 
     // #then should use @beta tag
-    expect(result).toBe("oh-my-opencode@beta")
+    expect(result).toBe("oh-my-openmath@beta")
   })
 
   test("returns @next when current version matches next tag", async () => {
@@ -55,7 +55,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("3.1.0-next.1")
 
     // #then should use @next tag
-    expect(result).toBe("oh-my-opencode@next")
+    expect(result).toBe("oh-my-openmath@next")
   })
 
   test("returns pinned version when no tag matches", async () => {
@@ -71,7 +71,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("3.0.0-beta.2")
 
     // #then should pin to specific version
-    expect(result).toBe("oh-my-opencode@3.0.0-beta.2")
+    expect(result).toBe("oh-my-openmath@3.0.0-beta.2")
   })
 
   test("returns pinned version when fetch fails", async () => {
@@ -82,7 +82,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("3.0.0-beta.3")
 
     // #then should fall back to pinned version
-    expect(result).toBe("oh-my-opencode@3.0.0-beta.3")
+    expect(result).toBe("oh-my-openmath@3.0.0-beta.3")
   })
 
   test("returns pinned version when npm returns non-ok response", async () => {
@@ -98,7 +98,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("2.14.0")
 
     // #then should fall back to pinned version
-    expect(result).toBe("oh-my-opencode@2.14.0")
+    expect(result).toBe("oh-my-openmath@2.14.0")
   })
 
   test("prioritizes latest over other tags when version matches multiple", async () => {
@@ -114,7 +114,7 @@ describe("getPluginNameWithVersion", () => {
     const result = await getPluginNameWithVersion("3.0.0")
 
     // #then should prioritize @latest
-    expect(result).toBe("oh-my-opencode@latest")
+    expect(result).toBe("oh-my-openmath@latest")
   })
 })
 
@@ -258,7 +258,7 @@ describe("generateOmoConfig - model fallback system", () => {
 
     // #then Sisyphus uses sonnet for daily driving with ultrawork opus override
     const sisyphus = (result.agents as Record<string, { model: string; variant?: string; ultrawork?: { model: string; variant?: string } }>).sisyphus
-    expect(result.$schema).toBe("https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json")
+    expect(result.$schema).toBe("https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json")
     expect(sisyphus.model).toBe("anthropic/claude-sonnet-4-6")
     expect(sisyphus.variant).toBe("max")
     expect(sisyphus.ultrawork).toEqual({ model: "anthropic/claude-opus-4-6", variant: "max" })
@@ -323,7 +323,7 @@ describe("generateOmoConfig - model fallback system", () => {
     const result = generateOmoConfig(config)
 
     // #then Sisyphus is omitted (requires all fallback providers)
-    expect(result.$schema).toBe("https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json")
+    expect(result.$schema).toBe("https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json")
     expect((result.agents as Record<string, { model: string }>).sisyphus).toBeUndefined()
   })
 

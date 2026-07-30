@@ -31,7 +31,7 @@ describe("pinned-version-updater", () => {
       //#then
       expect(result).toBe(true)
       const updated = fs.readFileSync(configPath, "utf-8")
-      expect(updated).toContain("oh-my-opencode@3.4.0")
+      expect(updated).toContain("oh-my-openmath@3.4.0")
       expect(updated).not.toContain("oh-my-opencode@3.1.8")
     })
 
@@ -66,7 +66,7 @@ describe("pinned-version-updater", () => {
     test("reverts from failed version back to original entry", () => {
       //#given
       const config = JSON.stringify({
-        plugin: ["oh-my-opencode@3.4.0"],
+        plugin: ["oh-my-openmath@3.4.0"],
       })
       fs.writeFileSync(configPath, config)
 
@@ -77,13 +77,13 @@ describe("pinned-version-updater", () => {
       expect(result).toBe(true)
       const reverted = fs.readFileSync(configPath, "utf-8")
       expect(reverted).toContain("oh-my-opencode@3.1.8")
-      expect(reverted).not.toContain("oh-my-opencode@3.4.0")
+      expect(reverted).not.toContain("oh-my-openmath@3.4.0")
     })
 
     test("reverts to unpinned entry", () => {
       //#given
       const config = JSON.stringify({
-        plugin: ["oh-my-opencode@3.4.0"],
+        plugin: ["oh-my-openmath@3.4.0"],
       })
       fs.writeFileSync(configPath, config)
 
@@ -94,7 +94,7 @@ describe("pinned-version-updater", () => {
       expect(result).toBe(true)
       const reverted = fs.readFileSync(configPath, "utf-8")
       expect(reverted).toContain('"oh-my-opencode"')
-      expect(reverted).not.toContain("oh-my-opencode@3.4.0")
+      expect(reverted).not.toContain("oh-my-openmath@3.4.0")
     })
 
     test("returns false when failed version not found", () => {
