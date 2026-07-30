@@ -58,6 +58,21 @@ describe("OpenMath workflow scope verification", () => {
       "Path is outside the Task 1-15 allowlist: assets/foreign.json",
     ])
   })
+
+  test("ignores only exact test-generated platform binaries", () => {
+    expect(verifyOpenMathWorkflowScope(facts({
+      untrackedPaths: [...F4_GENERATED_BINARY_PATHS, "failurecase.md"].join("\n"),
+    }))).toEqual([])
+  })
+
+  test("rejects unlisted generated-binary neighbors", () => {
+    expect(verifyOpenMathWorkflowScope(facts({
+      untrackedPaths: "packages/linux-x64/bin/foreign\npackages/foreign/bin/oh-my-openmath\nfailurecase.md",
+    }))).toEqual([
+      "Untracked path is outside the Task 1-15 allowlist: packages/linux-x64/bin/foreign",
+      "Untracked path is outside the Task 1-15 allowlist: packages/foreign/bin/oh-my-openmath",
+    ])
+  })
 })
 
 const F4_CORRECTIVE_TEST_PATHS = [
@@ -87,6 +102,20 @@ const F4_CORRECTIVE_TEST_PATHS = [
   "src/shared/model-availability.test-fixture.ts",
   "src/shared/model-availability.test.ts",
   "src/shared/opencode-config-dir.test.ts",
+] as const
+
+const F4_GENERATED_BINARY_PATHS = [
+  "packages/darwin-arm64/bin/oh-my-openmath",
+  "packages/darwin-x64-baseline/bin/oh-my-openmath",
+  "packages/darwin-x64/bin/oh-my-openmath",
+  "packages/linux-arm64-musl/bin/oh-my-openmath",
+  "packages/linux-arm64/bin/oh-my-openmath",
+  "packages/linux-x64-baseline/bin/oh-my-openmath",
+  "packages/linux-x64-musl-baseline/bin/oh-my-openmath",
+  "packages/linux-x64-musl/bin/oh-my-openmath",
+  "packages/linux-x64/bin/oh-my-openmath",
+  "packages/windows-x64-baseline/bin/oh-my-openmath.exe",
+  "packages/windows-x64/bin/oh-my-openmath.exe",
 ] as const
 
 function facts(overrides: Partial<OpenMathWorkflowScopeFacts> = {}): OpenMathWorkflowScopeFacts {
