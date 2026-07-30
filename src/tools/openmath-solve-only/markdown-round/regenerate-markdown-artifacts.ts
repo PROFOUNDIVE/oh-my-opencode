@@ -6,6 +6,10 @@ import { buildJsonPrompt } from "../prompt"
 import { makeFrozenMarkdownDraft } from "./make-frozen-markdown-draft"
 import { extractParserValidatedMarkdownCandidate } from "../markdown-candidate-extractor"
 
+export function shouldRegenerateMarkdownArtifacts(round: number, useSolverPatch: boolean | undefined): boolean {
+  return round === 1 || !(round > 1 && (useSolverPatch ?? true))
+}
+
 export async function regenerateMarkdownArtifacts(args: {
   client: OpencodeClient
   directory: string

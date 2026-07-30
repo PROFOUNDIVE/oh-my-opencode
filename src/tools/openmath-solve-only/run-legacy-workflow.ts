@@ -112,6 +112,7 @@ async function loadOrStartWorkflow(input: Readonly<{
       artifact_state: "DRAFT",
       max_review_rounds: input.maxReviewRounds,
       hint_budget_state: { hints_used: 0, hint_budget: 3 },
+      review_metadata: null,
       markdown_fallback: input.format === "markdown" ? {
         max_consecutive_patch_failures: input.maxConsecutivePatchFailures,
         max_ops: input.config?.artifacts?.patch?.max_ops ?? null,

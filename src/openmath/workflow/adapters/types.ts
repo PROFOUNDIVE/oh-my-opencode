@@ -1,4 +1,6 @@
 import type { OpenMathArtifactsDraft } from "../../artifacts-markdown/types"
+import type { LegacyReviewMetadata } from "../state/contracts"
+import type { PatchApplyFailure } from "./patch-apply-failure"
 
 export type PatchAdapterOptions = Readonly<{
   readonly max_ops?: number
@@ -44,7 +46,7 @@ export type AdapterError =
   | AdapterErrorFor<"INVALID_LEGACY_ARTIFACTS">
   | AdapterErrorFor<"INVALID_LEGACY_SECTIONS">
   | AdapterErrorFor<"INVALID_PATCH_SET">
-  | AdapterErrorFor<"PATCH_APPLY_FAILED">
+  | AdapterErrorFor<"PATCH_APPLY_FAILED"> & Readonly<{ readonly patch_failure: PatchApplyFailure }>
   | AdapterErrorFor<"MISSING_VERDICT">
   | AdapterErrorFor<"DUPLICATE_VERDICT">
   | AdapterErrorFor<"CONFLICTING_VERDICTS">
@@ -68,6 +70,7 @@ export type CanonicalReviewVerdict = "PASS" | "REVISE" | "INCONCLUSIVE"
 export type AdapterReview = Readonly<{
   readonly verdict: CanonicalReviewVerdict
   readonly raw_report: string
+  readonly legacy_metadata?: LegacyReviewMetadata
 }>
 
 type ParsedMarkdownArtifact = MarkdownArtifact & Readonly<{ readonly draft: OpenMathArtifactsDraft }>

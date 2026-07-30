@@ -103,7 +103,10 @@ async function dispatchLegacyStage(
   childTitles: Map<string, string>,
   childMessages: Map<string, string>,
   state: WorkflowStateV1,
-): Promise<Readonly<{ readonly ok: true; readonly session_id: string; readonly text: string }> | Readonly<{ readonly ok: false; readonly error: string }>> {
+): Promise<
+  | Readonly<{ readonly ok: true; readonly session_id: string; readonly text: string }>
+  | Readonly<{ readonly ok: false; readonly error: string; readonly error_code?: "SOLVER_PATCH_FAILED" }>
+> {
   let sessionID = dispatch.persisted_session_id
   let promptPersisted = false
   const result = await runSyncSubagentText({
@@ -143,7 +146,16 @@ async function dispatchLegacyStage(
   }
   return result.ok
     ? { ok: true, session_id: resolvedSessionID, text: result.text }
-    : { ok: false, error: result.error }
+    : {
+        ok: false,
+        error: result.error,
+        ...(state.profile_snapshot.name === "legacy-educational-markdown"
+          && state.legacy_projection.kind === "solve_only"
+          && state.next_stage === "REVISE"
+          && dispatch.agent_to_use === "solver-markdown-patch"
+          ? { error_code: "SOLVER_PATCH_FAILED" as const }
+          : {}),
+      }
 }
 
 function legacyDescription(state: WorkflowStateV1, agent: string): string {

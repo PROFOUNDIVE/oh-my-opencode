@@ -24,7 +24,7 @@ export function getMarkdownRoundInputs(args: {
   prevPatchFailureState: MarkdownPatchFailureState | undefined
 } {
   const orchestrator = args.frozen_artifacts
-    ? readMarkdownOrchestratorState(args.frozen_artifacts.hint_ladder as any)
+    ? readMarkdownOrchestratorState(args.frozen_artifacts.hint_ladder)
     : null
 
   const prevBlockingIssues = orchestrator?.last_blocking_issues
@@ -39,11 +39,32 @@ export function getMarkdownRoundInputs(args: {
     : undefined
 
   const useSolverPatch =
-    args.round > 1
-      ? (prevPatchFailureState?.consecutive_failures ?? 0) < args.maxConsecutivePatchFailures && !!baseArtifacts
-      : undefined
+    shouldUseMarkdownPatch({
+      round: args.round,
+      hasBaseArtifacts: baseArtifacts !== undefined,
+      previousFailureState: prevPatchFailureState,
+      maxConsecutivePatchFailures: args.maxConsecutivePatchFailures,
+    })
 
   return { baseArtifacts, useSolverPatch, prevBlockingIssues, prevPatchFailureState }
+}
+
+export function shouldUseMarkdownPatch(args: {
+  readonly round: number
+  readonly hasBaseArtifacts: boolean
+  readonly previousFailureState: MarkdownPatchFailureState | undefined
+  readonly maxConsecutivePatchFailures: number
+}): boolean | undefined {
+  return args.round > 1
+    ? (args.previousFailureState?.consecutive_failures ?? 0) < args.maxConsecutivePatchFailures && args.hasBaseArtifacts
+    : undefined
+}
+
+export function nextMarkdownPatchFailureState(
+  previous: MarkdownPatchFailureState | undefined,
+  failure: { readonly error_code: string; readonly section_id?: string } | null,
+): MarkdownPatchFailureState | undefined {
+  return nextPatchFailureState({ prev: previous, failure, resetOnSuccess: true })
 }
 
 export function applyMarkdownRoundOutcomeToDraft(args: {
@@ -57,18 +78,14 @@ export function applyMarkdownRoundOutcomeToDraft(args: {
   prevPatchFailureState: MarkdownPatchFailureState | undefined
 }): FrozenArtifacts {
   const nextBlockingIssues = args.roundResult.certificate ? args.roundResult.blocking_issues : args.prevBlockingIssues
-  const nextFailureState = nextPatchFailureState({
-    prev: args.prevPatchFailureState,
-    failure: args.roundResult.patch_failure,
-    resetOnSuccess: true,
-  })
+  const nextFailureState = nextMarkdownPatchFailureState(args.prevPatchFailureState, args.roundResult.patch_failure)
 
   return {
     ...args.draft,
-    hint_ladder: mergeMarkdownOrchestratorState(args.draft.hint_ladder as any, {
+    hint_ladder: mergeMarkdownOrchestratorState(args.draft.hint_ladder, {
       ...(typeof nextBlockingIssues !== "undefined" ? { last_blocking_issues: nextBlockingIssues } : {}),
       patch_failure_state: nextFailureState,
       last_patch_failure: args.roundResult.patch_failure,
-    }) as any,
+    }),
   }
 }

@@ -1,5 +1,5 @@
 import { applyOpenMathArtifactsPatch } from "../../artifacts-patch/apply"
-import { OpenMathArtifactsPatchSetSchema } from "../../artifacts-patch/types"
+import { OpenMathArtifactsPatchSetSchema, OpenMathArtifactsSectionIdSchema } from "../../artifacts-patch/types"
 import { extractSchemaValidatedJsonCandidate } from "../../../tools/openmath-solve-only/json-candidate-extractor"
 import type { AdapterResult, PatchAdapterOptions } from "./types"
 
@@ -34,6 +34,10 @@ export function adaptPatchSet(input: {
         code: "PATCH_APPLY_FAILED",
         message: `Patch application failed: ${applied.error_code}`,
         raw_output: input.rawOutput,
+        patch_failure: {
+          error_code: applied.error_code,
+          section_id: readSectionId(applied.details),
+        },
       },
     }
   }
@@ -49,6 +53,12 @@ export function adaptPatchSet(input: {
       draft: applied.draft,
     },
   }
+}
+
+function readSectionId(details: unknown) {
+  if (!details || typeof details !== "object" || !("section_id" in details)) return null
+  const parsed = OpenMathArtifactsSectionIdSchema.safeParse(details.section_id)
+  return parsed.success ? parsed.data : null
 }
 
 function invalidJsonError(rawOutput: string): AdapterResult {

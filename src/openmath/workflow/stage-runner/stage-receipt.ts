@@ -1,5 +1,6 @@
 import { adaptWorkflowOutput } from "../adapters/adapter-dispatch"
 import type { WorkflowStateV1 } from "../state"
+import type { WorkflowErrorCode } from "../state/literals"
 import { roleForWorkflowStage } from "./stage-role"
 import { sha256 } from "./sha256"
 
@@ -48,6 +49,7 @@ export function stageReceiptFromOutput(input: Readonly<{
     case "review":
       return {
         kind: "REVIEW",
+        ...(adapted.review.legacy_metadata === undefined ? {} : { legacy_metadata: adapted.review.legacy_metadata }),
         review: {
           round: input.state.review_round,
           verdict: adapted.review.verdict,
@@ -66,8 +68,11 @@ export function stageReceiptFromOutput(input: Readonly<{
   }
 }
 
-export function subagentFailureReceipt(message: string): StageReceipt {
-  return { kind: "ERROR", error_code: "SUBAGENT_FAILED", message }
+export function subagentFailureReceipt(
+  message: string,
+  errorCode: Exclude<WorkflowErrorCode, "ADAPTER_OUTPUT_INVALID"> = "SUBAGENT_FAILED",
+): StageReceipt {
+  return { kind: "ERROR", error_code: errorCode, message }
 }
 
 function adapterInput(adapter: RunningState["profile_snapshot"]["solve"]["output_adapter"], rawOutput: string, state: RunningState) {

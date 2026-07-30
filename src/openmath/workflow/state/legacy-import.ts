@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { z } from "zod"
 
-import { LegacyFrozenArtifactsSchema } from "./contracts"
+import { LegacyFrozenArtifactsSchema, LegacyReviewMetadataSchema } from "./contracts"
 import { createLegacyImportedArtifact } from "./legacy-artifact-import"
 import type { ReferenceSnapshotSchema, WorkflowProfileSnapshotSchema } from "./snapshots"
 import { WorkflowStateV1Schema, type WorkflowStateV1 } from "./schema"
@@ -98,6 +98,7 @@ export function importLegacySolveOnlyState(input: LegacyImportInput): LegacyImpo
       artifact_state: legacy.data.artifact_state,
       max_review_rounds: legacy.data.max_review_rounds,
       hint_budget_state: legacy.data.hint_budget_state,
+      review_metadata: legacyReviewMetadata(legacy.data.frozen_artifacts),
       markdown_fallback: null,
     },
     legacy_source_hash: sourceHash,
@@ -106,6 +107,24 @@ export function importLegacySolveOnlyState(input: LegacyImportInput): LegacyImpo
     return { kind: "error", error_code: "STORAGE_READ_FAILED", message: "Imported legacy state is invalid" }
   }
   return { kind: "imported", state: state.data }
+}
+
+function legacyReviewMetadata(frozen: z.infer<typeof LegacyFrozenArtifactsSchema> | null) {
+  if (frozen === null) return null
+  const retained = frozen.hint_ladder["__orchestrator_state"]
+  const blockingIssues = retained !== null && typeof retained === "object" && !Array.isArray(retained)
+    && Array.isArray(retained["last_blocking_issues"])
+    ? retained["last_blocking_issues"]
+    : undefined
+  return LegacyReviewMetadataSchema.parse({
+    certificate: {
+      artifact_version: frozen.review_certificate.artifact_version,
+      review_round: frozen.review_certificate.review_round,
+      timestamp: frozen.review_certificate.timestamp,
+      ...(frozen.review_certificate.notes === undefined ? {} : { notes: frozen.review_certificate.notes }),
+    },
+    ...(blockingIssues === undefined ? {} : { blocking_issues: blockingIssues }),
+  })
 }
 
 function parseJson(content: string): unknown {

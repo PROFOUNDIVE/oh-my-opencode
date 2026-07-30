@@ -62,6 +62,10 @@ function commitError(state: RunningState, attempt: CompletedAttempt, revision: n
     return rejected(state, "ILLEGAL_TRANSITION", "Error commit requires an error receipt")
   }
   const parseFailure = attempt.receipt.error_code === "ADAPTER_OUTPUT_INVALID"
+    || attempt.receipt.error_code === "SOLVER_PATCH_FAILED"
+      && attempt.stage === "REVISE"
+      && state.profile_snapshot.name === "legacy-educational-markdown"
+      && state.legacy_projection.kind === "solve_only"
   const shared = {
     ...state,
     ...commitAttemptReceipt(state, { attempt, outcome: "AWAITING_HUMAN", revision }),

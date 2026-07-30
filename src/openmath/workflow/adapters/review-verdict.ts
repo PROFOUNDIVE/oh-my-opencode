@@ -1,4 +1,5 @@
 import { ReviewerJsonOutputSchema } from "../../../tools/openmath-solve-only/subagent-output-schemas"
+import { LegacyReviewMetadataSchema } from "../state/contracts"
 import { parseJsonOutput } from "./json-output-parser"
 import type { AdapterResult, CanonicalReviewVerdict } from "./types"
 
@@ -18,12 +19,25 @@ export function adaptJsonReviewVerdict(rawOutput: string): AdapterResult {
       },
     }
   }
+  const legacyMetadata = LegacyReviewMetadataSchema.safeParse({
+    certificate: review.data.certificate,
+    ...(parsedJson.value !== null
+      && typeof parsedJson.value === "object"
+      && !Array.isArray(parsedJson.value)
+      && "blocking_issues" in parsedJson.value
+      ? { blocking_issues: parsedJson.value.blocking_issues }
+      : {}),
+  })
 
   return {
     ok: true,
     kind: "review",
     adapter: "review_verdict_json",
-    review: { verdict: normalizeLegacyVerdict(review.data.verdict), raw_report: rawOutput },
+    review: {
+      verdict: normalizeLegacyVerdict(review.data.verdict),
+      raw_report: rawOutput,
+      ...(legacyMetadata.success ? { legacy_metadata: legacyMetadata.data } : {}),
+    },
   }
 }
 

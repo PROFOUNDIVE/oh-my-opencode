@@ -29,6 +29,7 @@ export const WorkflowErrorCodeSchema = z.enum([
   "STORAGE_BUSY",
   "STORAGE_ATOMICITY_UNAVAILABLE",
   "SUBAGENT_FAILED",
+  "SOLVER_PATCH_FAILED",
   "RECONCILIATION_BLOCKED",
   "ABORTED",
 ])

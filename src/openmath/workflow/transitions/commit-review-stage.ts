@@ -41,6 +41,9 @@ export function commitReviewStage(
     consecutive_passes: passes,
     latest_review: currentReview,
     review_history: [...state.review_history, currentReview],
+    legacy_projection: state.legacy_projection.kind === "solve_only" && input.attempt.receipt.legacy_metadata !== undefined
+      ? { ...state.legacy_projection, review_metadata: input.attempt.receipt.legacy_metadata }
+      : state.legacy_projection,
     amendments: consumeNextReviewAmendments(state, input.revision),
   }
   if (terminalStatus) {

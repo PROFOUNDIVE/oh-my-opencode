@@ -59,6 +59,49 @@ test("persists and commits one SOLVE attempt with the exact immutable dispatch s
   expect(result.stage_history).toHaveLength(initialStageHistoryCount + 1)
 })
 
+test("keeps generic workflow transport failures blocked", async () => {
+  // given
+  const initialState = WorkflowStateV1Schema.parse({
+    ...runningWorkflowState("REVISE"),
+    legacy_projection: { kind: "none" },
+  })
+  if (initialState.status !== "RUNNING") throw new TypeError("Expected a RUNNING workflow")
+  let persistedState: WorkflowStateV1 = initialState
+  const runtime: StageRunnerRuntime = {
+    persist: async (nextState) => {
+      persistedState = nextState.state_revision > persistedState.state_revision
+        ? nextState
+        : WorkflowStateV1Schema.parse({ ...nextState, state_revision: persistedState.state_revision + 1 })
+      return persistedState
+    },
+    list_children: async () => [],
+    get_session: async () => ({ title: "" }),
+    list_messages: async () => {
+      const attempt = lastAttempt(persistedState)
+      return attempt && "idempotency_key" in attempt
+        ? [{ role: "user", text: `OPENMATH_ATTEMPT_KEY: ${attempt.idempotency_key}\npayload` }]
+        : []
+    },
+    dispatch: async (input) => {
+      await input.awaited_callbacks.on_session_created?.("generic-child")
+      await input.awaited_callbacks.on_prompt_sent?.("generic-child")
+      return { ok: false, error: "transport unavailable" }
+    },
+  }
+
+  // when
+  const result = await runWorkflowStage({ state: initialState, workflow_input: "input", runtime })
+
+  // then
+  expect(result.status).toBe("BLOCKED")
+  const attempt = result.dispatch_attempts.findLast((candidate) => candidate.phase === "COMMITTED")
+  expect(attempt?.phase === "COMMITTED" ? attempt.receipt : null).toEqual({
+    kind: "ERROR",
+    error_code: "SUBAGENT_FAILED",
+    message: "transport unavailable",
+  })
+})
+
 function lastAttempt(state: WorkflowStateV1) {
   return state.dispatch_attempts[state.dispatch_attempts.length - 1]
 }

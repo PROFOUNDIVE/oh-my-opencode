@@ -1,5 +1,8 @@
 import { compareAndSwapWorkflowState } from "../../openmath/workflow/storage"
 import { WorkflowStateV1Schema, type WorkflowStateV1 } from "../../openmath/workflow/state"
+import { shouldConsumeReviewBudgetForMarkdownError } from "./markdown-round-error-policy"
+import { nextMarkdownPatchFailureState, shouldUseMarkdownPatch } from "./markdown-round-policy"
+import { shouldRegenerateMarkdownArtifacts } from "./markdown-round/regenerate-markdown-artifacts"
 
 export async function recoverLegacyParseFailure(
   directory: string,
@@ -8,20 +11,37 @@ export async function recoverLegacyParseFailure(
   if (state.status !== "AWAITING_HUMAN" || state.awaiting_reason !== "PARSE_FAILURE") return state
   const attempt = state.dispatch_attempts.findLast((candidate) => candidate.phase === "COMMITTED")
   if (attempt?.phase !== "COMMITTED" || attempt.receipt.kind !== "ERROR") return state
+  const identity = patchErrorIdentity(attempt.stage, attempt.receipt)
+  if (attempt.stage !== "REVISE" && !shouldConsumeReviewBudgetForMarkdownError(identity.error_code)) return state
   const completed = state.completed_review_rounds + 1
   const exhausted = completed >= state.profile_snapshot.max_review_rounds
   const fallback = state.legacy_projection.kind === "solve_only" ? state.legacy_projection.markdown_fallback : null
-  const identity = patchErrorIdentity(attempt.receipt)
-  const repeated = fallback !== null
-    && fallback.last_error_code === identity.error_code
-    && fallback.last_section_id === identity.section_id
-  const consecutive = attempt.stage === "REVISE" ? repeated ? fallback.consecutive_failures + 1 : 1 : fallback?.consecutive_failures ?? 0
+  const previousFailureState = fallback === null ? undefined : {
+    consecutive_failures: fallback.consecutive_failures,
+    ...(fallback.last_error_code === null ? {} : { last_error_code: fallback.last_error_code }),
+    ...(fallback.last_section_id === null ? {} : { last_section_id: fallback.last_section_id }),
+  }
+  const nextFailureState = attempt.stage === "REVISE"
+    ? nextMarkdownPatchFailureState(previousFailureState, {
+        error_code: identity.error_code,
+        ...(identity.section_id === null ? {} : { section_id: identity.section_id }),
+      })
+    : previousFailureState
+  const consecutive = nextFailureState?.consecutive_failures ?? 0
   const nextFallback = fallback === null ? null : {
     ...fallback,
     consecutive_failures: consecutive,
     last_error_code: attempt.stage === "REVISE" ? identity.error_code : fallback.last_error_code,
     last_section_id: attempt.stage === "REVISE" ? identity.section_id : fallback.last_section_id,
-    regenerate_next: attempt.stage === "REVISE" && consecutive >= fallback.max_consecutive_patch_failures,
+    regenerate_next: attempt.stage === "REVISE" && shouldRegenerateMarkdownArtifacts(
+      state.review_round + 1,
+      shouldUseMarkdownPatch({
+        round: state.review_round + 1,
+        hasBaseArtifacts: state.artifact !== null,
+        previousFailureState: nextFailureState,
+        maxConsecutivePatchFailures: fallback.max_consecutive_patch_failures,
+      }),
+    ),
     sub_attempt_history: attempt.stage === "REVISE"
       ? [...fallback.sub_attempt_history, {
           kind: "patch" as const,
@@ -63,16 +83,19 @@ function nextStageAfterFailure(state: WorkflowStateV1, stage: "SOLVE" | "REVIEW"
   return "REVISE" as const
 }
 
-function patchErrorIdentity(receipt: Extract<WorkflowStateV1["dispatch_attempts"][number], { readonly phase: "COMMITTED" }>["receipt"]): {
+function patchErrorIdentity(
+  stage: "SOLVE" | "REVIEW" | "REVISE",
+  receipt: Extract<WorkflowStateV1["dispatch_attempts"][number], { readonly phase: "COMMITTED" }>["receipt"],
+): {
   readonly error_code: string
   readonly section_id: string | null
 } {
-  if (receipt.kind !== "ERROR" || !("adapter_error" in receipt)) {
-    return { error_code: receipt.kind === "ERROR" ? receipt.error_code : "PATCH_OUTPUT_INVALID", section_id: null }
+  if (receipt.kind !== "ERROR") return { error_code: "PATCH_OUTPUT_INVALID", section_id: null }
+  if (!("adapter_error" in receipt)) {
+    return { error_code: receipt.error_code, section_id: null }
   }
-  const messageCode = /Patch application failed: ([A-Z_]+)/.exec(receipt.adapter_error.message)?.[1]
-  return {
-    error_code: messageCode ?? (receipt.adapter_error.code === "PATCH_APPLY_FAILED" ? "PATCH_APPLY_FAILED" : "PATCH_OUTPUT_INVALID"),
-    section_id: null,
-  }
+  if (receipt.adapter_error.code === "PATCH_APPLY_FAILED") return receipt.adapter_error.patch_failure
+  if (stage === "SOLVE") return { error_code: "ARTIFACTS_PARSE_ERROR", section_id: null }
+  if (stage === "REVIEW") return { error_code: "REVIEWER_OUTPUT_INVALID", section_id: null }
+  return { error_code: "PATCH_OUTPUT_INVALID", section_id: null }
 }

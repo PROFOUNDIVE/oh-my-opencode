@@ -2,13 +2,14 @@ import { createHash } from "node:crypto"
 import { z } from "zod"
 
 import { parseOpenMathArtifactsMarkdown } from "../../artifacts-markdown/parse"
+import { hashOpenMathArtifactsMarkdown } from "../../artifacts-markdown/hash"
 import { ArtifactDtoSchema, LegacyFrozenArtifactsSchema } from "./contracts"
-import { HashSchema } from "./literals"
+import { LegacyMarkdownHashSchema } from "./legacy-markdown-hash"
 
 const RetainedMarkdownSchema = z.object({
   artifacts_format: z.literal("markdown"),
   artifacts_markdown: z.string().min(1),
-  artifacts_hash: HashSchema,
+  artifacts_hash: LegacyMarkdownHashSchema,
 }).strip()
 
 type LegacyArtifactInput = {
@@ -44,7 +45,7 @@ export function createLegacyImportedArtifact(input: LegacyArtifactInput): Legacy
   if (!parsed.ok || parsed.normalizedMarkdown !== metadata.data.artifacts_markdown) {
     return { ok: false, message: "Retained legacy markdown is not canonical" }
   }
-  if (hashText(metadata.data.artifacts_markdown) !== metadata.data.artifacts_hash) {
+  if (hashOpenMathArtifactsMarkdown(metadata.data.artifacts_markdown) !== metadata.data.artifacts_hash) {
     return { ok: false, message: "Retained legacy markdown hash does not match" }
   }
   return {
@@ -53,7 +54,7 @@ export function createLegacyImportedArtifact(input: LegacyArtifactInput): Legacy
       version: input.artifact_version,
       media_type: "text/markdown",
       content: metadata.data.artifacts_markdown,
-      sha256: metadata.data.artifacts_hash,
+      sha256: hashText(metadata.data.artifacts_markdown),
     },
   }
 }

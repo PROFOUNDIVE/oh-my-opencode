@@ -1,7 +1,8 @@
 import { z } from "zod"
 
-import { ArtifactDtoSchema, ReviewDtoSchema } from "./contracts"
+import { ArtifactDtoSchema, LegacyReviewMetadataSchema, ReviewDtoSchema } from "./contracts"
 import { HashSchema, WorkflowErrorCodeSchema, WorkflowStageSchema } from "./literals"
+import { PatchApplyFailureSchema } from "../adapters/patch-apply-failure"
 
 const NonBlankSchema = z.string().refine((value) => value.trim().length > 0)
 const ModelSegmentSchema = z.string().regex(/^\S+$/)
@@ -12,23 +13,31 @@ export const ResolvedModelSchema = z.object({
   variant: NonBlankSchema.optional(),
 }).strict()
 
-const AdapterErrorSchema = z.object({
+const AdapterErrorBaseSchema = z.object({
   kind: z.literal("adapter_error"),
-  code: z.enum([
+  message: NonBlankSchema,
+  raw_output: z.string(),
+})
+
+const AdapterErrorSchema = z.discriminatedUnion("code", [
+  AdapterErrorBaseSchema.extend({
+    code: z.enum([
     "EMPTY_MARKDOWN",
     "INVALID_JSON",
     "INVALID_LEGACY_ARTIFACTS",
     "INVALID_LEGACY_SECTIONS",
     "INVALID_PATCH_SET",
-    "PATCH_APPLY_FAILED",
     "MISSING_VERDICT",
     "DUPLICATE_VERDICT",
     "CONFLICTING_VERDICTS",
     "INVALID_REVIEW_VERDICT",
-  ]),
-  message: NonBlankSchema,
-  raw_output: z.string(),
-}).strict()
+    ]),
+  }).strict(),
+  AdapterErrorBaseSchema.extend({
+    code: z.literal("PATCH_APPLY_FAILED"),
+    patch_failure: PatchApplyFailureSchema,
+  }).strict(),
+])
 
 const AdapterStageErrorSchema = z.object({
   kind: z.literal("ERROR"),
@@ -56,7 +65,11 @@ const ReconciliationBlockedReceiptSchema = z.object({
 
 export const SuccessStageReceiptSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("ARTIFACT"), artifact: ArtifactDtoSchema }).strict(),
-  z.object({ kind: z.literal("REVIEW"), review: ReviewDtoSchema }).strict(),
+  z.object({
+    kind: z.literal("REVIEW"),
+    review: ReviewDtoSchema,
+    legacy_metadata: LegacyReviewMetadataSchema.optional(),
+  }).strict(),
 ])
 
 export const StageReceiptSchema = z.union([

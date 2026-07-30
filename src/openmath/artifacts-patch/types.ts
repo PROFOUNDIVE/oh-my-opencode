@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-const OpenMathArtifactsSectionIdSchema = z.enum([
+export const OpenMathArtifactsSectionIdSchema = z.enum([
   "reference_solution",
   "hint_ladder",
   "grading_rubric",

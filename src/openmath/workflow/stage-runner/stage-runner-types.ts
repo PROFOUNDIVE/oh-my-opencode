@@ -1,4 +1,5 @@
 import type { WorkflowStateV1 } from "../state"
+import type { WorkflowErrorCode } from "../state/literals"
 
 export type StageSubagentDispatch = Readonly<{
   readonly parent_session_id: string
@@ -23,6 +24,10 @@ export type StageRunnerRuntime = Readonly<{
   readonly list_messages: (sessionID: string) => Promise<readonly Readonly<{ readonly role: string; readonly text: string }>[]>
   readonly dispatch: (input: StageSubagentDispatch) => Promise<
     | Readonly<{ readonly ok: true; readonly session_id: string; readonly text: string }>
-    | Readonly<{ readonly ok: false; readonly error: string }>
+    | Readonly<{
+        readonly ok: false
+        readonly error: string
+        readonly error_code?: Exclude<WorkflowErrorCode, "ADAPTER_OUTPUT_INVALID">
+      }>
   >
 }>

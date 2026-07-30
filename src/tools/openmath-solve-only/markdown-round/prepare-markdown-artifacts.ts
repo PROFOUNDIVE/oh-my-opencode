@@ -2,7 +2,7 @@ import type { OpencodeClient, ToolContextWithMetadata } from "../../delegate-tas
 import type { FrozenArtifacts } from "../../../openmath/types"
 
 import type { OpenMathToolConfig } from "../tool-config"
-import { regenerateMarkdownArtifacts } from "./regenerate-markdown-artifacts"
+import { regenerateMarkdownArtifacts, shouldRegenerateMarkdownArtifacts } from "./regenerate-markdown-artifacts"
 import { applySolverMarkdownPatch } from "./apply-solver-markdown-patch"
 
 export async function prepareMarkdownArtifacts(args: {
@@ -38,10 +38,7 @@ export async function prepareMarkdownArtifacts(args: {
       source?: "solver" | "patch"
     }
 > {
-  const shouldUsePatch = args.round > 1 && (args.useSolverPatch ?? true)
-  const shouldRegenerate = args.round === 1 || !shouldUsePatch
-
-  if (shouldRegenerate) {
+  if (shouldRegenerateMarkdownArtifacts(args.round, args.useSolverPatch)) {
     const regenerated = await regenerateMarkdownArtifacts({
       client: args.client,
       directory: args.directory,

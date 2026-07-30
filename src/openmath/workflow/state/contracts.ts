@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { JsonObjectSchema } from "./json-value"
+import { JsonObjectSchema, JsonValueSchema } from "./json-value"
 import { HashSchema } from "./literals"
 
 export const ArtifactDtoSchema = z.object({
@@ -26,6 +26,18 @@ export const ReviewDtoSchema = z.object({
   reference_hash: HashSchema,
   artifact_input_hash: HashSchema,
 }).strict()
+
+export const LegacyReviewMetadataSchema = z.object({
+  certificate: z.object({
+    artifact_version: z.string(),
+    review_round: z.number().int().positive(),
+    timestamp: z.string(),
+    notes: z.string().optional(),
+  }).strict(),
+  blocking_issues: z.array(JsonValueSchema).optional(),
+}).strict()
+
+export type LegacyReviewMetadata = Readonly<z.infer<typeof LegacyReviewMetadataSchema>>
 
 export const AmendmentEventSchema = z.discriminatedUnion("event_type", [
   z.object({

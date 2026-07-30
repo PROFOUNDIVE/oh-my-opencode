@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { AmendmentHistorySchema } from "./amendment-history"
-import { ArtifactDtoSchema, ReviewDtoSchema } from "./contracts"
+import { ArtifactDtoSchema, LegacyReviewMetadataSchema, ReviewDtoSchema } from "./contracts"
 import { AwaitingReasonSchema, HashSchema, WorkflowStageSchema } from "./literals"
 import { ReferenceSnapshotSchema, WorkflowProfileSnapshotSchema } from "./snapshots"
 import { StageAttemptSchema, StageRecordSchema } from "./stage-contracts"
@@ -22,6 +22,7 @@ const LegacyProjectionSchema = z.discriminatedUnion("kind", [
       hints_used: z.number().int().nonnegative(),
       hint_budget: z.number().int().nonnegative(),
     }).strict(),
+    review_metadata: LegacyReviewMetadataSchema.nullable().default(null),
     markdown_fallback: z.object({
       max_consecutive_patch_failures: z.number().int().positive(),
       max_ops: z.number().int().positive().nullable(),

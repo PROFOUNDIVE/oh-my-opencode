@@ -108,6 +108,9 @@ function parseMarkdownArtifacts(state: WorkflowStateV1):
     return { kind: "error", error_code: "STORAGE_READ_FAILED", message: "Legacy markdown artifact content is invalid" }
   }
   const review = state.latest_review
+  const reviewMetadata = state.legacy_projection.kind === "solve_only"
+    ? state.legacy_projection.review_metadata
+    : null
   const verdict = review === null
     ? "[INCONCLUSIVE]" as const
     : review.verdict === "PASS"
@@ -115,7 +118,6 @@ function parseMarkdownArtifacts(state: WorkflowStateV1):
       : review.verdict === "REVISE"
         ? "[ERROR]" as const
         : "[INCONCLUSIVE]" as const
-  const notes = review?.raw_report ?? "DRAFT"
   return {
     kind: "parsed",
     artifacts: {
@@ -141,18 +143,24 @@ function parseMarkdownArtifacts(state: WorkflowStateV1):
       },
       variant_problem: parsed.draft.variant_problem,
       review_certificate: {
-        artifact_version: `v${artifact.version}`,
-        review_round: review?.round ?? state.review_round,
-        timestamp: new Date(0).toISOString(),
+        artifact_version: reviewMetadata?.certificate.artifact_version ?? `v${artifact.version}`,
+        review_round: reviewMetadata?.certificate.review_round ?? review?.round ?? state.review_round,
+        timestamp: reviewMetadata?.certificate.timestamp ?? new Date(0).toISOString(),
         verdict,
-        notes,
+        ...(reviewMetadata?.certificate.notes === undefined
+          ? { notes: review?.raw_report ?? "DRAFT" }
+          : { notes: reviewMetadata.certificate.notes }),
       },
     },
   }
 }
 
 function legacyMarkdownFallback(state: WorkflowStateV1): Record<string, unknown> {
-  if (state.legacy_projection.kind !== "solve_only" || state.legacy_projection.markdown_fallback === null) return {}
+  if (state.legacy_projection.kind !== "solve_only") return {}
+  const reviewMetadata = state.legacy_projection.review_metadata?.blocking_issues === undefined
+    ? {}
+    : { last_blocking_issues: state.legacy_projection.review_metadata.blocking_issues }
+  if (state.legacy_projection.markdown_fallback === null) return reviewMetadata
   const fallback = state.legacy_projection.markdown_fallback
   const patchFailureState = {
     consecutive_failures: fallback.consecutive_failures,
@@ -161,6 +169,7 @@ function legacyMarkdownFallback(state: WorkflowStateV1): Record<string, unknown>
   }
   const lastFailure = fallback.sub_attempt_history.findLast((attempt) => attempt.outcome === "FAILED")
   return {
+    ...reviewMetadata,
     max_consecutive_patch_failures: fallback.max_consecutive_patch_failures,
     max_ops: fallback.max_ops,
     allow_unique_substring_replace: fallback.allow_unique_substring_replace,
