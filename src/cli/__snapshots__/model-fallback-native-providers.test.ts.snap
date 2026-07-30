@@ -1,0 +1,795 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`generateModelConfig single native provider uses Claude models when only Claude is available 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "coach": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "explore": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "librarian": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "metis": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "momus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "multimodal-looker": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "oracle": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "prometheus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "sisyphus": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "ultrawork": {
+        "model": "anthropic/claude-opus-4-6",
+        "variant": "max",
+      },
+      "variant": "max",
+    },
+    "solver": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "verifier": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+  },
+  "categories": {
+    "quick": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "ultrabrain": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "unspecified-high": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "unspecified-low": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "visual-engineering": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "writing": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig single native provider uses Claude models with isMax20 flag 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "coach": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "explore": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "librarian": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "metis": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "momus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "multimodal-looker": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "oracle": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "prometheus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "sisyphus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver-markdown-patch": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "verifier": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+  },
+  "categories": {
+    "quick": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "ultrabrain": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "unspecified-high": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "unspecified-low": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "visual-engineering": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "writing": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig single native provider uses OpenAI models when only OpenAI is available 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "openai/gpt-5.2",
+    },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "explore": {
+      "model": "opencode/gpt-5-nano",
+    },
+    "hephaestus": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "librarian": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "metis": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "momus": {
+      "model": "openai/gpt-5.2",
+      "variant": "medium",
+    },
+    "multimodal-looker": {
+      "model": "openai/gpt-5.2",
+    },
+    "oracle": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "prometheus": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+  },
+  "categories": {
+    "deep": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "quick": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "ultrabrain": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "xhigh",
+    },
+    "unspecified-high": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "unspecified-low": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "visual-engineering": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "writing": {
+      "model": "opencode/glm-4.7-free",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig single native provider uses OpenAI models with isMax20 flag 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "openai/gpt-5.2",
+    },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "explore": {
+      "model": "opencode/gpt-5-nano",
+    },
+    "hephaestus": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "librarian": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "metis": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "momus": {
+      "model": "openai/gpt-5.2",
+      "variant": "medium",
+    },
+    "multimodal-looker": {
+      "model": "openai/gpt-5.2",
+    },
+    "oracle": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "prometheus": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+  },
+  "categories": {
+    "deep": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "quick": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "ultrabrain": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "xhigh",
+    },
+    "unspecified-high": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "unspecified-low": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "visual-engineering": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "writing": {
+      "model": "opencode/glm-4.7-free",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig single native provider uses Gemini models when only Gemini is available 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "google/gemini-3-pro",
+    },
+    "coach": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "explore": {
+      "model": "opencode/gpt-5-nano",
+    },
+    "librarian": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "metis": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "momus": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "multimodal-looker": {
+      "model": "google/gemini-3-flash",
+    },
+    "oracle": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "prometheus": {
+      "model": "google/gemini-3-pro",
+    },
+    "reference-reviewer": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+  },
+  "categories": {
+    "artistry": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "quick": {
+      "model": "google/gemini-3-flash",
+    },
+    "ultrabrain": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "unspecified-high": {
+      "model": "google/gemini-3-flash",
+    },
+    "unspecified-low": {
+      "model": "google/gemini-3-flash",
+    },
+    "visual-engineering": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "writing": {
+      "model": "google/gemini-3-flash",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig single native provider uses Gemini models with isMax20 flag 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "google/gemini-3-pro",
+    },
+    "coach": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "explore": {
+      "model": "opencode/gpt-5-nano",
+    },
+    "librarian": {
+      "model": "opencode/glm-4.7-free",
+    },
+    "metis": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "momus": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "multimodal-looker": {
+      "model": "google/gemini-3-flash",
+    },
+    "oracle": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "prometheus": {
+      "model": "google/gemini-3-pro",
+    },
+    "reference-reviewer": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+  },
+  "categories": {
+    "artistry": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "quick": {
+      "model": "google/gemini-3-flash",
+    },
+    "ultrabrain": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "unspecified-high": {
+      "model": "google/gemini-3-pro",
+    },
+    "unspecified-low": {
+      "model": "google/gemini-3-flash",
+    },
+    "visual-engineering": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "writing": {
+      "model": "google/gemini-3-flash",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig all native providers uses preferred models from fallback chains when all natives available 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "explore": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "hephaestus": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "librarian": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "metis": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "momus": {
+      "model": "openai/gpt-5.2",
+      "variant": "medium",
+    },
+    "multimodal-looker": {
+      "model": "google/gemini-3-flash",
+    },
+    "oracle": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "prometheus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "sisyphus": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "ultrawork": {
+        "model": "anthropic/claude-opus-4-6",
+        "variant": "max",
+      },
+      "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+  },
+  "categories": {
+    "artistry": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "deep": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "quick": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "ultrabrain": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "xhigh",
+    },
+    "unspecified-high": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "unspecified-low": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "visual-engineering": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "writing": {
+      "model": "google/gemini-3-flash",
+    },
+  },
+}
+`;
+
+exports[`generateModelConfig all native providers uses preferred models with isMax20 flag when all natives available 1`] = `
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-openmath.schema.json",
+  "agents": {
+    "atlas": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "coach": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "explore": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "hephaestus": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "librarian": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "metis": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "momus": {
+      "model": "openai/gpt-5.2",
+      "variant": "medium",
+    },
+    "multimodal-looker": {
+      "model": "google/gemini-3-flash",
+    },
+    "oracle": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "prometheus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "reference-reviewer": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "reference-reviewer-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "sisyphus": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "solver": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "solver-markdown-patch": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+    "verifier": {
+      "model": "openai/gpt-5.2",
+      "variant": "high",
+    },
+  },
+  "categories": {
+    "artistry": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "deep": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "medium",
+    },
+    "quick": {
+      "model": "anthropic/claude-haiku-4-5",
+    },
+    "ultrabrain": {
+      "model": "openai/gpt-5.3-codex",
+      "variant": "xhigh",
+    },
+    "unspecified-high": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
+    "unspecified-low": {
+      "model": "anthropic/claude-sonnet-4-6",
+    },
+    "visual-engineering": {
+      "model": "google/gemini-3-pro",
+      "variant": "high",
+    },
+    "writing": {
+      "model": "google/gemini-3-flash",
+    },
+  },
+}
+`;
