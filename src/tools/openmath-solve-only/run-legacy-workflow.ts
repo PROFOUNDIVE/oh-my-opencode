@@ -10,7 +10,7 @@ import type { OpenMathToolConfig } from "./tool-config"
 import { createLegacyWorkflowProfileSnapshot } from "./legacy-workflow-profile"
 import { createLegacyWorkflowRuntime } from "./legacy-workflow-runtime"
 import { recoverLegacyParseFailure } from "./legacy-workflow-recovery"
-import { maybeAutoExport } from "./maybe-auto-export"
+import { createLegacyWorkflowResult } from "./legacy-workflow-result"
 import { normalizeProblem } from "./prompt"
 
 export async function runLegacyWorkflow(input: Readonly<{
@@ -48,7 +48,7 @@ export async function runLegacyWorkflow(input: Readonly<{
   if (projected.kind === "error" || !writeOpenMathSessionState(input.directory, projected.state, stateFilenameMode)) {
     return { id: input.problem.id, session_id: runId, rounds_used: state.completed_review_rounds, error_code: "STATE_WRITE_FAILED", message: "Failed to persist OpenMath state after review" }
   }
-  return resultFromWorkflow(input, state)
+  return createLegacyWorkflowResult(input, state)
 }
 
 async function loadOrStartWorkflow(input: Readonly<{
@@ -157,57 +157,6 @@ async function runUntilSettled(
   return recovered.state_revision === completed.state_revision
     ? completed
     : runUntilSettled(input, recovered, stateFilenameMode)
-}
-
-async function resultFromWorkflow(
-  input: Parameters<typeof runLegacyWorkflow>[0],
-  state: WorkflowStateV1,
-): Promise<OpenMathSolveOnlyResult> {
-  const lastAttempt = state.dispatch_attempts.findLast((attempt) => attempt.phase === "COMMITTED")
-  const roundsUsed = Math.max(state.completed_review_rounds, lastAttempt?.review_round ?? 0)
-  if (state.status === "PASSED") {
-    const exported = await maybeAutoExport({
-      directory: input.directory,
-      config: input.config,
-      ctx: input.ctx,
-      sessionId: state.run_id,
-      prefix: input.problem.prefix ?? input.problem.id,
-      exportDir: input.exportDir,
-      enabled: input.autoExport,
-    })
-    return { id: input.problem.id, session_id: state.run_id, rounds_used: roundsUsed, verdict: "[CORRECT]", ...(exported ? { exported } : {}) }
-  }
-  const verdict = state.latest_review?.verdict === "INCONCLUSIVE" ? "[INCONCLUSIVE]" as const : "[ERROR]" as const
-  const errorAttempt = state.dispatch_attempts.findLast((attempt) => attempt.phase === "COMMITTED" && attempt.receipt.kind === "ERROR")
-  const errorCode = errorAttempt?.phase === "COMMITTED" && errorAttempt.receipt.kind === "ERROR"
-    ? legacyErrorCode(errorAttempt.stage, errorAttempt.receipt.error_code, errorAttempt.receipt.message)
-    : undefined
-  return {
-    id: input.problem.id,
-    session_id: state.run_id,
-    rounds_used: roundsUsed,
-    verdict,
-    ...(errorCode === undefined ? {} : { error_code: errorCode }),
-    ...(errorAttempt?.phase === "COMMITTED" && "adapter_error" in errorAttempt.receipt
-      ? { message: `Synthetic ${errorAttempt.stage === "SOLVE" ? "solver" : errorAttempt.stage === "REVIEW" ? "reviewer" : "patch"} failure${syntheticStage(errorAttempt.stage, errorAttempt.receipt.adapter_error.code)}` }
-      : {}),
-  }
-}
-
-function syntheticStage(stage: "SOLVE" | "REVIEW" | "REVISE", code: string): string {
-  if (stage === "REVIEW" && code === "INVALID_JSON") return " (candidate_scan)"
-  if (stage === "REVISE" && code === "INVALID_PATCH_SET") return " (schema)"
-  return ""
-}
-
-function legacyErrorCode(stage: "SOLVE" | "REVIEW" | "REVISE", code: string, message: string): string {
-  if (code === "SUBAGENT_FAILED" && message.toLowerCase().includes("agent \"") && message.toLowerCase().includes("not found")) {
-    return "AGENT_NOT_FOUND"
-  }
-  if (code !== "ADAPTER_OUTPUT_INVALID") return code
-  if (stage === "SOLVE") return "ARTIFACTS_PARSE_ERROR"
-  if (stage === "REVIEW") return "REVIEWER_OUTPUT_INVALID"
-  return "PATCH_OUTPUT_INVALID"
 }
 
 function isRunnable(state: WorkflowStateV1): state is Extract<WorkflowStateV1, { readonly status: "READY" | "RUNNING" | "BLOCKED" }> {
