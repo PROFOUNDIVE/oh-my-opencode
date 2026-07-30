@@ -44,6 +44,20 @@ describe("OpenMath workflow scope verification", () => {
       "Path is outside the Task 1-15 allowlist: src/hooks/foreign.test.ts",
     ])
   })
+
+  test("accepts the generated OpenMath schema artifact", () => {
+    expect(verifyOpenMathWorkflowScope(facts({
+      diffNameStatus: "M\tassets/oh-my-openmath.schema.json",
+    }))).toEqual([])
+  })
+
+  test("rejects neighboring generated assets", () => {
+    expect(verifyOpenMathWorkflowScope(facts({
+      diffNameStatus: "A\tassets/foreign.json",
+    }))).toEqual([
+      "Path is outside the Task 1-15 allowlist: assets/foreign.json",
+    ])
+  })
 })
 
 const F4_CORRECTIVE_TEST_PATHS = [
