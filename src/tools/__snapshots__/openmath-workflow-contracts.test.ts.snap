@@ -278,10 +278,7 @@ exports[`Task 12 final R4 execution coverage snapshots actual envelopes from all
   },
   {
     "artifact": {
-      "content": 
-"# artifact
-"
-,
+      "content": "# artifact\\n",
       "media_type": "text/markdown",
       "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
       "version": 1,
@@ -327,10 +324,7 @@ exports[`Task 12 final R4 execution coverage snapshots actual envelopes from all
   },
   {
     "artifact": {
-      "content": 
-"# artifact
-"
-,
+      "content": "# artifact\\n",
       "media_type": "text/markdown",
       "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
       "version": 1,
@@ -376,10 +370,7 @@ exports[`Task 12 final R4 execution coverage snapshots actual envelopes from all
   },
   {
     "artifact": {
-      "content": 
-"# artifact
-"
-,
+      "content": "# artifact\\n",
       "media_type": "text/markdown",
       "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
       "version": 1,
@@ -425,10 +416,7 @@ exports[`Task 12 final R4 execution coverage snapshots actual envelopes from all
   },
   {
     "artifact": {
-      "content": 
-"# artifact
-"
-,
+      "content": "# artifact\\n",
       "media_type": "text/markdown",
       "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
       "version": 1,
@@ -474,10 +462,7 @@ exports[`Task 12 final R4 execution coverage snapshots actual envelopes from all
   },
   {
     "artifact": {
-      "content": 
-"# artifact
-"
-,
+      "content": "# artifact\\n",
       "media_type": "text/markdown",
       "sha256": "574fa87b532b8a4904d8bd937edc9058f3597262d22d12b06b6ef889bbcb84e7",
       "version": 1,

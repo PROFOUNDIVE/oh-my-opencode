@@ -34,7 +34,7 @@ describe("Task 12 final R4 execution coverage", () => {
     const abort = parse(await tools.abort.execute({ run_id: "six", expected_state_revision: Number(reload.state_revision) }, context))
     const envelopes = [start, step, status, amend, reload, abort]
     expect(envelopes.every((value) => WorkflowSuccessEnvelopeSchema.safeParse(value).success)).toBe(true)
-    expect(envelopes).toMatchSnapshot()
+    expect(envelopes.map(snapshotEnvelope)).toMatchSnapshot()
   })
 
   test("reloads only selected prompt and reference snapshots without runtime construction", async () => {
@@ -87,3 +87,9 @@ function runtime(directory: string, initial: WorkflowStateV1): StageRunnerRuntim
 }
 async function readState(directory: string, runId: string) { const result = await readWorkflowState(directory, runId); if (result.kind === "error") throw new Error(result.message); return result.state }
 function parse(value: unknown): Record<string, unknown> { return JSON.parse(String(value)) }
+
+function snapshotEnvelope(envelope: Record<string, unknown>): Record<string, unknown> {
+  const artifact = envelope.artifact
+  if (typeof artifact !== "object" || artifact === null || !("content" in artifact) || typeof artifact.content !== "string") return envelope
+  return { ...envelope, artifact: { ...artifact, content: artifact.content.replace(/\n/g, "\\n") } }
+}
