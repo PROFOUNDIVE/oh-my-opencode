@@ -71,7 +71,11 @@ export function stageReceiptFromOutput(input: Readonly<{
 export function subagentFailureReceipt(
   message: string,
   errorCode: Exclude<WorkflowErrorCode, "ADAPTER_OUTPUT_INVALID"> = "SUBAGENT_FAILED",
+  legacyFailure?: "SOLVER_PATCH_FAILED",
 ): StageReceipt {
+  if (legacyFailure !== undefined) {
+    return { kind: "ERROR", error_code: "SUBAGENT_FAILED", message, legacy_failure: legacyFailure }
+  }
   return { kind: "ERROR", error_code: errorCode, message }
 }
 

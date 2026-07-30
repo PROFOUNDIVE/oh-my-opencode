@@ -28,6 +28,7 @@ export type StageRunnerRuntime = Readonly<{
         readonly ok: false
         readonly error: string
         readonly error_code?: Exclude<WorkflowErrorCode, "ADAPTER_OUTPUT_INVALID">
+        readonly legacy_failure?: "SOLVER_PATCH_FAILED"
       }>
   >
 }>

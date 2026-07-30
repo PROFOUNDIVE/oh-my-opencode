@@ -52,8 +52,16 @@ const NonAdapterStageErrorSchema = z.object({
   message: NonBlankSchema,
 }).strict()
 
+const LegacyPatchTransportErrorSchema = z.object({
+  kind: z.literal("ERROR"),
+  error_code: z.literal("SUBAGENT_FAILED"),
+  message: NonBlankSchema,
+  legacy_failure: z.literal("SOLVER_PATCH_FAILED"),
+}).strict()
+
 export const ErrorStageReceiptSchema = z.union([
   AdapterStageErrorSchema,
+  LegacyPatchTransportErrorSchema,
   NonAdapterStageErrorSchema,
 ])
 

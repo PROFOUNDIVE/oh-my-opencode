@@ -163,7 +163,7 @@ async function dispatchAttempt(input: Readonly<{
   }
   const completed = result.ok
     ? completedAttempt(attempt, result.text, stageReceiptFromOutput({ state, attempt, raw_output: result.text }))
-    : completedAttempt(attempt, "", subagentFailureReceipt(result.error, result.error_code))
+    : completedAttempt(attempt, "", subagentFailureReceipt(result.error, result.error_code, result.legacy_failure))
   state = await persistRunning(input.runtime, replaceAttempt(state, completed))
   return commitCompletedAttempt(state, input.runtime)
 }

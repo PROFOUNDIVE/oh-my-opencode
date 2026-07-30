@@ -147,9 +147,11 @@ function parseMarkdownArtifacts(state: WorkflowStateV1):
         review_round: reviewMetadata?.certificate.review_round ?? review?.round ?? state.review_round,
         timestamp: reviewMetadata?.certificate.timestamp ?? new Date(0).toISOString(),
         verdict,
-        ...(reviewMetadata?.certificate.notes === undefined
+        ...(reviewMetadata === null
           ? { notes: review?.raw_report ?? "DRAFT" }
-          : { notes: reviewMetadata.certificate.notes }),
+          : reviewMetadata.certificate.notes === undefined
+            ? {}
+            : { notes: reviewMetadata.certificate.notes }),
       },
     },
   }

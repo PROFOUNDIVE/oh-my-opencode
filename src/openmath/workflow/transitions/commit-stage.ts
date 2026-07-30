@@ -62,8 +62,11 @@ function commitError(state: RunningState, attempt: CompletedAttempt, revision: n
     return rejected(state, "ILLEGAL_TRANSITION", "Error commit requires an error receipt")
   }
   const parseFailure = attempt.receipt.error_code === "ADAPTER_OUTPUT_INVALID"
-    || attempt.receipt.error_code === "SOLVER_PATCH_FAILED"
+    || attempt.receipt.error_code === "SUBAGENT_FAILED"
+      && "legacy_failure" in attempt.receipt
+      && attempt.receipt.legacy_failure === "SOLVER_PATCH_FAILED"
       && attempt.stage === "REVISE"
+      && attempt.role === "solver-markdown-patch"
       && state.profile_snapshot.name === "legacy-educational-markdown"
       && state.legacy_projection.kind === "solve_only"
   const shared = {

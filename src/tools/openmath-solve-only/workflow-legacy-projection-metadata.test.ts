@@ -88,3 +88,48 @@ test("projects the exact reviewer certificate and markdown blocking metadata", a
     last_blocking_issues: blockingIssues,
   })
 })
+
+test("preserves an absent optional reviewer certificate note as absent", async () => {
+  // given
+  dispatchSubagent = async (call) => {
+    if (call.agentToUse === "solver-markdown") {
+      return { ok: true, sessionID: "solve", text: createCharacterizationArtifacts() }
+    }
+    if (call.agentToUse === "reference-reviewer-markdown") {
+      const payload = parseDispatchedPayload(call.prompt)
+      return {
+        ok: true,
+        sessionID: "review",
+        text: JSON.stringify({
+          verdict: "[CORRECT]",
+          blocking_issues: [],
+          checks_performed: ["logic"],
+          certificate: {
+            artifact_version: "reviewer-v9",
+            review_round: payload.review_round,
+            timestamp: "2031-02-03T04:05:06.000Z",
+          },
+          base_hash: payload.base_hash,
+        }),
+      }
+    }
+    return { ok: false, error: `Unexpected agent ${call.agentToUse}` }
+  }
+  const tool = createOpenMathSolveOnlyTool({
+    directory,
+    client: Object.create(null),
+    openmathConfig: { artifacts: { format: "markdown" } },
+  })
+
+  // when
+  await tool.execute({ session_id: "root", problems: [{ id: "missing-note", problem: "Prove it." }] }, context)
+  const certificate = readOpenMathSessionState(directory, "root::missing-note")?.frozen_artifacts?.review_certificate
+
+  // then
+  expect(certificate).toEqual({
+    artifact_version: "reviewer-v9",
+    review_round: 1,
+    timestamp: "2031-02-03T04:05:06.000Z",
+    verdict: "[CORRECT]",
+  })
+})

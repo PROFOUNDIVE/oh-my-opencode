@@ -94,5 +94,5 @@ test("records and retries legacy patch transport failures before threshold regen
   ))
   expect(transportReceipts.map((attempt) => attempt.phase === "COMMITTED" && attempt.receipt.kind === "ERROR"
     ? attempt.receipt.error_code
-    : null)).toEqual(["SOLVER_PATCH_FAILED", "SOLVER_PATCH_FAILED"])
+    : null)).toEqual(["SUBAGENT_FAILED", "SUBAGENT_FAILED"])
 })

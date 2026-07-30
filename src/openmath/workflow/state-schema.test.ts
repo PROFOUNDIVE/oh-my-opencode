@@ -1,9 +1,37 @@
 import { describe, expect, test } from "bun:test"
 
 import { parseWorkflowStateV1Json, WorkflowStateV1Schema } from "./state"
+import { WorkflowErrorCodeSchema } from "./state/literals"
 import { createWorkflowStateFixture } from "./state/test-fixture"
 
+const FIXED_WORKFLOW_ERROR_CODES = [
+  "VALIDATION_ERROR",
+  "RUN_NOT_FOUND",
+  "RUN_ALREADY_EXISTS",
+  "PROFILE_NOT_FOUND",
+  "ILLEGAL_TRANSITION",
+  "STALE_STATE_REVISION",
+  "PROMPT_SOURCE_ERROR",
+  "REFERENCE_SOURCE_ERROR",
+  "ADAPTER_OUTPUT_INVALID",
+  "STORAGE_READ_FAILED",
+  "STORAGE_WRITE_FAILED",
+  "STORAGE_BUSY",
+  "STORAGE_ATOMICITY_UNAVAILABLE",
+  "SUBAGENT_FAILED",
+  "RECONCILIATION_BLOCKED",
+  "ABORTED",
+] as const
+
 describe("WorkflowStateV1 schema", () => {
+  test("keeps the workflow error-code contract exact", () => {
+    // when
+    const options = WorkflowErrorCodeSchema.options
+
+    // then
+    expect(options).toEqual(FIXED_WORKFLOW_ERROR_CODES)
+  })
+
   test("round-trips every concrete persisted state field through JSON", () => {
     // given
     const state = createWorkflowStateFixture()

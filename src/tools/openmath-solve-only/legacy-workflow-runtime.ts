@@ -105,7 +105,7 @@ async function dispatchLegacyStage(
   state: WorkflowStateV1,
 ): Promise<
   | Readonly<{ readonly ok: true; readonly session_id: string; readonly text: string }>
-  | Readonly<{ readonly ok: false; readonly error: string; readonly error_code?: "SOLVER_PATCH_FAILED" }>
+  | Readonly<{ readonly ok: false; readonly error: string; readonly legacy_failure?: "SOLVER_PATCH_FAILED" }>
 > {
   let sessionID = dispatch.persisted_session_id
   let promptPersisted = false
@@ -153,7 +153,7 @@ async function dispatchLegacyStage(
           && state.legacy_projection.kind === "solve_only"
           && state.next_stage === "REVISE"
           && dispatch.agent_to_use === "solver-markdown-patch"
-          ? { error_code: "SOLVER_PATCH_FAILED" as const }
+          ? { legacy_failure: "SOLVER_PATCH_FAILED" as const }
           : {}),
       }
 }

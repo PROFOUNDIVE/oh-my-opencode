@@ -91,6 +91,9 @@ function patchErrorIdentity(
   readonly section_id: string | null
 } {
   if (receipt.kind !== "ERROR") return { error_code: "PATCH_OUTPUT_INVALID", section_id: null }
+  if (stage === "REVISE" && "legacy_failure" in receipt) {
+    return { error_code: receipt.legacy_failure, section_id: null }
+  }
   if (!("adapter_error" in receipt)) {
     return { error_code: receipt.error_code, section_id: null }
   }
