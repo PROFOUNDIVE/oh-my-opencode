@@ -251,15 +251,32 @@ When OpenMath runs in the default markdown artifacts mode (`"openmath": { "artif
 
 ### Interruptible OpenMath Workflow Profiles
 
-Use the canonical `.opencode/oh-my-openmath.jsonc` filename for a new workflow profile. The older `oh-my-opencode.json[c]` filename is compatibility-only for migration. The repository-owned [OpenMath workflow example](examples/openmath-workflow/profile.jsonc) is parsed by the same Zod schemas as runtime config.
+Use `.opencode/oh-my-openmath.jsonc` for new workflow profiles. `oh-my-opencode.json[c]` is a legacy compatibility filename only. The repository-owned [profile fixture](examples/openmath-workflow/profile.jsonc) is parsed by the same `openmath` schema as runtime configuration.
 
-The `openmath` block accepts `workflow_profiles`, `default_workflow_profile`, and nonempty `workflow_allowed_roots`. A profile name uses lowercase letters, numbers, and hyphens. Each `solve`, `review`, and `revise` role has `agent`, optional `model` and `variant`, `prompt`, and `output_adapter`. Models use exactly `provider/model`; `variant` requires that explicit model. Valid checkpoint policies are `none`, `after_solve`, `after_review`, and `every_stage`.
+| `openmath` field | Type | Default |
+| --- | --- | --- |
+| `artifacts.format` | `"markdown"` or `"json"` | `"markdown"` |
+| `max_review_rounds` | Integer, minimum 1 | `3` |
+| `max_consecutive_patch_failures` | Integer, minimum 1 | `2` |
+| `workflow_profiles` | Profile map | `{}` |
+| `default_workflow_profile` | Profile name | No default |
+| `workflow_allowed_roots` | Nonempty array of nonblank paths | `["."]` |
+| `state_filename_mode` | `"linux"` or `"windows"` | `"linux"` |
+| `default_mode` | `"interactive"`, `"solve_only"`, or `"export"` | No default |
 
-The stage adapter sets are fixed: SOLVE uses `legacy_omo_sections`, `legacy_json_artifacts`, or `opaque_markdown`; REVIEW uses `review_verdict_json` or `review_verdict_markdown`; REVISE uses `patch_set_json`, `full_replace_markdown`, or `legacy_json_artifacts`. The example's REVISE role intentionally selects `full_replace_markdown`, so it returns complete replacement Markdown rather than patch JSON.
+Profile names match `^[a-z][a-z0-9-]*$`. Each profile requires `solve`, `review`, `revise`, `min_review_rounds`, `max_review_rounds`, `required_consecutive_passes`, and `checkpoint`. The three round fields are positive integers; the minimum and required-pass count cannot exceed the maximum. `checkpoint` is `none`, `after_solve`, `after_review`, or `every_stage`.
 
-For file prompts, use `{ "kind": "file", "uri": "file://./prompt.md" }`. The URI is resolved relative to the configuration layer and captured as immutable content plus a hash. Reference manifests are YAML, JSON, or JSONC documents with `version: 1` and a `references` array of `{ id, path, role, stages, required }`; see [references.yaml](examples/openmath-workflow/references.yaml). Manifest entries are relative, regular files inside `workflow_allowed_roots`.
+Each role requires nonblank `agent`, `prompt`, and `output_adapter`. `model` is an optional exact `provider/model` string. `variant` is optional but requires an explicit `model`. Prompt sources are `{ "kind": "builtin" }`, `{ "kind": "inline", "content": "..." }`, or `{ "kind": "file", "uri": "file://./prompt.md" }`.
 
-Use `openmath_workflow_status` after every interruption. Its `next_actions` are the authority for whether to step, amend, reload prompts/references, or abort, and each action supplies its required revision. `openmath_state_get`, `openmath_state_set`, and `openmath_state_reset` are retained only for legacy raw-state compatibility, not workflow mutation. The README documents the five-review restart/resume example and exact recovery codes.
+Adapter compatibility is schema-checked:
+
+| Role | Valid `output_adapter` values |
+| --- | --- |
+| `solve` | `legacy_omo_sections`, `legacy_json_artifacts`, `opaque_markdown` |
+| `review` | `review_verdict_json`, `review_verdict_markdown` |
+| `revise` | `patch_set_json`, `full_replace_markdown`, `legacy_json_artifacts` |
+
+See [Configurable and Interruptible OpenMath Workflows](openmath-workflows.md) for profile selection, request and reference shapes, commands, checkpoints, amendments, reloads, persistence, restart behavior, and troubleshooting. See the complete [workflow fixtures](examples/openmath-workflow/) instead of duplicating them here.
 
 ### Permission Options
 

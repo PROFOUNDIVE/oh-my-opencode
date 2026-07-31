@@ -55,10 +55,6 @@ Focuses on proposing mathematical solutions. It explores different approaches an
 Acts as a rigorous peer reviewer. It checks solutions against known references, identifies logical fallacies, and ensures mathematical precision.
 
 - **`reference-reviewer-markdown`**: Reviews canonical markdown artifacts and returns verdict + blocking issues (no patch ops)
-Focuses on proposing mathematical solutions. It explores different approaches and derives answers based on the problem statement.
-
-### 📚 Reviewer Agent
-Acts as a rigorous peer reviewer. It checks solutions against known references, identifies logical fallacies, and ensures mathematical precision.
 
 ### ✅ Verifier Agent
 Responsible for checking the correctness of the steps. It validates calculations and logical deductions to prevent hallucinations.
@@ -75,7 +71,6 @@ Provides guidance and hints without giving away the answer directly. Useful for 
 - **State Management**: Durable state tools to track progress across sessions
 - **Export Mode**: Generate student/teacher markdown artifacts
 - **Configurable Review Rounds**: Set `max_review_rounds` (default 3, minimum 1)
-- **State Management**: Durable state tools (`openmath_state_get`, `openmath_state_set`, `openmath_state_reset`) to track progress across sessions.
 - **Specialized Roles**: Distinct prompts and contexts for each agent role.
 
 ## Installation
@@ -106,7 +101,7 @@ Configuration is stored in `.opencode/oh-my-openmath.jsonc` or `~/.config/openco
     // State storage filename mode: "linux" (default, backward-compatible) or "windows"
     // In "windows" mode, forbidden filename chars are escaped with underscore tokens (e.g., :: -> _x3A__x3A_)
     "state_filename_mode": "linux",
-    // Default mode
+    // Optional mode selection
     "default_mode": "interactive",
     // Solve-only mode settings
     "solve_only": {
@@ -154,7 +149,7 @@ For legacy JSON mode (`"artifacts": { "format": "json" }`), use `solver` and `re
 
 ## Usage
 
-### Interactive Mode (Default)
+### Interactive Mode
 
 Let Sisyphus guide you through the problem-solving process:
 
@@ -198,9 +193,9 @@ Generates:
 - `hw1_pb4_solution_for_student.md` - Hint ladder only (sequential)
 - `hw1_pb4_solution_for_teacher.md` - Full solution + complete rubric + review certificate + variant problem
 
-### State Management
+### Legacy State Management
 
-Access and manage OpenMath session state:
+Access and manage legacy OpenMath session state. These raw-state tools do not mutate configurable workflow runs:
 
 ```
 /openmath_state_get {"session_id":"SMT-HW1::PB4"}
@@ -228,84 +223,24 @@ Set `"artifacts": { "format": "json" }` in config to use the original JSON-only 
 
 ### Configurable Interruptible Workflows
 
-New interactive workflows are opt-in. Configure them under `openmath.workflow_profiles` in `.opencode/oh-my-openmath.jsonc`; `oh-my-opencode.json[c]` is compatibility-only for existing installations. The complete, schema-validated fixture is in [`docs/examples/openmath-workflow/profile.jsonc`](docs/examples/openmath-workflow/profile.jsonc).
+Workflow profiles are opt-in configurations for the SOLVE, REVIEW, and REVISE stages. They select each stage's agent, model, prompt source, output adapter, stop policy, and checkpoint policy. Existing solve-only behavior remains available without defining a profile.
 
-```jsonc
-{
-  "openmath": {
-    "default_workflow_profile": "openmath-documentation-example",
-    "workflow_allowed_roots": ["."],
-    "workflow_profiles": {
-      "openmath-documentation-example": {
-        "solve": {
-          "agent": "solver-markdown",
-          "model": "openai/gpt-5.3-codex",
-          "prompt": { "kind": "file", "uri": "file://./SOLVER_MARKDOWN.md" },
-          "output_adapter": "opaque_markdown"
-        },
-        "review": {
-          "agent": "reference-reviewer-markdown",
-          "model": "anthropic/claude-opus-4-6",
-          "prompt": { "kind": "file", "uri": "file://./REFERENCE_REVIEWER.md" },
-          "output_adapter": "review_verdict_markdown"
-        },
-        "revise": {
-          "agent": "solver-markdown-patch",
-          "model": "openai/gpt-5.3-codex",
-          "prompt": { "kind": "file", "uri": "file://./SOLVER_MARKDOWN_PATCH.md" },
-          "output_adapter": "full_replace_markdown"
-        },
-        "min_review_rounds": 5,
-        "max_review_rounds": 7,
-        "required_consecutive_passes": 2,
-        "checkpoint": "after_review"
-      }
-    }
-  }
-}
+```text
+/openmath-workflow-start {"run_id":"proof-1","workflow_profile":"openmath-documentation-example","request":{"kind":"markdown","instruction":"Write and verify a proof."},"reference_manifest_path":"docs/examples/openmath-workflow/references.yaml"}
+/openmath-workflow-status {"run_id":"proof-1"}
+/openmath-workflow-step {"run_id":"proof-1","expected_state_revision":0,"mode":"to_checkpoint"}
 ```
 
-Each role requires `agent`, optional explicit `model` and `variant`, a `prompt` of `builtin`, `inline`, or `file`, and a stage-compatible adapter. A `file` prompt must use a `file://` URI and is captured when the profile is loaded. The example reviser deliberately uses `full_replace_markdown`: it replaces the complete Markdown artifact and does not accept patch-set JSON.
+Use the revision returned by status or by the chosen `next_actions` entry; `0` above is the initial revision of a newly started run.
 
-References use the Task 6 manifest shape:
+Core properties:
 
-```yaml
-version: 1
-references:
-  - id: proof-source
-    path: proof-source.md
-    role: authoritative
-    stages: [solve, review, revise]
-    required: true
-```
+- Stages are atomic; interruption occurs between stages at explicit checkpoints, not during token streaming.
+- Prompt and reference file bytes stay fixed for a run until an explicit reload from the persisted source.
+- Every mutation is revision-checked, and every success response supplies authoritative `next_actions`.
+- Runs persist across OpenCode restarts and resume through status plus the returned action and revision.
 
-Reference paths are relative to the manifest. The manifest and every reference must be regular files inside `workflow_allowed_roots`; symlink escapes, absolute entry paths, and paths outside those roots are rejected. Prompt and reference snapshots are immutable and hash-bound after start. Editing a source file does not alter a running workflow. Use `openmath_workflow_reload` with `targets: ["prompts"]`, `targets: ["references"]`, or both, plus the returned revision, to create the next snapshot version.
-
-The six workflow tools are `openmath_workflow_start`, `openmath_workflow_step`, `openmath_workflow_status`, `openmath_workflow_amend`, `openmath_workflow_reload`, and `openmath_workflow_abort`. Their slash-command equivalents use hyphens, for example `/openmath-workflow-start`. Every response carries explicit `next_actions`; use the supplied `required_state_revision` rather than guessing a revision. `openmath_state_get`, `openmath_state_set`, and `openmath_state_reset` remain legacy raw-state compatibility tools. Do not use them to mutate a workflow run.
-
-#### Deterministic End-to-End Example
-
-Start with the documented profile and `references.yaml`, then retain every returned `state_revision` as `rN` below.
-
-1. Call `openmath_workflow_start` with `run_id`, `workflow_profile: "openmath-documentation-example"`, a markdown request, and `reference_manifest_path: "docs/examples/openmath-workflow/references.yaml"`. Call `openmath_workflow_step` in `to_checkpoint` mode with `r0`. SOLVE and review 1 run, then the `after_review` checkpoint returns REVIEW 1 as `REVISE`.
-2. Call `openmath_workflow_amend` with review 1's revision, `operation: "add"`, `kind: "required_check"`, `scope: "next_review"`, and a concrete correction. Step to the next checkpoint; REVIEW 2 returns `REVISE`.
-3. Call `openmath_workflow_reload` with review 2's revision and `targets: ["references"]`. This is the only operation in the sequence that changes the reference snapshot version and hash. Step through REVIEW 3, which returns `REVISE`.
-4. Restart OpenCode. Call `openmath_workflow_status` for the same run, take its returned `required_state_revision`, and call `openmath_workflow_step` in `to_checkpoint` mode. The persisted checkpoint resumes rather than redispatching a committed attempt. REVIEW 4 returns `PASS`.
-5. Step once more with the returned revision. REVIEW 5 returns `PASS`; it is the second consecutive pass and the fifth completed review, so the workflow reaches final `PASSED`.
-
-This timeline satisfies the profile's five-review minimum and two-consecutive-PASS requirement while demonstrating an amendment, explicit reference reload, and restart/resume.
-
-#### Troubleshooting
-
-| Situation | Error code or adapter code | Next action |
-| --- | --- | --- |
-| File prompt is missing, outside its profile base, or its captured provenance is stale | `PROMPT_SOURCE_ERROR` | Correct the `file://` URI or reload prompts with the current revision. |
-| Reviewer omits its standalone verdict line | `ADAPTER_OUTPUT_INVALID` with `MISSING_VERDICT` | Return exactly one `VERDICT: PASS`, `VERDICT: REVISE`, or `VERDICT: INCONCLUSIVE` line, then step after the required intervention. |
-| A tool request uses an old revision | `STALE_STATE_REVISION` | Call status and retry only with its `next_actions[].required_state_revision`. |
-| Restart reconciliation finds ambiguous child identity or prompt markers | `RECONCILIATION_BLOCKED` | Use the returned `step_one_stage` reconciliation action or abort; do not edit raw state. |
-| Manifest, reference, or allowed-root path is rejected | `REFERENCE_SOURCE_ERROR` with `outside_allowed_roots`, `invalid_path`, or `missing` | Keep manifest entries relative and place every referenced file under `workflow_allowed_roots`. |
-
-Other workflow envelopes use `VALIDATION_ERROR`, `RUN_NOT_FOUND`, `RUN_ALREADY_EXISTS`, `PROFILE_NOT_FOUND`, `ILLEGAL_TRANSITION`, `STORAGE_READ_FAILED`, `STORAGE_WRITE_FAILED`, `STORAGE_BUSY`, `STORAGE_ATOMICITY_UNAVAILABLE`, `SUBAGENT_FAILED`, or `ABORTED` as applicable.
+See the [OpenMath workflow guide](docs/openmath-workflows.md), [configuration reference](docs/configurations.md#interruptible-openmath-workflow-profiles), and [canonical workflow fixtures](docs/examples/openmath-workflow/).
 
 ## File Reference Format
 
