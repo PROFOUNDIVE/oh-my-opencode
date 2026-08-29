@@ -1,5 +1,10 @@
 import type { CommandDefinition } from "../claude-code-command-loader"
-import type { BuiltinCommandName, BuiltinCommands, OpenMathWorkflowCommandName } from "./types"
+import type {
+  BuiltinCommandName,
+  BuiltinCommands,
+  OpenMathResearchCommandName,
+  OpenMathWorkflowCommandName,
+} from "./types"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
 import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
@@ -9,8 +14,12 @@ import { HANDOFF_TEMPLATE } from "./templates/handoff"
 import { OPENMATH_SOLVE_ONLY_TEMPLATE } from "./templates/openmath-solve-only"
 import { OPENMATH_EXPORT_TEMPLATE } from "./templates/openmath-export"
 import { OPENMATH_WORKFLOW_COMMAND_DEFINITIONS } from "./workflow-command-definitions"
+import { OPENMATH_RESEARCH_COMMAND_DEFINITIONS } from "./research-command-definitions"
 
-const BUILTIN_COMMAND_DEFINITIONS: Record<Exclude<BuiltinCommandName, OpenMathWorkflowCommandName>, Omit<CommandDefinition, "name">> = {
+const BUILTIN_COMMAND_DEFINITIONS: Record<Exclude<
+  BuiltinCommandName,
+  OpenMathWorkflowCommandName | OpenMathResearchCommandName
+>, Omit<CommandDefinition, "name">> = {
   "init-deep": {
     description: "(builtin) Initialize hierarchical AGENTS.md knowledge base",
     template: `<command-instruction>
@@ -131,6 +140,7 @@ export function loadBuiltinCommands(
   for (const [name, definition] of Object.entries({
     ...BUILTIN_COMMAND_DEFINITIONS,
     ...OPENMATH_WORKFLOW_COMMAND_DEFINITIONS,
+    ...OPENMATH_RESEARCH_COMMAND_DEFINITIONS,
   })) {
     if (!disabled.has(name as BuiltinCommandName)) {
       const { argumentHint: _argumentHint, ...openCodeCompatible } = definition

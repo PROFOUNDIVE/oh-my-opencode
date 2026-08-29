@@ -8,6 +8,14 @@ export type OpenMathWorkflowCommandName =
   | "openmath-workflow-reload"
   | "openmath-workflow-abort"
 
+export type OpenMathResearchCommandName =
+  | "openmath-research-start"
+  | "openmath-research-status"
+  | "openmath-research-step"
+  | "openmath-research-amend"
+  | "openmath-research-promote"
+  | "openmath-research-abort"
+
 export type BuiltinCommandName =
   | "init-deep"
   | "ralph-loop"
@@ -19,6 +27,7 @@ export type BuiltinCommandName =
   | "handoff"
   | "openmath-solve-only"
   | "openmath-export"
+  | OpenMathResearchCommandName
   | OpenMathWorkflowCommandName
 
 export interface BuiltinCommandConfig {

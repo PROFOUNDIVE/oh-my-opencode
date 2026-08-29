@@ -17,6 +17,12 @@ export const BuiltinCommandNameSchema = z.enum([
   "openmath-workflow-amend",
   "openmath-workflow-reload",
   "openmath-workflow-abort",
+  "openmath-research-start",
+  "openmath-research-status",
+  "openmath-research-step",
+  "openmath-research-amend",
+  "openmath-research-promote",
+  "openmath-research-abort",
 ])
 
 export type BuiltinCommandName = z.infer<typeof BuiltinCommandNameSchema>

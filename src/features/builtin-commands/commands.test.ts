@@ -25,6 +25,26 @@ describe("loadBuiltinCommands", () => {
     }
   })
 
+  test("loads exact OpenMath research command routes", () => {
+    const researchCommands = {
+      "openmath-research-start": "openmath_research_start",
+      "openmath-research-status": "openmath_research_status",
+      "openmath-research-step": "openmath_research_step",
+      "openmath-research-amend": "openmath_research_amend",
+      "openmath-research-promote": "openmath_research_promote",
+      "openmath-research-abort": "openmath_research_abort",
+    } as const
+
+    const commands = loadBuiltinCommands()
+
+    expect(Object.keys(commands).filter((name) => name.startsWith("openmath-research-")).sort()).toEqual(
+      Object.keys(researchCommands).sort(),
+    )
+    for (const [commandName, toolName] of Object.entries(researchCommands)) {
+      expect(commands[commandName]?.template).toContain(toolName)
+    }
+  })
+
   test("should include handoff command in loaded commands", () => {
     //#given
     const disabledCommands: BuiltinCommandName[] = []
