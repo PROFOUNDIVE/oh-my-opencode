@@ -1,0 +1,55 @@
+{
+  "default_research_profile": "phase-a-documentation-example",
+  "workflow_allowed_roots": ["."],
+  "workflow_profiles": {
+    "research-candidate": {
+      "solve": {
+        "agent": "solver-markdown",
+        "model": "openai/gpt-5.3-codex",
+        "prompt": { "kind": "inline", "content": "Construct one self-contained proof candidate." },
+        "output_adapter": "opaque_markdown"
+      },
+      "review": {
+        "agent": "reference-reviewer-markdown",
+        "model": "anthropic/claude-opus-4-6",
+        "prompt": { "kind": "inline", "content": "Review the selected candidate." },
+        "output_adapter": "review_verdict_json"
+      },
+      "revise": {
+        "agent": "solver-markdown-patch",
+        "model": "openai/gpt-5.3-codex",
+        "prompt": { "kind": "inline", "content": "Revise the selected candidate from review evidence." },
+        "output_adapter": "patch_set_json"
+      },
+      "min_review_rounds": 1,
+      "max_review_rounds": 3,
+      "required_consecutive_passes": 1,
+      "checkpoint": "after_solve"
+    }
+  },
+  "research_profiles": {
+    "phase-a-documentation-example": {
+      "candidate_workflow_profile": "research-candidate",
+      "strategies": [
+        { "id": "direct", "prompt": { "kind": "file", "uri": "file://./STRATEGY_DIRECT.md" } },
+        { "id": "contradiction", "prompt": { "kind": "file", "uri": "file://./STRATEGY_CONTRADICTION.md" } }
+      ],
+      "candidates_per_strategy": 1,
+      "screening_roles": [
+        {
+          "id": "logical-screen",
+          "agent": "reference-reviewer-markdown",
+          "model": "anthropic/claude-opus-4-6",
+          "prompt": { "kind": "file", "uri": "file://./SCREEN_LOGICAL.md" }
+        }
+      ],
+      "max_active_candidates": 2,
+      "survivor_limit": 2,
+      "tournament_role": {
+        "agent": "oracle",
+        "model": "openai/gpt-5.2",
+        "prompt": { "kind": "file", "uri": "file://./TOURNAMENT.md" }
+      }
+    }
+  }
+}

@@ -278,6 +278,15 @@ Adapter compatibility is schema-checked:
 
 See [Configurable and Interruptible OpenMath Workflows](openmath-workflows.md) for profile selection, request and reference shapes, commands, checkpoints, amendments, reloads, persistence, restart behavior, and troubleshooting. See the complete [workflow fixtures](examples/openmath-workflow/) instead of duplicating them here.
 
+### Phase A OpenMath Research Campaign Profiles
+
+Research campaigns are opt-in through `openmath.research_profiles`; `openmath.default_research_profile` is optional and there is no built-in research profile. See [OpenMath Research Campaigns: Phase A Operations](openmath-research-campaigns.md) for the strict profile fields, repository fixture, lifecycle matrices, isolation rules, explicit recovery loop, and terminal human gate.
+
+| `openmath` field | Type | Default |
+| --- | --- | --- |
+| `research_profiles` | Strict Phase A profile map | `{}` |
+| `default_research_profile` | Profile name | No default |
+
 ### Permission Options
 
 Fine-grained control over what agents can do:

@@ -1,0 +1,6 @@
+version: 1
+references:
+  - id: campaign-reference
+    path: reference.md
+    role: authoritative
+    stages: [solve, review, revise]

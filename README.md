@@ -240,7 +240,7 @@ Core properties:
 - Every mutation is revision-checked, and every success response supplies authoritative `next_actions`.
 - Runs persist across OpenCode restarts and resume through status plus the returned action and revision.
 
-See the [OpenMath workflow guide](docs/openmath-workflows.md), [configuration reference](docs/configurations.md#interruptible-openmath-workflow-profiles), and [canonical workflow fixtures](docs/examples/openmath-workflow/).
+See the [OpenMath workflow guide](docs/openmath-workflows.md), [Phase A research campaign guide](docs/openmath-research-campaigns.md), [configuration reference](docs/configurations.md#interruptible-openmath-workflow-profiles), and [canonical workflow fixtures](docs/examples/openmath-workflow/).
 
 ## File Reference Format
 

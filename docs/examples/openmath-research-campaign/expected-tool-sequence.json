@@ -1,0 +1,49 @@
+[
+  {
+    "tool": "openmath_research_start",
+    "command": "openmath-research-start",
+    "input": {
+      "campaign_id": "phase-a-example",
+      "research_profile": "phase-a-documentation-example",
+      "objective": { "kind": "markdown", "instruction": "Prove the stated result." },
+      "reference_manifest_path": "docs/examples/openmath-research-campaign/references.yaml"
+    }
+  },
+  {
+    "tool": "openmath_research_status",
+    "command": "openmath-research-status",
+    "input": { "campaign_id": "phase-a-example" }
+  },
+  {
+    "tool": "openmath_research_step",
+    "command": "openmath-research-step",
+    "input": { "campaign_id": "phase-a-example", "expected_state_revision": 0, "mode": "to_checkpoint" }
+  },
+  {
+    "tool": "openmath_research_amend",
+    "command": "openmath-research-amend",
+    "input": {
+      "campaign_id": "phase-a-example",
+      "expected_state_revision": 1,
+      "operation": "add",
+      "kind": "required_check",
+      "scope": "all_candidates",
+      "content": "Check every boundary case."
+    }
+  },
+  {
+    "tool": "openmath_research_promote",
+    "command": "openmath-research-promote",
+    "input": {
+      "campaign_id": "phase-a-example",
+      "expected_state_revision": 2,
+      "dossier_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "decision": "approve"
+    }
+  },
+  {
+    "tool": "openmath_research_abort",
+    "command": "openmath-research-abort",
+    "input": { "campaign_id": "phase-a-example", "expected_state_revision": 2, "reason": "Operator stop." }
+  }
+]
