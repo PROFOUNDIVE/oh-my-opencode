@@ -9,6 +9,7 @@ import {
   createDelegateTask,
   createOpenMathArtifactsTools,
   createOpenMathExportTool,
+  createOpenMathResearchTools,
   createOpenMathSolveOnlyTool,
   createOpenMathStateTools,
   createOpenMathWorkflowTools,
@@ -59,6 +60,12 @@ export function createToolRegistry(args: {
     openmathConfig: pluginConfig.openmath ?? OpenMathConfigSchema.parse({}),
     pluginAgents: pluginConfig.agents,
   })
+  const openMathResearchTools = createOpenMathResearchTools({
+    directory: ctx.directory,
+    client: ctx.client,
+    openmathConfig: pluginConfig.openmath ?? OpenMathConfigSchema.parse({}),
+    pluginAgents: pluginConfig.agents,
+  })
 
   const allTools: Record<string, ToolDefinition> = {
     ...createOpenMathStateTools(
@@ -77,6 +84,7 @@ export function createToolRegistry(args: {
       openmathConfig: pluginConfig.openmath,
     }),
     ...openMathWorkflowTools,
+    ...openMathResearchTools,
     ...openMathArtifactsTools,
     ...backgroundTools,
     ...(lookAt ? { look_at: lookAt } : {}),
