@@ -27,6 +27,7 @@ test("passes the immutable stage snapshot unchanged into the typed sync subagent
     prompt_marker: `OPENMATH_ATTEMPT_KEY: ${"e".repeat(64)}\n`,
     persisted_session_id: "child-1",
     send_prompt: false,
+    tool_policy: "deny_all",
     awaited_callbacks: {},
   }
 
@@ -43,5 +44,54 @@ test("passes the immutable stage snapshot unchanged into the typed sync subagent
     promptMarker: input.prompt_marker,
     categoryModel: input.category_model,
     systemContent: "immutable system",
+    tool_policy: "deny_all",
   })
 })
+
+test("forwards a falsey malformed policy to the fail-closed sender", async () => {
+  // given
+  const source = falseyPolicyDriverSource()
+
+  // when
+  const child = Bun.spawn(["bun", "-e", source], { cwd: process.cwd(), stdout: "pipe", stderr: "pipe" })
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ])
+
+  // then
+  if (exitCode !== 0) throw new Error(stderr)
+  expect(stdout.trim()).toBe("forwarded-empty")
+})
+
+function falseyPolicyDriverSource(): string {
+  return `
+    import { createOpencodeClient } from "@opencode-ai/sdk";
+    import { createSyncStageDispatch } from "./src/openmath/workflow/stage-runner/sync-stage-dispatch.ts";
+
+    const dispatch = createSyncStageDispatch({
+      client: createOpencodeClient(),
+      directory: "/project",
+      ctx: { sessionID: "caller", messageID: "message", agent: "tester", abort: new AbortController().signal },
+    }, {
+      runSubagent: async (input) => {
+        console.log(input.tool_policy === "" ? "forwarded-empty" : "missing");
+        return { ok: true, sessionID: "child-1", text: "output" };
+      },
+    });
+    await dispatch({
+      parent_session_id: "parent",
+      child_title: "candidate",
+      agent_to_use: "solver",
+      category_model: { providerID: "openai", modelID: "gpt-5.2" },
+      system_content: undefined,
+      user_prompt: "payload",
+      prompt_marker: "marker",
+      persisted_session_id: undefined,
+      send_prompt: true,
+      tool_policy: "",
+      awaited_callbacks: {},
+    });
+  `
+}

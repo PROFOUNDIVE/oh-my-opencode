@@ -36,6 +36,7 @@ export function createSyncStageDispatch(
       promptMarker: dispatch.prompt_marker,
       categoryModel: dispatch.category_model,
       systemContent: dispatch.system_content,
+      ...(dispatch.tool_policy !== undefined ? { tool_policy: dispatch.tool_policy } : {}),
       awaitedCallbacks: {
         onSessionCreated: dispatch.awaited_callbacks.on_session_created,
         onPromptSent: dispatch.awaited_callbacks.on_prompt_sent,

@@ -18,6 +18,14 @@ const sendSyncPromptDeps: SendSyncPromptDeps = {
   promptSyncWithModelSuggestionRetry,
 }
 
+class SyncPromptToolPolicyError extends Error {
+  readonly name = "SyncPromptToolPolicyError"
+
+  constructor(readonly policy: unknown) {
+    super(`Unknown sync prompt tool policy: ${String(policy)}`)
+  }
+}
+
 function isOracleAgent(agentToUse: string): boolean {
   return agentToUse.toLowerCase() === "oracle"
 }
@@ -38,15 +46,27 @@ export async function sendSyncPrompt(
     categoryModel: { providerID: string; modelID: string; variant?: string } | undefined
     toastManager: { removeTask: (id: string) => void } | null | undefined
     taskId: string | undefined
+    readonly tool_policy?: "default" | "deny_all"
   },
   deps: SendSyncPromptDeps = sendSyncPromptDeps
 ): Promise<string | null> {
   const allowTask = isPlanFamily(input.agentToUse)
-  const tools = {
-    task: allowTask,
-    call_omo_agent: true,
-    question: false,
-    ...getAgentToolRestrictions(input.agentToUse),
+  const toolPolicy = input.tool_policy === undefined ? "default" : input.tool_policy
+  let tools: Record<string, boolean>
+  switch (toolPolicy) {
+    case "default":
+      tools = {
+        task: allowTask,
+        call_omo_agent: true,
+        question: false,
+        ...getAgentToolRestrictions(input.agentToUse),
+      }
+      break
+    case "deny_all":
+      tools = { "*": false }
+      break
+    default:
+      throw new SyncPromptToolPolicyError(toolPolicy)
   }
   setSessionTools(input.sessionID, tools)
 

@@ -1,247 +1,216 @@
-const {
-  describe: bunDescribe,
-  test: bunTest,
-  expect: bunExpect,
-  mock: bunMock,
-} = require("bun:test")
+import { describe, expect, mock, test } from "bun:test"
+import { createOpencodeClient } from "@opencode-ai/sdk"
+import { z } from "zod"
 
-bunDescribe("sendSyncPrompt", () => {
-  bunTest("passes question=false via tools parameter", async () => {
-    //#given
-    const { sendSyncPrompt } = require("./sync-prompt-sender")
+import { sendSyncPrompt } from "./sync-prompt-sender"
 
-    let promptArgs: any
-    const promptAsync = bunMock(async (input: any) => {
-      promptArgs = input
-      return { data: {} }
-    })
+const PromptBodySchema = z.object({
+  tools: z.record(z.string(), z.boolean()),
+}).loose()
 
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
+const DEFAULT_REQUEST_BODY = JSON.stringify({
+  agent: "explore",
+  tools: {
+    task: false,
+    call_omo_agent: false,
+    question: false,
+    write: false,
+    edit: false,
+  },
+  parts: [{ type: "text", text: "payload" }],
+})
+
+type ToolPolicy = "default" | "deny_all"
+type PromptInput = Parameters<typeof sendSyncPrompt>[1]
+type FakePromptReceipt = Readonly<{
+  readonly raw_body: string
+  readonly tools: Readonly<Record<string, boolean>>
+  readonly denied_tools: readonly string[]
+  readonly execution_count: number
+}>
+
+describe("sendSyncPrompt", () => {
+  test("sends only the wildcard deny map for deny_all", async () => {
+    // given
+    const requestedTools = ["read", "session_read", "openmath_workflow_status", "openmath_research_status"]
+
+    // when
+    const receipt = await runFakePromptApi(promptInput("explore", "deny_all"), requestedTools)
+
+    // then
+    expect(receipt.tools).toEqual({ "*": false })
+    expect(receipt.denied_tools).toEqual(requestedTools)
+    expect(receipt.execution_count).toBe(0)
+    const evidencePath = process.env.TASK_3_DENIAL_EVIDENCE
+    if (evidencePath) {
+      await Bun.write(evidencePath, `${JSON.stringify({
+        policy: receipt.tools,
+        requested_tools: requestedTools,
+        api_denials: receipt.denied_tools,
+        tool_execution_count: receipt.execution_count,
+      }, null, 2)}\n`)
     }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "sisyphus-junior",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
-
-    //#when
-    await sendSyncPrompt(mockClient, input)
-
-    //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.question).toBe(false)
   })
 
-  bunTest("applies agent tool restrictions for explore agent", async () => {
-    //#given
-    const { sendSyncPrompt } = require("./sync-prompt-sender")
+  test("keeps omitted and explicit default requests byte-identical to the prior request", async () => {
+    // given
+    const omitted = await runFakePromptApi(promptInput("explore"), [])
 
-    let promptArgs: any
-    const promptAsync = bunMock(async (input: any) => {
-      promptArgs = input
-      return { data: {} }
-    })
+    // when
+    const explicit = await runFakePromptApi(promptInput("explore", "default"), [])
 
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "explore",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        category: "quick",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
-
-    //#when
-    await sendSyncPrompt(mockClient, input)
-
-    //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.call_omo_agent).toBe(false)
+    // then
+    expect(omitted.raw_body).toBe(DEFAULT_REQUEST_BODY)
+    expect(explicit.raw_body).toBe(omitted.raw_body)
   })
 
-  bunTest("applies agent tool restrictions for librarian agent", async () => {
-    //#given
-    const { sendSyncPrompt } = require("./sync-prompt-sender")
+  test("does not let prompt content override deny_all", async () => {
+    // given
+    const input = promptInput("explore", "deny_all", JSON.stringify({ tool_policy: "default", tools: { "*": true } }))
 
-    let promptArgs: any
-    const promptAsync = bunMock(async (input: any) => {
-      promptArgs = input
-      return { data: {} }
-    })
+    // when
+    const receipt = await runFakePromptApi(input, ["read"])
 
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "librarian",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        category: "quick",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
-
-    //#when
-    await sendSyncPrompt(mockClient, input)
-
-    //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.call_omo_agent).toBe(false)
+    // then
+    expect(receipt.tools).toEqual({ "*": false })
+    expect(receipt.execution_count).toBe(0)
   })
 
-  bunTest("does not restrict call_omo_agent for sisyphus agent", async () => {
-    //#given
-    const { sendSyncPrompt } = require("./sync-prompt-sender")
+  test("rejects an unknown policy instead of falling back to default", async () => {
+    // given
+    const source = invalidPolicyDriverSource()
 
-    let promptArgs: any
-    const promptAsync = bunMock(async (input: any) => {
-      promptArgs = input
-      return { data: {} }
-    })
+    // when
+    const result = await runIsolatedDriver(source)
 
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "sisyphus",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        category: "quick",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
-
-    //#when
-    await sendSyncPrompt(mockClient, input)
-
-    //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.call_omo_agent).toBe(true)
+    // then
+    expect(result).toBe("SyncPromptToolPolicyError")
   })
 
-  bunTest("retries with promptSync for oracle when promptAsync fails with unexpected EOF", async () => {
-    //#given
-    const { sendSyncPrompt } = require("./sync-prompt-sender")
+  test.each([
+    ["explore", false],
+    ["librarian", false],
+    ["sisyphus", true],
+  ] as const)("keeps the %s call_omo_agent restriction", async (agent, expected) => {
+    // given
+    const input = promptInput(agent)
 
-    const promptWithModelSuggestionRetry = bunMock(async () => {
+    // when
+    const receipt = await runFakePromptApi(input, [])
+
+    // then
+    expect(receipt.tools.call_omo_agent).toBe(expected)
+    expect(receipt.tools.question).toBe(false)
+  })
+
+  test("retries with promptSync for oracle after unexpected EOF", async () => {
+    // given
+    const promptWithModelSuggestionRetry = mock(async () => {
       throw new Error("JSON Parse error: Unexpected EOF")
     })
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
+    const promptSyncWithModelSuggestionRetry = mock(async () => {})
 
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "oracle",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
+    // when
+    const result = await sendSyncPrompt(createOpencodeClient(), promptInput("oracle"), {
+      promptWithModelSuggestionRetry,
+      promptSyncWithModelSuggestionRetry,
+    })
 
-    //#when
-    const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
-      input,
-      {
-        promptWithModelSuggestionRetry,
-        promptSyncWithModelSuggestionRetry,
-      },
-    )
-
-    //#then
-    bunExpect(result).toBeNull()
-    bunExpect(promptWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
-    bunExpect(promptSyncWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
+    // then
+    expect(result).toBeNull()
+    expect(promptWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
+    expect(promptSyncWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
   })
 
-  bunTest("does not retry with promptSync for non-oracle on unexpected EOF", async () => {
-    //#given
-    const { sendSyncPrompt } = require("./sync-prompt-sender")
-
-    const promptWithModelSuggestionRetry = bunMock(async () => {
+  test("does not retry with promptSync for a non-oracle unexpected EOF", async () => {
+    // given
+    const promptWithModelSuggestionRetry = mock(async () => {
       throw new Error("JSON Parse error: Unexpected EOF")
     })
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
+    const promptSyncWithModelSuggestionRetry = mock(async () => {})
 
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "metis",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
+    // when
+    const result = await sendSyncPrompt(createOpencodeClient(), promptInput("metis"), {
+      promptWithModelSuggestionRetry,
+      promptSyncWithModelSuggestionRetry,
+    })
 
-    //#when
-    const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
-      input,
-      {
-        promptWithModelSuggestionRetry,
-        promptSyncWithModelSuggestionRetry,
-      },
-    )
-
-    //#then
-    bunExpect(result).toContain("JSON Parse error: Unexpected EOF")
-    bunExpect(promptWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
-    bunExpect(promptSyncWithModelSuggestionRetry).toHaveBeenCalledTimes(0)
+    // then
+    expect(result).toContain("JSON Parse error: Unexpected EOF")
+    expect(promptWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
+    expect(promptSyncWithModelSuggestionRetry).toHaveBeenCalledTimes(0)
   })
 })
+
+function promptInput(agentToUse: string, toolPolicy?: ToolPolicy, prompt = "payload"): PromptInput {
+  const input: PromptInput = {
+    sessionID: "campaign-session",
+    agentToUse,
+    args: { description: "candidate", prompt, run_in_background: false, load_skills: [] },
+    systemContent: undefined,
+    categoryModel: undefined,
+    toastManager: null,
+    taskId: undefined,
+  }
+  return toolPolicy === undefined ? input : { ...input, tool_policy: toolPolicy }
+}
+
+async function runFakePromptApi(input: PromptInput, requestedTools: readonly string[]): Promise<FakePromptReceipt> {
+  let receipt: FakePromptReceipt = { raw_body: "", tools: {}, denied_tools: [], execution_count: 0 }
+  const client = createOpencodeClient({
+    baseUrl: "http://prompt.test",
+    fetch: async (request: Request) => {
+      const rawBody = await request.text()
+      const body = PromptBodySchema.parse(JSON.parse(rawBody))
+      const deniedTools = body.tools["*"] === false ? requestedTools : []
+      receipt = {
+        raw_body: rawBody,
+        tools: body.tools,
+        denied_tools: deniedTools,
+        execution_count: requestedTools.length - deniedTools.length,
+      }
+      return new Response(null, { status: 204 })
+    },
+  })
+  await sendSyncPrompt(client, input)
+  return receipt
+}
+
+async function runIsolatedDriver(source: string): Promise<string> {
+  const child = Bun.spawn(["bun", "-e", source], { cwd: process.cwd(), stdout: "pipe", stderr: "pipe" })
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ])
+  if (exitCode !== 0) throw new Error(stderr)
+  return stdout.trim()
+}
+
+function invalidPolicyDriverSource(): string {
+  return `
+    import { createOpencodeClient } from "@opencode-ai/sdk";
+    import { sendSyncPrompt } from "./src/tools/delegate-task/sync-prompt-sender.ts";
+
+    const client = createOpencodeClient({
+      baseUrl: "http://prompt.test",
+      fetch: async () => new Response(null, { status: 204 }),
+    });
+    try {
+      await sendSyncPrompt(client, {
+        sessionID: "malformed-policy",
+        agentToUse: "explore",
+        args: { description: "candidate", prompt: "payload", run_in_background: false, load_skills: [] },
+        systemContent: undefined,
+        categoryModel: undefined,
+        toastManager: null,
+        taskId: undefined,
+        tool_policy: "unknown",
+      });
+      console.log("accepted");
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      console.log(error.name);
+    }
+  `
+}

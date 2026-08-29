@@ -11,6 +11,7 @@ export type StageSubagentDispatch = Readonly<{
   readonly prompt_marker: string
   readonly persisted_session_id: string | undefined
   readonly send_prompt: boolean
+  readonly tool_policy?: "default" | "deny_all"
   readonly awaited_callbacks: Readonly<{
     readonly on_session_created?: (sessionID: string) => Promise<void>
     readonly on_prompt_sent?: (sessionID: string) => Promise<void>

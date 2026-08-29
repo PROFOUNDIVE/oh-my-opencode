@@ -33,6 +33,28 @@ test("propagates a lifecycle persistence failure instead of converting it to a s
   expect(result).toBe("persist-after-session-created")
 })
 
+test("forwards deny_all to the sync prompt dependency", async () => {
+  // given
+  const source = toolPolicyDriverSource("deny_all")
+
+  // when
+  const result = await runIsolatedDriver(source)
+
+  // then
+  expect(result).toBe("deny_all")
+})
+
+test("forwards a falsey malformed policy for fail-closed validation", async () => {
+  // given
+  const source = toolPolicyDriverSource("")
+
+  // when
+  const result = await runIsolatedDriver(source)
+
+  // then
+  expect(result).toBe("forwarded-empty")
+})
+
 async function runIsolatedDriver(source: string): Promise<string> {
   const child = Bun.spawn(["bun", "-e", source], {
     cwd: process.cwd(),
@@ -85,6 +107,7 @@ function syncDriverSource(resume: boolean): string {
       },
       sendSyncPrompt: async (_client, input) => {
         promptCalls += 1;
+        if ("tool_policy" in input) throw new Error("default policy field was injected");
         prompted.push(input.systemContent + "|" + input.categoryModel?.providerID + "/" + input.categoryModel?.modelID + "/" + input.categoryModel?.variant + "|" + input.args.prompt);
         return null;
       },
@@ -133,5 +156,35 @@ function lifecycleFailureDriverSource(): string {
       if (!(error instanceof Error)) throw error;
       console.log(error.message);
     }
+  `
+}
+
+function toolPolicyDriverSource(policy: string): string {
+  return `
+    import { createOpencodeClient } from "@opencode-ai/sdk";
+    import { runSyncSubagentText } from "./src/tools/openmath-solve-only/run-sync-subagent.ts";
+
+    let observedPolicy = "missing";
+    const result = await runSyncSubagentText({
+      client: createOpencodeClient(),
+      directory: "/project",
+      parentSessionID: "campaign-parent",
+      ctx: { sessionID: "campaign-caller", messageID: "message", agent: "tester", abort: new AbortController().signal },
+      agentToUse: "solver",
+      description: "candidate",
+      prompt: "payload",
+      tool_policy: ${JSON.stringify(policy)},
+    }, {
+      createSyncSession: async () => ({ ok: true, sessionID: "candidate-1", parentDirectory: "/project" }),
+      sendSyncPrompt: async (_client, input) => {
+        observedPolicy = input.tool_policy === "" ? "forwarded-empty" : input.tool_policy ?? "missing";
+        return null;
+      },
+      pollSyncSession: async () => null,
+      fetchSyncResult: async () => ({ ok: true, textContent: "output" }),
+    });
+
+    if (!result.ok) throw new Error(result.error);
+    console.log(observedPolicy);
   `
 }

@@ -40,6 +40,7 @@ export async function runSyncSubagentText(
     systemContent?: string
     categoryModel?: CategoryModel
     awaitedCallbacks?: AwaitedCallbacks
+    readonly tool_policy?: "default" | "deny_all"
   },
   deps: SyncTaskDeps = syncTaskDeps,
 ): Promise<{ ok: true; sessionID: string; text: string } | { ok: false; error: string; error_code?: string }> {
@@ -79,6 +80,7 @@ export async function runSyncSubagentText(
         categoryModel: args.categoryModel,
         toastManager: null,
         taskId: undefined,
+        ...(args.tool_policy !== undefined ? { tool_policy: args.tool_policy } : {}),
       })
 
       if (promptError) {
