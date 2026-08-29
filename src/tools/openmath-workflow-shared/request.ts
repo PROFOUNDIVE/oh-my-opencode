@@ -4,6 +4,8 @@ import { z } from "zod"
 import { resolveProblemRefToProblemText } from "../openmath-solve-only/problem-ref"
 import { WorkflowRequestSnapshotSchema, type WorkflowRequestSnapshot } from "../../openmath/workflow/state"
 
+export { serializeWorkflowInputSnapshot as workflowInputFromSnapshot } from "../../openmath/workflow/application/serialize-workflow-input-snapshot"
+
 const NonBlankSchema = z.string().refine((value) => value.trim().length > 0)
 const ProblemRequestSchema = z.object({
   kind: z.literal("problem"),
@@ -40,10 +42,6 @@ export async function resolveWorkflowRequest(
     default:
       return assertNever(request)
   }
-}
-
-export function workflowInputFromSnapshot(snapshot: WorkflowRequestSnapshot): string {
-  return JSON.stringify(snapshot)
 }
 
 async function resolveProblemRequest(

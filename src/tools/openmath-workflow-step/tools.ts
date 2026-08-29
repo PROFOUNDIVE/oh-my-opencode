@@ -1,10 +1,9 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
-import { createWorkflowStageRuntime, runWorkflowStep } from "../../openmath/workflow/stage-runner"
-import { readWorkflowState } from "../../openmath/workflow/storage"
-import { reduceTransition } from "../../openmath/workflow/transitions"
+import { stepWorkflow } from "../../openmath/workflow/application/step-workflow"
+import { createWorkflowStageRuntime } from "../../openmath/workflow/stage-runner"
 import type { ToolContextWithMetadata } from "../delegate-task/types"
-import { jsonWorkflowError, jsonWorkflowException, jsonWorkflowSuccess, workflowInputFromSnapshot, type OpenMathWorkflowToolOptions } from "../openmath-workflow-shared"
+import { jsonWorkflowError, jsonWorkflowException, jsonWorkflowSuccess, type OpenMathWorkflowToolOptions } from "../openmath-workflow-shared"
 import { OpenMathWorkflowStepInputSchema } from "./types"
 
 export function createOpenMathWorkflowStepTool(options: OpenMathWorkflowToolOptions): ToolDefinition {
@@ -14,26 +13,14 @@ export function createOpenMathWorkflowStepTool(options: OpenMathWorkflowToolOpti
     execute: async (rawArgs: Record<string, unknown>, context) => {
       try {
         const input = OpenMathWorkflowStepInputSchema.parse(rawArgs)
-        const current = await readWorkflowState(options.directory, input.run_id)
-        if (current.kind === "error") return jsonWorkflowError(current)
-        if (current.state.state_revision !== input.expected_state_revision) {
-          return jsonWorkflowError({ error_code: "STALE_STATE_REVISION", message: `Expected revision ${input.expected_state_revision}, found ${current.state.state_revision}`, current_state_revision: current.state.state_revision })
-        }
-        if (current.state.request_snapshot === undefined) {
-          return jsonWorkflowError({ error_code: "STORAGE_READ_FAILED", message: "Workflow request snapshot is missing" })
-        }
-        const preflight = reduceTransition(current.state, { type: "STEP", mode: input.mode ?? "one_stage" })
-        if (!preflight.ok) return jsonWorkflowError({ error_code: preflight.error_code, message: preflight.message })
         const ctx = context as ToolContextWithMetadata
-        const runtime = options.createStageRuntime?.({ state: current.state, ctx }) ?? defaultRuntime(options, current.state, ctx)
-        if (!runtime) return jsonWorkflowError({ error_code: "SUBAGENT_FAILED", message: "OpenCode client is required to execute workflow stages" })
-        const state = await runWorkflowStep({
-          state: current.state,
-          workflow_input: workflowInputFromSnapshot(current.state.request_snapshot),
+        const result = await stepWorkflow({
+          directory: options.directory,
+          run_id: input.run_id,
+          expected_state_revision: input.expected_state_revision,
           mode: input.mode ?? "one_stage",
-          runtime,
-        })
-        return jsonWorkflowSuccess(state)
+        }, { create_runtime: (state) => options.createStageRuntime?.({ state, ctx }) ?? defaultRuntime(options, state, ctx) })
+        return result.kind === "ok" ? jsonWorkflowSuccess(result.state) : jsonWorkflowError(result)
       } catch (error) {
         return jsonWorkflowException(error)
       }

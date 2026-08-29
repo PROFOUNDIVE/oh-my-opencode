@@ -1,6 +1,7 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
-import { jsonWorkflowException, mutateWorkflow, type OpenMathWorkflowToolOptions } from "../openmath-workflow-shared"
+import { abortWorkflow } from "../../openmath/workflow/application/abort-workflow"
+import { jsonWorkflowError, jsonWorkflowException, jsonWorkflowSuccess, type OpenMathWorkflowToolOptions } from "../openmath-workflow-shared"
 import { OpenMathWorkflowAbortInputSchema } from "./types"
 
 export function createOpenMathWorkflowAbortTool(options: OpenMathWorkflowToolOptions): ToolDefinition {
@@ -10,12 +11,13 @@ export function createOpenMathWorkflowAbortTool(options: OpenMathWorkflowToolOpt
     execute: async (rawArgs: Record<string, unknown>) => {
       try {
         const input = OpenMathWorkflowAbortInputSchema.parse(rawArgs)
-        return await mutateWorkflow({
+        const result = await abortWorkflow({
           directory: options.directory,
           run_id: input.run_id,
           expected_state_revision: input.expected_state_revision,
-          event: { type: "ABORT", reason: input.reason },
+          reason: input.reason,
         })
+        return result.kind === "ok" ? jsonWorkflowSuccess(result.state) : jsonWorkflowError(result)
       } catch (error) {
         return jsonWorkflowException(error)
       }

@@ -1,6 +1,7 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
-import { jsonWorkflowException, mutateWorkflow, type OpenMathWorkflowToolOptions } from "../openmath-workflow-shared"
+import { amendWorkflow } from "../../openmath/workflow/application/amend-workflow"
+import { jsonWorkflowError, jsonWorkflowException, jsonWorkflowSuccess, type OpenMathWorkflowToolOptions } from "../openmath-workflow-shared"
 import { OpenMathWorkflowAmendInputSchema, OpenMathWorkflowAmendmentScopeSchema, OpenMathWorkflowNonBlankSchema } from "./types"
 
 export function createOpenMathWorkflowAmendTool(options: OpenMathWorkflowToolOptions): ToolDefinition {
@@ -18,10 +19,8 @@ export function createOpenMathWorkflowAmendTool(options: OpenMathWorkflowToolOpt
     execute: async (rawArgs: Record<string, unknown>) => {
       try {
         const input = OpenMathWorkflowAmendInputSchema.parse(rawArgs)
-        const event = input.operation === "add"
-          ? { type: "ADD_AMENDMENT" as const, kind: input.kind, scope: input.scope, content: input.content }
-          : { type: "RETRACT_AMENDMENT" as const, amendment_id: input.amendment_id }
-        return await mutateWorkflow({ ...input, directory: options.directory, event })
+        const result = await amendWorkflow({ ...input, directory: options.directory })
+        return result.kind === "ok" ? jsonWorkflowSuccess(result.state) : jsonWorkflowError(result)
       } catch (error) {
         return jsonWorkflowException(error)
       }
