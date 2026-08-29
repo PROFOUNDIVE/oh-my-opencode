@@ -1,0 +1,1 @@
+export const OPENMATH_RESEARCH_PROMOTE_TEMPLATE = `Call the exact tool openmath_research_promote with the JSON object in $ARGUMENTS. This decision ends only at promotion-ready metadata or rejection; it does not create canonical authority or certify mathematical correctness. Return only the tool output.`
