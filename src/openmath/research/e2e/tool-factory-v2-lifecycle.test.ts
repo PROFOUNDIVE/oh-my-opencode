@@ -45,6 +45,7 @@ describe("enabled V2 public tool-factory lifecycle", () => {
       "openmath_research_step",
       "openmath_research_amend",
       "openmath_research_promote",
+      "openmath_research_educationalize",
       "openmath_research_abort",
     ])
     const stepTool = tools.openmath_research_step

@@ -124,7 +124,7 @@ describe("old-profile Phase-A public baseline", () => {
     }
 
     // then
-    expect(Object.keys(research)).toEqual(["openmath_research_start", "openmath_research_status", "openmath_research_step", "openmath_research_amend", "openmath_research_promote", "openmath_research_abort"])
+    expect(Object.keys(research)).toEqual(["openmath_research_start", "openmath_research_status", "openmath_research_step", "openmath_research_amend", "openmath_research_promote", "openmath_research_educationalize", "openmath_research_abort"])
     expect(Object.keys(workflow)).toEqual(["openmath_workflow_start", "openmath_workflow_step", "openmath_workflow_status", "openmath_workflow_amend", "openmath_workflow_reload", "openmath_workflow_abort"])
     expect(mutationAccepted).toEqual({ seventh_tool: false, campaign_field: false, envelope_field: false, v1_field: false })
     expect(CampaignErrorEnvelopeSchema.safeParse({ ok: false, error_code: "VALIDATION_ERROR", message: "invalid" }).success).toBe(true)

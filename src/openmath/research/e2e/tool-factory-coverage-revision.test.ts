@@ -86,6 +86,7 @@ describe("enabled coverage revision through public research factories", () => {
       "openmath_research_step",
       "openmath_research_amend",
       "openmath_research_promote",
+      "openmath_research_educationalize",
       "openmath_research_abort",
     ])
 
