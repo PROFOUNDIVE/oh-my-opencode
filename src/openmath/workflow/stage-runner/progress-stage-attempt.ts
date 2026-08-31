@@ -128,6 +128,7 @@ async function dispatchAttempt(input: Readonly<{
     prompt_marker: `OPENMATH_ATTEMPT_KEY: ${input.attempt.idempotency_key}\n`,
     persisted_session_id: "child_session_id" in input.attempt ? input.attempt.child_session_id : undefined,
     send_prompt: input.send_prompt,
+    tool_policy: state.request_snapshot?.kind === "research_educationalization" ? "deny_all" : undefined,
     awaited_callbacks: {
       on_session_created: async (sessionID) => {
         if (input.attempt.phase !== "PREPARED") return

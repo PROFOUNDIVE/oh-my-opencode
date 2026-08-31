@@ -56,7 +56,9 @@ export function stageReceiptFromOutput(input: Readonly<{
           raw_report: adapted.review.raw_report,
           raw_report_sha256: sha256(adapted.review.raw_report),
           findings: [],
-          checks_performed: ["artifact_correctness", "reference_consistency"],
+          checks_performed: adapted.review.checks_performed === undefined
+            ? ["artifact_correctness", "reference_consistency"]
+            : [...adapted.review.checks_performed],
           session_id: input.attempt.child_session_id,
           prompt_hash: input.attempt.prompt_hash,
           reference_hash: input.attempt.reference_hash,
@@ -99,6 +101,15 @@ function adapterInput(adapter: RunningState["profile_snapshot"]["solve"]["output
         ...(legacyPatchOptions(state) ? { patch_options: legacyPatchOptions(state) } : {}),
       } as const
     case "full_replace_markdown":
+      return { adapter, raw_output: rawOutput } as const
+    case "research_educational_artifacts": {
+      const request = state.request_snapshot
+      if (request?.kind !== "research_educationalization") {
+        throw new TypeError("Research educational artifacts require research educationalization provenance")
+      }
+      return { adapter, raw_output: rawOutput, fixed_reference_solution: request.reference_solution } as const
+    }
+    case "research_educational_review_json":
       return { adapter, raw_output: rawOutput } as const
     default:
       return assertNever(adapter)
