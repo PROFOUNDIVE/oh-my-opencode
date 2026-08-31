@@ -6,6 +6,7 @@ import { reduceCompleteDiscovery } from "./complete-discovery"
 import { reduceCompleteScreening } from "./complete-screening"
 import { reduceCompleteTournament } from "./complete-tournament"
 import { reduceDossierReady, reducePromotionDecision } from "./promotion"
+import { reducePublishCertificationAttachment } from "./publish-certification-attachment"
 import { reduceRequestCampaignStep } from "./request-step"
 import { reduceCampaignAbort, reduceCampaignBlock, reduceCampaignRejection } from "./terminal-controls"
 import { illegal } from "./transition-result"
@@ -33,6 +34,8 @@ export function reduceCampaignTransition(
       return reduceCompleteChildWorkflow(state, event)
     case "DOSSIER_READY":
       return reduceDossierReady(state, event)
+    case "PUBLISH_CERTIFICATION_ATTACHMENT":
+      return reducePublishCertificationAttachment(state, event)
     case "ADD_AMENDMENT":
       return reduceAddCampaignAmendment(state, event)
     case "RETRACT_AMENDMENT":

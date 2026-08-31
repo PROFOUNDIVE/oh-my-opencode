@@ -1,4 +1,5 @@
 import type { ResearchCampaignStateV1 } from "../state"
+import { admitPromotionDecision } from "./promotion-approval-gate"
 import { illegal, invalid, validated } from "./transition-result"
 import type { CampaignTransitionEvent, CampaignTransitionResult } from "./types"
 
@@ -53,6 +54,8 @@ export function reducePromotionDecision(
   ) {
     return illegal(state, "Promotion decision requires the before-promotion checkpoint")
   }
+  const admission = admitPromotionDecision(state, event)
+  if (!admission.ok) return invalid(state, admission.message)
   switch (event.decision_receipt.decision) {
     case "approve":
       return validated(state, {

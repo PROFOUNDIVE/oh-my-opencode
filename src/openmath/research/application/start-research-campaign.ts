@@ -5,8 +5,9 @@ import type { WorkflowRequestSnapshot } from "../../workflow/state"
 import { ResearchProfileResolutionError, type ResearchProfileSnapshot } from "../profile-snapshot"
 import { startResearchCampaignState, type ResearchCampaignMutationResult } from "../storage"
 import { buildCampaignSourceSnapshot } from "./build-campaign-source-snapshot"
-import { campaignErrorEnvelope, campaignSuccessEnvelope } from "./campaign-envelope"
-import type { CampaignApplicationResult } from "./campaign-application-result"
+import { campaignErrorEnvelope } from "./campaign-envelope"
+import type { PublicCampaignApplicationResult } from "./campaign-application-result"
+import { campaignLifecycleEnvelope } from "./campaign-lifecycle-envelope"
 import { CampaignSourceResolutionError } from "./campaign-source-resolution-error"
 import { createInitialCampaignState } from "./create-initial-campaign-state"
 
@@ -21,7 +22,7 @@ export async function startResearchCampaign(input: Readonly<{
   readonly directory: string
   readonly campaign_id: string
   readonly parent_session_id: string
-}>, dependencies: StartResearchCampaignDependencies): Promise<CampaignApplicationResult> {
+}>, dependencies: StartResearchCampaignDependencies): Promise<PublicCampaignApplicationResult> {
   try {
     const objective = await dependencies.resolve_objective()
     const references = await dependencies.resolve_references()
@@ -32,7 +33,7 @@ export async function startResearchCampaign(input: Readonly<{
       source_snapshot: buildCampaignSourceSnapshot({ objective, profile, references }),
     })
     const result = await (dependencies.start_state ?? startResearchCampaignState)({ directory: input.directory, state })
-    return result.kind === "ok" ? campaignSuccessEnvelope(result.state) : campaignErrorEnvelope(result)
+    return result.kind === "ok" ? campaignLifecycleEnvelope(result.state) : campaignErrorEnvelope(result)
   } catch (error) {
     if (error instanceof ResearchProfileResolutionError) {
       const error_code = error.code === "PROFILE_NOT_FOUND" ? "PROFILE_NOT_FOUND" : error.code === "SOURCE_ERROR" ? "SOURCE_ERROR" : "VALIDATION_ERROR"

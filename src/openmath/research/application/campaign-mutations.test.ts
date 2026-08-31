@@ -63,6 +63,30 @@ describe("campaign mutations", () => {
     expect(result).toMatchObject({ ok: false, error_code: "VALIDATION_ERROR" })
   })
 
+  test("rejects certification revision fields on Phase A mutations", async () => {
+    // given
+    const state = emptyDiscoveryState()
+    let writes = 0
+
+    // when
+    const result = await abortResearchCampaign({
+      directory,
+      campaign_id: state.campaign_id,
+      expected_state_revision: state.state_revision,
+      expected_certification_revision: null,
+    }, {
+      read_state: async () => ({ kind: "ok", state }),
+      compare_and_swap: async () => {
+        writes += 1
+        return { kind: "error", error_code: "STORAGE_WRITE_FAILED", message: "must not write" }
+      },
+    })
+
+    // then
+    expect(result).toMatchObject({ ok: false, error_code: "VALIDATION_ERROR" })
+    expect(writes).toBe(0)
+  })
+
   test("maps selected refinement to unchanged workflow all_remaining amendment", async () => {
     // given
     const state = awaitingState("DEEP_REFINEMENT")

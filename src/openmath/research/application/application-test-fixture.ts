@@ -62,6 +62,15 @@ export function profileSnapshot(references: ReferenceSnapshot = referenceSnapsho
   return Object.freeze({ ...core, profile_hash: hash(JSON.stringify(core)), reference_snapshot: references })
 }
 
+export function rehashProfileSnapshot(profile: ResearchProfileSnapshot): ResearchProfileSnapshot {
+  const { profile_hash: _profileHash, reference_snapshot: references, ...staleCore } = profile
+  const core = {
+    ...staleCore,
+    candidate_workflow_profile_hash: hash(JSON.stringify(profile.candidate_workflow_profile)),
+  }
+  return Object.freeze({ ...core, profile_hash: hash(JSON.stringify(core)), reference_snapshot: references })
+}
+
 function role(output_adapter: "opaque_markdown" | "review_verdict_json" | "patch_set_json") {
   return {
     agent: "solver",

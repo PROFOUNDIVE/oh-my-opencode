@@ -11,7 +11,7 @@ import {
 } from "../state"
 import { ResearchCampaignStateV1Schema } from "../state"
 import { buildCampaignSourceSnapshot } from "../application/build-campaign-source-snapshot"
-import { objectiveSnapshot, profileSnapshot, referenceSnapshot } from "../application/application-test-fixture"
+import { objectiveSnapshot, profileSnapshot, rehashProfileSnapshot, referenceSnapshot } from "../application/application-test-fixture"
 import { screen, tournament } from "../state/aggregate-test-fixture"
 
 export const HASH_A = CampaignHashSchema.parse("a".repeat(64))
@@ -24,11 +24,11 @@ export function withValidScreeningSources(
   const baseProfile = profileSnapshot()
   const sourceSnapshot = buildCampaignSourceSnapshot({
     objective: objectiveSnapshot(),
-    profile: {
+    profile: rehashProfileSnapshot({
       ...baseProfile,
       survivor_limit: survivorLimit,
       screening_roles: baseProfile.screening_roles.map((role) => ({ ...role, id: "logical-soundness" })),
-    },
+    }),
     references: referenceSnapshot(),
   })
   return ResearchCampaignStateV1Schema.parse({

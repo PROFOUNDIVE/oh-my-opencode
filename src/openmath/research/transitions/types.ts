@@ -10,10 +10,20 @@ import {
   type ScreenReceipt,
   type TournamentReceipt,
 } from "../state"
+import type { CertificationSelectedArtifact } from "../certification/state/identity"
+import type { ResearchCertificationStateV1 } from "../certification/state/schema"
+import type { OpaqueAttachmentReference } from "../state/attachments"
 
 export type CampaignStepMode = "one_stage" | "to_checkpoint"
 export type CampaignAmendmentScope = z.infer<typeof CampaignAmendmentScopeSchema>
 export type CampaignAmendmentKind = "question" | "required_check" | "suspected_blocker" | "scope_change"
+
+export type PromotionCertificationEvidence = Readonly<{
+  readonly state: ResearchCertificationStateV1
+  readonly content_sha256: string
+  readonly observed_selected_artifact: CertificationSelectedArtifact
+  readonly artifact_content_sha256: string
+}>
 
 export type CampaignChildResult =
   | { readonly status: "PASSED"; readonly candidate: CandidateDescriptor }
@@ -52,13 +62,25 @@ export type CampaignTransitionEvent =
     }
   | { readonly type: "DOSSIER_READY"; readonly dossier: PromotionDossierReference }
   | {
+      readonly type: "PUBLISH_CERTIFICATION_ATTACHMENT"
+      readonly selected_artifact: CertificationSelectedArtifact
+      readonly certification_profile_sha256: string
+      readonly generation_id: string
+      readonly certification_revision: number
+      readonly attachment: OpaqueAttachmentReference
+    }
+  | {
       readonly type: "ADD_AMENDMENT"
       readonly kind: CampaignAmendmentKind
       readonly scope: CampaignAmendmentScope
       readonly content: string
     }
   | { readonly type: "RETRACT_AMENDMENT"; readonly amendment_id: string }
-  | { readonly type: "PROMOTE"; readonly decision_receipt: PromotionDecisionReceipt }
+  | {
+      readonly type: "PROMOTE"
+      readonly decision_receipt: PromotionDecisionReceipt
+      readonly certification_evidence?: PromotionCertificationEvidence
+    }
   | { readonly type: "ABORT"; readonly reason: string | null }
   | { readonly type: "BLOCK"; readonly reason: string; readonly job_attempts: readonly CampaignJobAttempt[] }
   | { readonly type: "REJECT"; readonly job_attempts: readonly CampaignJobAttempt[] }

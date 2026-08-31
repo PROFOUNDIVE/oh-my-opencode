@@ -34,6 +34,7 @@ export type CampaignSchedulerTransition = Exclude<CampaignTransitionEvent,
   | { readonly type: "ADD_AMENDMENT" }
   | { readonly type: "RETRACT_AMENDMENT" }
   | { readonly type: "PROMOTE" }
+  | { readonly type: "PUBLISH_CERTIFICATION_ATTACHMENT" }
   | { readonly type: "ABORT" }
 >
 
