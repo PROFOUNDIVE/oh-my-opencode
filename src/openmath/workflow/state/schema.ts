@@ -6,6 +6,7 @@ import { AwaitingReasonSchema, HashSchema, WorkflowStageSchema } from "./literal
 import { ReferenceSnapshotSchema, WorkflowProfileSnapshotSchema } from "./snapshots"
 import { StageAttemptSchema, StageRecordSchema } from "./stage-contracts"
 import { WorkflowRequestSnapshotSchema } from "./request-snapshot"
+import { researchEducationalizationInvariantIssues } from "./research-educationalization-invariants"
 
 const NonBlankSchema = z.string().refine((value) => value.trim().length > 0)
 
@@ -65,6 +66,8 @@ const WorkflowStateCoreSchema = z.object({
   legacy_source_hash: HashSchema.nullable(),
 })
 
+export type WorkflowStateCore = z.infer<typeof WorkflowStateCoreSchema>
+
 const IdleStatusFields = {
   next_stage: WorkflowStageSchema,
   awaiting_reason: z.null(),
@@ -117,6 +120,9 @@ export const WorkflowStateV1Schema = z.discriminatedUnion("status", [
     blocked_reason: NonBlankSchema,
   }).strict(),
 ]).superRefine((state, context) => {
+  for (const issue of researchEducationalizationInvariantIssues(state)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: [...issue.path], message: issue.message })
+  }
   if (state.abort_requested === false && state.abort_reason !== null) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["abort_reason"], message: "Abort reason requires abort_requested" })
   }
