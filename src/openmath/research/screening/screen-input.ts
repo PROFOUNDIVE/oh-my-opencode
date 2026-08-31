@@ -58,6 +58,8 @@ function objectiveContent(objective: WorkflowRequestSnapshot): BlindScreenInput[
       }
     case "markdown":
       return { kind: "markdown", instruction: objective.instruction }
+    case "research_educationalization":
+      throw new TypeError("Research educationalization cannot be used as a campaign objective")
     default:
       return assertNever(objective)
   }
