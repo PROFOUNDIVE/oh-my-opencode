@@ -9,6 +9,7 @@ import { createOpenMathResearchTools } from "../../tools/openmath-research-tools
 import { OpenMathResearchEnabledAbortInputSchema, OpenMathResearchPhaseAAbortInputSchema } from "../../tools/openmath-research-abort/types"
 import { OpenMathResearchEnabledAmendInputSchema, OpenMathResearchPhaseAAmendInputSchema } from "../../tools/openmath-research-amend/types"
 import { OpenMathResearchEnabledPromoteInputSchema, OpenMathResearchPhaseAPromoteInputSchema } from "../../tools/openmath-research-promote/types"
+import { OpenMathResearchEducationalizeInputSchema } from "../../tools/openmath-research-educationalize/types"
 import { OpenMathResearchStartInputSchema } from "../../tools/openmath-research-start"
 import { OpenMathResearchStatusInputSchema } from "../../tools/openmath-research-status"
 import { OpenMathResearchEnabledStepInputSchema, OpenMathResearchPhaseAStepInputSchema } from "../../tools/openmath-research-step/types"
@@ -22,6 +23,7 @@ const expectedToolNames = [
   "openmath_research_step",
   "openmath_research_amend",
   "openmath_research_promote",
+  "openmath_research_educationalize",
   "openmath_research_abort",
 ] as const
 const expectedCommandNames = expectedToolNames.map((name) => name.replace(/_/g, "-"))
@@ -46,8 +48,9 @@ const EnabledToolSequenceSchema = z.array(z.discriminatedUnion("tool", [
   route("openmath_research_step", "openmath-research-step", OpenMathResearchEnabledStepInputSchema),
   route("openmath_research_amend", "openmath-research-amend", OpenMathResearchEnabledAmendInputSchema),
   route("openmath_research_promote", "openmath-research-promote", OpenMathResearchEnabledPromoteInputSchema),
+  route("openmath_research_educationalize", "openmath-research-educationalize", OpenMathResearchEducationalizeInputSchema),
   route("openmath_research_abort", "openmath-research-abort", OpenMathResearchEnabledAbortInputSchema),
-])).length(6).readonly()
+])).length(7).readonly()
 
 describe("OpenMath research campaign documentation examples", () => {
   test("parses the Phase A profile, prompt sources, references, and runtime snapshot", () => {
@@ -92,7 +95,7 @@ describe("OpenMath research campaign documentation examples", () => {
     expect(snapshot.certification?.witness_role.prompt.kind).toBe("file")
   })
 
-  test("binds Phase A and enabled examples to their exact six public routes", () => {
+  test("binds Phase A and enabled examples to their exact public routes", () => {
     const config = fixtureConfig()
     const sequence = EnabledToolSequenceSchema.parse(JSON.parse(readFileSync(
       join(exampleDirectory, "expected-tool-sequence.json"),
