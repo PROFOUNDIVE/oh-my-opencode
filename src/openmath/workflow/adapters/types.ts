@@ -20,6 +20,12 @@ export type AdapterInput =
       readonly patch_options?: PatchAdapterOptions
     }>
   | Readonly<{ readonly adapter: "full_replace_markdown"; readonly raw_output: string }>
+  | Readonly<{
+      readonly adapter: "research_educational_artifacts"
+      readonly raw_output: string
+      readonly fixed_reference_solution: string
+    }>
+  | Readonly<{ readonly adapter: "research_educational_review_json"; readonly raw_output: string }>
 
 export type AdapterErrorCode =
   | "EMPTY_MARKDOWN"
@@ -32,6 +38,9 @@ export type AdapterErrorCode =
   | "DUPLICATE_VERDICT"
   | "CONFLICTING_VERDICTS"
   | "INVALID_REVIEW_VERDICT"
+  | "INVALID_RESEARCH_EDUCATIONAL_ARTIFACTS"
+  | "INVALID_RESEARCH_EDUCATIONAL_REVIEW"
+  | "REFERENCE_SOLUTION_MUTATED"
 
 type AdapterErrorFor<Code extends AdapterErrorCode> = Readonly<{
   readonly kind: "adapter_error"
@@ -51,6 +60,9 @@ export type AdapterError =
   | AdapterErrorFor<"DUPLICATE_VERDICT">
   | AdapterErrorFor<"CONFLICTING_VERDICTS">
   | AdapterErrorFor<"INVALID_REVIEW_VERDICT">
+  | AdapterErrorFor<"INVALID_RESEARCH_EDUCATIONAL_ARTIFACTS">
+  | AdapterErrorFor<"INVALID_RESEARCH_EDUCATIONAL_REVIEW">
+  | AdapterErrorFor<"REFERENCE_SOLUTION_MUTATED">
 
 export type MarkdownArtifact = Readonly<{
   readonly media_type: "text/markdown"
@@ -71,6 +83,8 @@ export type AdapterReview = Readonly<{
   readonly verdict: CanonicalReviewVerdict
   readonly raw_report: string
   readonly legacy_metadata?: LegacyReviewMetadata
+  readonly source_defect?: boolean
+  readonly checks_performed?: readonly string[]
 }>
 
 type ParsedMarkdownArtifact = MarkdownArtifact & Readonly<{ readonly draft: OpenMathArtifactsDraft }>
@@ -85,7 +99,7 @@ type LegacyOmoSectionsResult = Readonly<{
 type LegacyJsonArtifactsResult = Readonly<{
   readonly ok: true
   readonly kind: "legacy_json_artifacts"
-  readonly adapter: "legacy_json_artifacts"
+  readonly adapter: "legacy_json_artifacts" | "research_educational_artifacts"
   readonly artifacts: LegacyJsonArtifacts
 }>
 
@@ -99,7 +113,7 @@ type ReplacementMarkdownResult = Readonly<{
 type ReviewResult = Readonly<{
   readonly ok: true
   readonly kind: "review"
-  readonly adapter: "review_verdict_json" | "review_verdict_markdown"
+  readonly adapter: "review_verdict_json" | "review_verdict_markdown" | "research_educational_review_json"
   readonly review: AdapterReview
 }>
 

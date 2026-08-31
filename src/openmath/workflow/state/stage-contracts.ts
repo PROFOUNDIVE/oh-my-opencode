@@ -31,6 +31,9 @@ const AdapterErrorSchema = z.discriminatedUnion("code", [
     "DUPLICATE_VERDICT",
     "CONFLICTING_VERDICTS",
     "INVALID_REVIEW_VERDICT",
+    "INVALID_RESEARCH_EDUCATIONAL_ARTIFACTS",
+    "INVALID_RESEARCH_EDUCATIONAL_REVIEW",
+    "REFERENCE_SOLUTION_MUTATED",
     ]),
   }).strict(),
   AdapterErrorBaseSchema.extend({
