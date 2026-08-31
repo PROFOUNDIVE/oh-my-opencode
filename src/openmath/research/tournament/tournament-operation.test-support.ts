@@ -4,6 +4,7 @@ import { createInitialCampaignState } from "../application/create-initial-campai
 import {
   objectiveSnapshot,
   profileSnapshot,
+  rehashProfileSnapshot,
   referenceSnapshot,
 } from "../application/application-test-fixture"
 import { stepResearchCampaign } from "../application"
@@ -69,7 +70,7 @@ export class FakeTournamentTransport {
 }
 
 export async function createScreenedCampaign(directory: string) {
-  const profile = { ...profileSnapshot(), survivor_limit: 2 }
+  const profile = rehashProfileSnapshot({ ...profileSnapshot(), survivor_limit: 2 })
   const initial = createInitialCampaignState({
     campaign_id: "campaign-a",
     parent_session_id: "ses_parent",

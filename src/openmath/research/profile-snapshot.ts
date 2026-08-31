@@ -1,29 +1,17 @@
-import { createHash } from "node:crypto"
-
 import type { OpenMathConfig } from "../../config/schema/openmath"
 import { resolveAllowedRoots, resolveManifestPath } from "../references/path-resolver"
 import { ReferenceManifestError, type ReferenceSnapshot } from "../references/types"
-import {
-  resolveWorkflowProfileSnapshot,
-  type ResolvedAgentModel,
-  type ResolvedWorkflowProfileSnapshot,
-} from "../workflow/profile-snapshot"
+import { resolveWorkflowProfileSnapshot, type ResolvedAgentModel, type ResolvedWorkflowProfileSnapshot } from "../workflow/profile-snapshot"
 import { WorkflowProfileResolutionError } from "../workflow/profile-snapshot-error"
+import { sha256 } from "../workflow/stage-runner/sha256"
 import { ReferenceSnapshotSchema, WorkflowProfileSnapshotSchema } from "../workflow/state/snapshots"
+import { deepFreeze } from "./deep-freeze"
 import { ResearchProfileNameSchema, type ResearchProfile } from "./profile-schema"
-import {
-  ResearchRoleResolutionError,
-  resolveResearchPromptSnapshot,
-  resolveResearchRoleSnapshot,
-  type ResolvedResearchPromptSnapshot,
-  type ResolvedResearchRoleSnapshot,
-} from "./role-settings"
+import { ResearchRoleResolutionError, resolveResearchCertificationSnapshot, resolveResearchPromptSnapshot, resolveResearchRoleSnapshot, type ResolvedResearchCertificationSnapshot, type ResolvedResearchPromptSnapshot, type ResolvedResearchRoleSnapshot } from "./role-settings"
 
-export type { ResolvedResearchPromptSnapshot, ResolvedResearchRoleSnapshot } from "./role-settings"
+export type { ResolvedResearchCertificationSnapshot, ResolvedResearchPromptSnapshot, ResolvedResearchRoleSnapshot } from "./role-settings"
 
-type CandidateWorkflowProfileSnapshot = Readonly<
-  ResolvedWorkflowProfileSnapshot & { readonly snapshot_version: number }
->
+type CandidateWorkflowProfileSnapshot = Readonly<ResolvedWorkflowProfileSnapshot & { readonly snapshot_version: number }>
 
 export type ResearchProfileSnapshot = Readonly<{
   readonly snapshot_version: 1
@@ -39,14 +27,12 @@ export type ResearchProfileSnapshot = Readonly<{
   readonly max_active_candidates: number
   readonly survivor_limit: number
   readonly tournament_role: ResolvedResearchRoleSnapshot
+  readonly certification?: ResolvedResearchCertificationSnapshot
   readonly profile_hash: string
   readonly reference_snapshot: ReferenceSnapshot
 }>
 
-export type ResearchProfileResolutionErrorCode =
-  | "PROFILE_NOT_FOUND"
-  | "SOURCE_ERROR"
-  | "INVALID_WORKFLOW_PROFILE"
+export type ResearchProfileResolutionErrorCode = "PROFILE_NOT_FOUND" | "SOURCE_ERROR" | "INVALID_WORKFLOW_PROFILE"
 
 export class ResearchProfileResolutionError extends Error {
   readonly name = "ResearchProfileResolutionError"
@@ -78,6 +64,7 @@ export function resolveResearchProfileSnapshot(
   let strategies: ResearchProfileSnapshot["strategies"]
   let screeningRoles: ResearchProfileSnapshot["screening_roles"]
   let tournamentRole: ResearchProfileSnapshot["tournament_role"]
+  let certification: ResearchProfileSnapshot["certification"]
   try {
     strategies = selection.profile.strategies.map((strategy) => ({
       id: strategy.id,
@@ -94,6 +81,11 @@ export function resolveResearchProfileSnapshot(
     tournamentRole = resolveResearchRoleSnapshot({
       role: selection.profile.tournament_role,
       source: source("tournament_role"),
+      resolve_agent_model: input.resolve_agent_model,
+    })
+    certification = selection.profile.certification === undefined ? undefined : resolveResearchCertificationSnapshot({
+      certification: selection.profile.certification,
+      source: { directory: input.directory, allowed_roots: allowedRoots },
       resolve_agent_model: input.resolve_agent_model,
     })
   } catch (error) {
@@ -114,6 +106,7 @@ export function resolveResearchProfileSnapshot(
     max_active_candidates: selection.profile.max_active_candidates,
     survivor_limit: selection.profile.survivor_limit,
     tournament_role: tournamentRole,
+    ...(certification === undefined ? {} : { certification }),
   }
   const referenceSnapshot = ReferenceSnapshotSchema.parse(input.reference_snapshot)
   const snapshot: ResearchProfileSnapshot = {
@@ -202,14 +195,4 @@ function assertFileAllowed(
   allowedRoots: ReturnType<typeof resolveAllowedRoots>,
 ): void {
   resolveManifestPath({ referenceManifestPath: uri, projectDirectory: directory, allowedRoots })
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value, "utf8").digest("hex")
-}
-
-function deepFreeze(value: unknown): void {
-  if (typeof value !== "object" || value === null || Object.isFrozen(value)) return
-  for (const child of Object.values(value)) deepFreeze(child)
-  Object.freeze(value)
 }

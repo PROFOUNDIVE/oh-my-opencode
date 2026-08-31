@@ -10,6 +10,12 @@ export type ReplacementPrompt = {
   readonly sha256: string
 }
 
+export type ResolvedReplacementPromptSource = {
+  readonly originalPath: string
+  readonly resolvedPath: string
+  readonly canonicalPath: string
+}
+
 export type ReplacementPromptDiagnosticCode =
   | "malformed"
   | "missing"
@@ -32,31 +38,35 @@ export class ReplacementPromptDiagnostic extends Error {
 export function resolveReplacementPrompt(fileUri: string, configDir?: string): ReplacementPrompt {
   const decoded = decodeReplacementUri(fileUri, configDir)
   const canonicalPath = resolveCanonicalPath(fileUri, decoded)
-  const stats = readSourceStats(fileUri, canonicalPath)
+  return readResolvedReplacementPrompt({ originalPath: fileUri, resolvedPath: decoded.path, canonicalPath })
+}
+
+export function readResolvedReplacementPrompt(source: ResolvedReplacementPromptSource): ReplacementPrompt {
+  const stats = readSourceStats(source.originalPath, source.canonicalPath)
 
   if (!stats.isFile()) {
-    throw new ReplacementPromptDiagnostic("non_regular", fileUri, canonicalPath)
+    throw new ReplacementPromptDiagnostic("non_regular", source.originalPath, source.canonicalPath)
   }
   if ((stats.mode & 0o444) === 0) {
-    throw new ReplacementPromptDiagnostic("unreadable", fileUri, canonicalPath)
+    throw new ReplacementPromptDiagnostic("unreadable", source.originalPath, source.canonicalPath)
   }
 
   try {
-    accessSync(canonicalPath, constants.R_OK)
-    const bytes = readFileSync(canonicalPath)
+    accessSync(source.canonicalPath, constants.R_OK)
+    const bytes = readFileSync(source.canonicalPath)
     const content = new TextDecoder("utf-8", { fatal: true }).decode(bytes)
     return {
       content,
-      uri: fileUri,
-      path: decoded.path,
-      canonicalPath,
+      uri: source.originalPath,
+      path: source.resolvedPath,
+      canonicalPath: source.canonicalPath,
       sha256: createHash("sha256").update(bytes).digest("hex"),
     }
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new ReplacementPromptDiagnostic("invalid_utf8", fileUri, canonicalPath)
+      throw new ReplacementPromptDiagnostic("invalid_utf8", source.originalPath, source.canonicalPath)
     }
-    throw new ReplacementPromptDiagnostic("unreadable", fileUri, canonicalPath)
+    throw new ReplacementPromptDiagnostic("unreadable", source.originalPath, source.canonicalPath)
   }
 }
 

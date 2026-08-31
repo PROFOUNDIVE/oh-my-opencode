@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto"
 import { z } from "zod"
 
-import { resolveReplacementPrompt, ReplacementPromptDiagnostic } from "../../agents/builtin-agents/replacement-prompt-resolver"
+import { readResolvedReplacementPrompt, ReplacementPromptDiagnostic } from "../../agents/builtin-agents/replacement-prompt-resolver"
 import { resolveManifestPath, type resolveAllowedRoots } from "../references/path-resolver"
 import { ReferenceManifestError } from "../references/types"
 import type { ResolvedAgentModel } from "../workflow/profile-snapshot"
 import { PromptSourceSchema } from "../workflow/prompt-source"
 import { parseWorkflowModelString, WorkflowModelStringSchema } from "../workflow/role-settings"
+import type { ResearchCertificationProfile } from "./profile-schema"
 
 const NonBlankStringSchema = z.string().refine((value) => value.trim().length > 0, {
   message: "Value must not be blank",
@@ -64,6 +65,21 @@ export type ResolvedResearchRoleSnapshot = Readonly<{
   readonly prompt: ResolvedResearchPromptSnapshot
 }>
 
+export type ResolvedResearchCertificationSnapshot = Readonly<{
+  readonly schema_version: 1
+  readonly extraction_role: ResolvedResearchRoleSnapshot
+  readonly coverage_role: ResolvedResearchRoleSnapshot
+  readonly counterexample_role: ResolvedResearchRoleSnapshot
+  readonly witness_role: ResolvedResearchRoleSnapshot
+  readonly max_obligations: number
+  readonly max_coverage_rounds: number
+  readonly max_coverage_findings: number
+  readonly allowed_attack_modes: ResearchCertificationProfile["allowed_attack_modes"]
+  readonly max_attacks_per_obligation: number
+  readonly max_active_certification_jobs: number
+  readonly certification_profile_hash: string
+}>
+
 export class ResearchRoleResolutionError extends Error {
   readonly name = "ResearchRoleResolutionError"
 }
@@ -93,6 +109,33 @@ export function resolveResearchRoleSnapshot(input: Readonly<{
   }
 }
 
+export function resolveResearchCertificationSnapshot(input: Readonly<{
+  readonly certification: ResearchCertificationProfile
+  readonly source: Omit<ResearchSourceResolutionInput, "location">
+  readonly resolve_agent_model: (agent: string) => ResolvedAgentModel
+}>): ResolvedResearchCertificationSnapshot {
+  const resolveRole = (role: ResearchRoleSettings, location: string) => resolveResearchRoleSnapshot({
+    role,
+    source: { ...input.source, location },
+    resolve_agent_model: input.resolve_agent_model,
+  })
+  const certification = input.certification
+  const core = {
+    schema_version: certification.schema_version,
+    extraction_role: resolveRole(certification.extraction_role, "certification.extraction_role"),
+    coverage_role: resolveRole(certification.coverage_role, "certification.coverage_role"),
+    counterexample_role: resolveRole(certification.counterexample_role, "certification.counterexample_role"),
+    witness_role: resolveRole(certification.witness_role, "certification.witness_role"),
+    max_obligations: certification.max_obligations,
+    max_coverage_rounds: certification.max_coverage_rounds,
+    max_coverage_findings: certification.max_coverage_findings,
+    allowed_attack_modes: certification.allowed_attack_modes,
+    max_attacks_per_obligation: certification.max_attacks_per_obligation,
+    max_active_certification_jobs: certification.max_active_certification_jobs,
+  }
+  return { ...core, certification_profile_hash: sha256(JSON.stringify(core)) }
+}
+
 export function resolveResearchPromptSnapshot(input: Readonly<{
   readonly prompt: ResearchPromptSource
 } & ResearchSourceResolutionInput>): ResolvedResearchPromptSnapshot {
@@ -105,12 +148,12 @@ export function resolveResearchPromptSnapshot(input: Readonly<{
       }
     case "file":
       try {
-        resolveManifestPath({
+        const resolved = resolveManifestPath({
           referenceManifestPath: input.prompt.uri,
           projectDirectory: input.directory,
           allowedRoots: input.allowed_roots,
         })
-        const prompt = resolveReplacementPrompt(input.prompt.uri, input.directory)
+        const prompt = readResolvedReplacementPrompt(resolved)
         return {
           kind: "file",
           original_uri: prompt.uri,

@@ -2,8 +2,9 @@ import { describe, expect, test } from "bun:test"
 
 import { buildCampaignSourceSnapshot } from "../application/build-campaign-source-snapshot"
 import { createInitialCampaignState } from "../application/create-initial-campaign-state"
-import { objectiveSnapshot, profileSnapshot, referenceSnapshot } from "../application/application-test-fixture"
+import { objectiveSnapshot, profileSnapshot, rehashProfileSnapshot, referenceSnapshot } from "../application/application-test-fixture"
 import type { ResearchProfileSnapshot } from "../profile-snapshot"
+import { CampaignJobIdSchema, CandidateIdSchema, ChildRunIdSchema } from "../state"
 import { planCandidateDiscovery } from "./candidate-planner"
 
 describe("candidate discovery planner", () => {
@@ -24,10 +25,10 @@ describe("candidate discovery planner", () => {
       ordinal: candidate.candidate_kind === "STRATEGY" ? candidate.strategy_ordinal : 0,
       parents: candidate.parent_candidate_ids,
     }))).toEqual([
-      { id: "direct-01", run: "campaign-a::direct-01", ordinal: 1, parents: [] },
-      { id: "direct-02", run: "campaign-a::direct-02", ordinal: 2, parents: [] },
-      { id: "contradiction-01", run: "campaign-a::contradiction-01", ordinal: 1, parents: [] },
-      { id: "contradiction-02", run: "campaign-a::contradiction-02", ordinal: 2, parents: [] },
+      { id: CandidateIdSchema.parse("direct-01"), run: ChildRunIdSchema.parse("campaign-a::direct-01"), ordinal: 1, parents: [] },
+      { id: CandidateIdSchema.parse("direct-02"), run: ChildRunIdSchema.parse("campaign-a::direct-02"), ordinal: 2, parents: [] },
+      { id: CandidateIdSchema.parse("contradiction-01"), run: ChildRunIdSchema.parse("campaign-a::contradiction-01"), ordinal: 1, parents: [] },
+      { id: CandidateIdSchema.parse("contradiction-02"), run: ChildRunIdSchema.parse("campaign-a::contradiction-02"), ordinal: 2, parents: [] },
     ])
     expect(result.plan.job_attempts.map((job) => ({
       phase: job.phase,
@@ -35,10 +36,10 @@ describe("candidate discovery planner", () => {
       target: job.target,
       prepared: job.prepared_at_revision,
     }))).toEqual([
-      { phase: "PREPARED", job: "job-candidate-direct-01", target: { kind: "CANDIDATE", candidate_id: "direct-01" }, prepared: 1 },
-      { phase: "PREPARED", job: "job-candidate-direct-02", target: { kind: "CANDIDATE", candidate_id: "direct-02" }, prepared: 1 },
-      { phase: "PREPARED", job: "job-candidate-contradiction-01", target: { kind: "CANDIDATE", candidate_id: "contradiction-01" }, prepared: 1 },
-      { phase: "PREPARED", job: "job-candidate-contradiction-02", target: { kind: "CANDIDATE", candidate_id: "contradiction-02" }, prepared: 1 },
+      { phase: "PREPARED", job: CampaignJobIdSchema.parse("job-candidate-direct-01"), target: { kind: "CANDIDATE", candidate_id: CandidateIdSchema.parse("direct-01") }, prepared: 1 },
+      { phase: "PREPARED", job: CampaignJobIdSchema.parse("job-candidate-direct-02"), target: { kind: "CANDIDATE", candidate_id: CandidateIdSchema.parse("direct-02") }, prepared: 1 },
+      { phase: "PREPARED", job: CampaignJobIdSchema.parse("job-candidate-contradiction-01"), target: { kind: "CANDIDATE", candidate_id: CandidateIdSchema.parse("contradiction-01") }, prepared: 1 },
+      { phase: "PREPARED", job: CampaignJobIdSchema.parse("job-candidate-contradiction-02"), target: { kind: "CANDIDATE", candidate_id: CandidateIdSchema.parse("contradiction-02") }, prepared: 1 },
     ])
   })
 
@@ -101,7 +102,7 @@ function campaignState(profile: ResearchProfileSnapshot) {
 }
 
 function withCandidatesPerStrategy(profile: ResearchProfileSnapshot, count: number): ResearchProfileSnapshot {
-  return { ...profile, candidates_per_strategy: count, max_active_candidates: count }
+  return rehashProfileSnapshot({ ...profile, candidates_per_strategy: count, max_active_candidates: count })
 }
 
 function missingStrategy(): ResearchProfileSnapshot["strategies"][number] {

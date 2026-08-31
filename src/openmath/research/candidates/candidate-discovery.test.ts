@@ -8,6 +8,7 @@ import { createInitialCampaignState } from "../application/create-initial-campai
 import {
   objectiveSnapshot,
   profileSnapshot,
+  rehashProfileSnapshot,
   referenceSnapshot,
   removeTemporaryCampaignDirectory,
   temporaryCampaignDirectory,
@@ -17,6 +18,7 @@ import type { ResearchProfileSnapshot } from "../profile-snapshot"
 import { serializeCandidateChildWorkflowInput, type CandidateChildWorkflowInput } from "./candidate-child-input"
 import { createCandidateDiscoveryStepDependencies } from "./candidate-discovery-operations"
 import { FakeCandidateTransport } from "./candidate-discovery-test-runtime"
+import { CampaignHashSchema } from "../state"
 
 type ForbiddenBuilderKey = Extract<keyof CandidateChildWorkflowInput,
   | "candidate_id" | "sibling_candidates" | "parent_candidate_ids" | "lineage"
@@ -135,7 +137,9 @@ describe("candidate discovery operation", () => {
     expect(inputBytes[1]).not.toContain(FakeCandidateTransport.secret)
     const campaign = await readResearchCampaignState(directory, initial.campaign_id)
     if (campaign.kind === "error") throw new TypeError(campaign.message)
-    expect(campaign.state.job_attempts.map((job) => job.input_sha256)).toEqual(inputBytes.map(sha256))
+    expect(campaign.state.job_attempts.map((job) => job.input_sha256)).toEqual(
+      inputBytes.map((input) => CampaignHashSchema.parse(sha256(input))),
+    )
     const directRequest = transport.requests.find((request) => request.child_title.includes("direct-01"))
     const contradictionRequest = transport.requests.find((request) => request.child_title.includes("contradiction-01"))
     expect(directRequest?.user_prompt).toContain("STRATEGY_DIRECT_SENTINEL")
@@ -174,17 +178,17 @@ describe("candidate discovery operation", () => {
 })
 
 function withCandidatesPerStrategy(profile: ResearchProfileSnapshot, count: number): ResearchProfileSnapshot {
-  return { ...profile, candidates_per_strategy: count, max_active_candidates: 2 }
+  return rehashProfileSnapshot({ ...profile, candidates_per_strategy: count, max_active_candidates: 2 })
 }
 
 function withStrategyMarkers(profile: ResearchProfileSnapshot): ResearchProfileSnapshot {
-  return {
+  return rehashProfileSnapshot({
     ...profile,
     strategies: profile.strategies.map((strategy, index) => ({
       ...strategy,
       prompt: { ...strategy.prompt, content: index === 0 ? "STRATEGY_DIRECT_SENTINEL" : "STRATEGY_CONTRADICTION_SENTINEL" },
     })),
-  }
+  })
 }
 
 function sha256(value: string): string {

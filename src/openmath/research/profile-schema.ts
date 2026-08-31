@@ -16,6 +16,16 @@ export const ResearchProfileNameSchema = StableIdSchema.brand<"ResearchProfileNa
 export const ResearchStrategyIdSchema = StableIdSchema.brand<"ResearchStrategyId">()
 export const ResearchScreeningRoleIdSchema = StableIdSchema.brand<"ResearchScreeningRoleId">()
 
+export const ResearchCertificationAttackModeSchema = z.enum([
+  "EDGE_CASE",
+  "FINITE_SEARCH",
+  "DEGENERATE_CASE",
+  "ASSUMPTION_REMOVAL",
+  "PARAMETER_BOUNDARY",
+  "CONSTRUCTION_SEARCH",
+  "COMPUTATIONAL_FALSIFICATION",
+])
+
 const ResearchStrategySchema = z.object({
   id: ResearchStrategyIdSchema,
   prompt: ResearchPromptSourceSchema,
@@ -28,6 +38,45 @@ const ResearchScreeningRoleSchema = z.object({
   addVariantModelIssue(role, context)
 }).readonly()
 
+export const ResearchCertificationProfileSchema = z.object({
+  schema_version: z.literal(1),
+  extraction_role: ResearchRoleSettingsSchema,
+  coverage_role: ResearchRoleSettingsSchema,
+  counterexample_role: ResearchRoleSettingsSchema,
+  witness_role: ResearchRoleSettingsSchema,
+  max_obligations: z.number().int().min(1).max(256),
+  max_coverage_rounds: z.number().int().min(1).max(5),
+  max_coverage_findings: z.number().int().min(1).max(256),
+  allowed_attack_modes: z.array(ResearchCertificationAttackModeSchema).min(1).max(7).readonly(),
+  max_attacks_per_obligation: z.number().int().min(1).max(7),
+  max_active_certification_jobs: z.number().int().min(1).max(16),
+}).strict().superRefine((certification, context) => {
+  addCertificationAttackBoundIssues(certification, context)
+}).readonly()
+
+export function addCertificationAttackBoundIssues(
+  certification: Readonly<{
+    readonly allowed_attack_modes: readonly string[]
+    readonly max_attacks_per_obligation: number
+  }>,
+  context: z.RefinementCtx,
+): void {
+  const modes = new Set<string>()
+  for (const [index, mode] of certification.allowed_attack_modes.entries()) {
+    if (modes.has(mode)) {
+      context.addIssue({ code: "custom", path: ["allowed_attack_modes", index], message: "Attack modes must be unique" })
+    }
+    modes.add(mode)
+  }
+  if (certification.max_attacks_per_obligation > modes.size) {
+    context.addIssue({
+      code: "custom",
+      path: ["max_attacks_per_obligation"],
+      message: "max_attacks_per_obligation must not exceed the unique configured attack mode count",
+    })
+  }
+}
+
 export const ResearchProfileSchema = z.object({
   candidate_workflow_profile: WorkflowProfileNameSchema,
   strategies: z.array(ResearchStrategySchema).min(2).max(8).readonly(),
@@ -36,6 +85,7 @@ export const ResearchProfileSchema = z.object({
   max_active_candidates: z.number().int().min(1).max(32),
   survivor_limit: z.number().int().min(1).max(32),
   tournament_role: ResearchRoleSettingsSchema,
+  certification: ResearchCertificationProfileSchema.optional(),
 }).strict().superRefine((profile, context) => {
   addDuplicateIssues(profile.strategies, "strategies", context)
   addDuplicateIssues(profile.screening_roles, "screening_roles", context)
@@ -98,5 +148,6 @@ function addDuplicateIssues(
 }
 
 export type ResearchProfile = z.infer<typeof ResearchProfileSchema>
+export type ResearchCertificationProfile = z.infer<typeof ResearchCertificationProfileSchema>
 export type ResearchProfiles = z.infer<typeof ResearchProfilesSchema>
 export type ResearchProfileName = z.infer<typeof ResearchProfileNameSchema>

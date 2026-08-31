@@ -2,7 +2,7 @@ import type { CampaignJobDispatch, CampaignJobRuntime } from "../scheduler"
 import { stepResearchCampaign } from "../application"
 import { buildCampaignSourceSnapshot } from "../application/build-campaign-source-snapshot"
 import { createInitialCampaignState } from "../application/create-initial-campaign-state"
-import { objectiveSnapshot, profileSnapshot, referenceSnapshot } from "../application/application-test-fixture"
+import { objectiveSnapshot, profileSnapshot, rehashProfileSnapshot, referenceSnapshot } from "../application/application-test-fixture"
 import { createCandidateDiscoveryStepDependencies } from "../candidates/candidate-discovery-operations"
 import { FakeCandidateTransport } from "../candidates/candidate-discovery-test-runtime"
 import { createInitialScreeningStepDependencies } from "../screening/screening-operations"
@@ -67,11 +67,11 @@ export async function createKeepSelection(directory: string, maxReviewRounds = 2
 
 async function createScreenedCampaignWithReviewLimit(directory: string, maxReviewRounds: number) {
   const baseProfile = profileSnapshot()
-  const profile = {
+  const profile = rehashProfileSnapshot({
     ...baseProfile,
     survivor_limit: 2,
     candidate_workflow_profile: { ...baseProfile.candidate_workflow_profile, max_review_rounds: maxReviewRounds },
-  }
+  })
   const initial = createInitialCampaignState({
     campaign_id: "campaign-a",
     parent_session_id: "ses_parent",
