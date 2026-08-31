@@ -38,6 +38,14 @@ export const WorkflowProfileSchema = z.object({
   const stages: readonly WorkflowStageName[] = ["solve", "review", "revise"]
   for (const stage of stages) {
     const role = profile[stage]
+    if (role.output_adapter === "research_educational_artifacts" || role.output_adapter === "research_educational_review_json") {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [stage, "output_adapter"],
+        message: "Research educationalization adapters are reserved for the dedicated workflow",
+      })
+      continue
+    }
     if (!isWorkflowAdapterAllowed(stage, role.output_adapter)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
