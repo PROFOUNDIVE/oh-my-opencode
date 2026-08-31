@@ -25,6 +25,10 @@ import {
   OpenMathResearchStepToolKey,
 } from "./openmath-research-step"
 import type { OpenMathResearchToolOptions } from "./openmath-research-shared"
+import {
+  createOpenMathResearchEducationalizeTool,
+  OpenMathResearchEducationalizeToolKey,
+} from "./openmath-research-educationalize"
 
 export function createOpenMathResearchTools(
   options: OpenMathResearchToolOptions,
@@ -35,6 +39,7 @@ export function createOpenMathResearchTools(
     [OpenMathResearchStepToolKey]: createOpenMathResearchStepTool(options),
     [OpenMathResearchAmendToolKey]: createOpenMathResearchAmendTool(options),
     [OpenMathResearchPromoteToolKey]: createOpenMathResearchPromoteTool(options),
+    [OpenMathResearchEducationalizeToolKey]: createOpenMathResearchEducationalizeTool(options),
     [OpenMathResearchAbortToolKey]: createOpenMathResearchAbortTool(options),
   }
 }
