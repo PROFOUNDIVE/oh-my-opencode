@@ -53,6 +53,7 @@ export function createResearchToolFactoryHarness(options: HarnessOptions) {
     dependency_constructions: () => dependencyConstructions,
   })
   return {
+    directory,
     cleanup: () => removeTemporaryCampaignDirectory(directory),
     parentArtifactSentinel: FakeCandidateTransport.secret,
     runCrashRecovery,

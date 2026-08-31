@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test"
+import { existsSync } from "node:fs"
+import { join } from "node:path"
 
+import { getResearchCampaignDirectory } from "../storage"
 import { createResearchToolFactoryHarness } from "./tool-factory-harness"
 
 const cleanups: (() => void)[] = []
@@ -68,5 +71,6 @@ describe("Phase A research tool factories", () => {
     expect(result.persisted.revisions).toEqual(
       Array.from({ length: result.persisted.revisions.length }, (_, index) => index),
     )
+    expect(existsSync(join(getResearchCampaignDirectory(harness.directory, "campaign-a"), "certification"))).toBe(false)
   })
 })
