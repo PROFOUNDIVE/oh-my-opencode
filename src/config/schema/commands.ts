@@ -22,6 +22,7 @@ export const BuiltinCommandNameSchema = z.enum([
   "openmath-research-step",
   "openmath-research-amend",
   "openmath-research-promote",
+  "openmath-research-educationalize",
   "openmath-research-abort",
 ])
 

@@ -15,6 +15,7 @@ export const OpenMathResearchToolNameSchema = z.enum([
   "openmath_research_step",
   "openmath_research_amend",
   "openmath_research_promote",
+  "openmath_research_educationalize",
   "openmath_research_abort",
 ])
 

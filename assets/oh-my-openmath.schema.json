@@ -125,6 +125,7 @@
           "openmath-research-step",
           "openmath-research-amend",
           "openmath-research-promote",
+          "openmath-research-educationalize",
           "openmath-research-abort"
         ]
       }
@@ -152,6 +153,7 @@
               "openmath_research_step",
               "openmath_research_amend",
               "openmath_research_promote",
+              "openmath_research_educationalize",
               "openmath_research_abort"
             ]
           },
@@ -3547,7 +3549,9 @@
                       "review_verdict_json",
                       "review_verdict_markdown",
                       "patch_set_json",
-                      "full_replace_markdown"
+                      "full_replace_markdown",
+                      "research_educational_artifacts",
+                      "research_educational_review_json"
                     ]
                   }
                 },
@@ -3630,7 +3634,9 @@
                       "review_verdict_json",
                       "review_verdict_markdown",
                       "patch_set_json",
-                      "full_replace_markdown"
+                      "full_replace_markdown",
+                      "research_educational_artifacts",
+                      "research_educational_review_json"
                     ]
                   }
                 },
@@ -3713,7 +3719,9 @@
                       "review_verdict_json",
                       "review_verdict_markdown",
                       "patch_set_json",
-                      "full_replace_markdown"
+                      "full_replace_markdown",
+                      "research_educational_artifacts",
+                      "research_educational_review_json"
                     ]
                   }
                 },
