@@ -12,6 +12,7 @@ const RESEARCH_TOOL_KEYS = [
   "openmath_research_step",
   "openmath_research_amend",
   "openmath_research_promote",
+  "openmath_research_educationalize",
   "openmath_research_abort",
 ] as const
 
@@ -21,6 +22,7 @@ const RESEARCH_COMMAND_NAMES = [
   "openmath-research-step",
   "openmath-research-amend",
   "openmath-research-promote",
+  "openmath-research-educationalize",
   "openmath-research-abort",
 ] as const
 
