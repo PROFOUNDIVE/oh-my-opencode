@@ -6,8 +6,15 @@ import { reduceAbort } from "./request-abort"
 import { reduceStep } from "./request-step"
 import { reduceRetractAmendment } from "./retract-amendment"
 import type { TransitionResult, WorkflowTransitionEvent } from "./types"
+import { rejected } from "./result"
 
 export function reduceTransition(state: WorkflowStateV1, event: WorkflowTransitionEvent): TransitionResult {
+  if (
+    state.request_snapshot?.kind === "research_educationalization"
+    && (event.type === "ADD_AMENDMENT" || event.type === "RETRACT_AMENDMENT" || event.type === "RELOAD")
+  ) {
+    return rejected(state, "ILLEGAL_TRANSITION", "Research educationalization snapshots and review outcomes are immutable")
+  }
   switch (event.type) {
     case "STEP":
       return reduceStep(state, event)

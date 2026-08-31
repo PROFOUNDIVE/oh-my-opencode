@@ -4,6 +4,9 @@ import { readWorkflowState } from "../storage"
 import { reduceTransition, type StepMode } from "../transitions"
 import { serializeWorkflowInputSnapshot } from "./serialize-workflow-input-snapshot"
 import type { WorkflowApplicationResult } from "./workflow-application-result"
+import { admitResearchTerminalState, ResearchTerminalAdmissionError } from "./research-terminal-admission"
+import type { ApprovedEducationalSourceResult } from "../../research/educationalization/approved-source"
+import { StagePersistenceError } from "../stage-runner/stage-persistence-error"
 
 export async function stepWorkflow(input: Readonly<{
   readonly directory: string
@@ -12,6 +15,7 @@ export async function stepWorkflow(input: Readonly<{
   readonly mode: StepMode
 }>, dependencies: Readonly<{
   readonly create_runtime: (state: WorkflowStateV1) => StageRunnerRuntime | undefined
+  readonly validate_research_terminal?: () => Promise<ApprovedEducationalSourceResult>
 }>): Promise<WorkflowApplicationResult> {
   const current = await readWorkflowState(input.directory, input.run_id)
   if (current.kind === "error") return current
@@ -32,11 +36,33 @@ export async function stepWorkflow(input: Readonly<{
   if (runtime === undefined) {
     return { kind: "error", error_code: "SUBAGENT_FAILED", message: "OpenCode client is required to execute workflow stages" }
   }
-  const state = await runWorkflowStep({
-    state: current.state,
-    workflow_input: serializeWorkflowInputSnapshot(current.state.request_snapshot),
-    mode: input.mode,
-    runtime,
-  })
-  return { kind: "ok", state }
+  try {
+    const state = await runWorkflowStep({
+      state: current.state,
+      workflow_input: serializeWorkflowInputSnapshot(current.state.request_snapshot),
+      mode: input.mode,
+      runtime: {
+        ...runtime,
+        persist: async (nextState) => {
+          await admitResearchTerminalState({
+            directory: input.directory,
+            state: nextState,
+            ...(dependencies.validate_research_terminal === undefined
+              ? {}
+              : { validate_source: dependencies.validate_research_terminal }),
+          })
+          return runtime.persist(nextState)
+        },
+      },
+    })
+    return { kind: "ok", state }
+  } catch (error) {
+    if (error instanceof ResearchTerminalAdmissionError) {
+      return { kind: "error", error_code: error.error_code, message: error.message }
+    }
+    if (error instanceof StagePersistenceError) {
+      return { kind: "error", error_code: error.error_code, message: error.message }
+    }
+    throw error
+  }
 }
