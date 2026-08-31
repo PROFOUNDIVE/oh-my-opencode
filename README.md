@@ -70,6 +70,7 @@ Provides guidance and hints without giving away the answer directly. Useful for 
 - **File Reference Support**: Reference problems from `@filename.md` or `@filename.tex`
 - **State Management**: Durable state tools to track progress across sessions
 - **Export Mode**: Generate student/teacher markdown artifacts
+- **Research Educationalization**: Turn an explicitly approved, certified research result into independently reviewed student/teacher materials without changing the approved proof
 - **Configurable Review Rounds**: Set `max_review_rounds` (default 3, minimum 1)
 - **Specialized Roles**: Distinct prompts and contexts for each agent role.
 
@@ -180,6 +181,33 @@ The tool will:
 ```
 /openmath-solve-only {"session_id":"SMT-HW1","problems":[{"id":"PB4","problem_ref":{"file_path":"@[HW1.md]","problem_number":4}}],"auto_export":true,"export_dir":"./exports"}
 ```
+
+### Research Campaign to Educational Export
+
+Research campaigns are opt-in. Copy the Phase B example fields from [`docs/examples/openmath-research-campaign/profile.jsonc`](docs/examples/openmath-research-campaign/profile.jsonc) under your config's `openmath` key, including `workflow_profiles`, `research_profiles`, and `workflow_allowed_roots`.
+
+Start a certified research campaign, then execute only actions returned by status. Every mutation must use the latest returned revision:
+
+```text
+/openmath-research-start {"campaign_id":"proof-1","research_profile":"phase-b-certification-example","objective":{"kind":"markdown","instruction":"Prove the stated result."},"reference_manifest_path":"docs/examples/openmath-research-campaign/references.yaml"}
+/openmath-research-step {"campaign_id":"proof-1","expected_state_revision":0,"expected_certification_revision":null,"mode":"to_checkpoint"}
+/openmath-research-status {"campaign_id":"proof-1"}
+```
+
+Repeat `status` → returned `next_actions` until the campaign pauses before promotion. Approve using the exact campaign revision, certification revision, and dossier hash returned by the campaign, then educationalize that approved identity:
+
+```text
+/openmath-research-promote {"campaign_id":"proof-1","expected_state_revision":<campaign-revision>,"expected_certification_revision":<certification-revision>,"dossier_sha256":"<64-char-dossier-sha256>","decision":"approve"}
+/openmath-research-educationalize {"campaign_id":"proof-1","expected_state_revision":<approved-campaign-revision>,"expected_certification_revision":<certification-revision>,"dossier_sha256":"<same-dossier-sha256>"}
+```
+
+Export the returned frozen identity through the normal renderer:
+
+```text
+/openmath-export {"research_educationalization_id":"research-education-<sha256>","dir":"./exports","prefix":"proof-1"}
+```
+
+Educationalization preserves the approved proof bytes. It generates and independently reviews only hints, rubric, and a variant problem. `PEDAGOGICAL_PASS` is not canonical authority or a machine-checked correctness certificate. See the [research campaign guide](docs/openmath-research-campaigns.md) for recovery, Phase B evidence, and truth boundaries.
 
 ### Export Mode
 

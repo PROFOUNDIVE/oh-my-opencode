@@ -46,9 +46,10 @@ Tool names use underscores; slash commands use hyphens.
 | `openmath_research_step` / `/openmath-research-step` | Execute or reconcile using `campaign_id`, exact `expected_state_revision`, and optional `one_stage` or `to_checkpoint` mode |
 | `openmath_research_amend` / `/openmath-research-amend` | Add or retract a revision-checked Phase A amendment |
 | `openmath_research_promote` / `/openmath-research-promote` | Record `approve` or `reject` against an exact revision and dossier SHA-256 |
+| `openmath_research_educationalize` / `/openmath-research-educationalize` | Explicitly generate, independently review, and freeze pedagogical derivatives from an approved certified V2 source |
 | `openmath_research_abort` / `/openmath-research-abort` | Request or complete a revision-checked abort |
 
-The fixture's [`expected-tool-sequence.json`](examples/openmath-research-campaign/expected-tool-sequence.json) is a structural catalog of all six routes and valid input shapes. `promote` and `abort` are alternative terminal controls, not two operations to run consecutively.
+The fixture's [`expected-tool-sequence.json`](examples/openmath-research-campaign/expected-tool-sequence.json) is a structural catalog of the public routes and valid input shapes. `promote` and `abort` are alternative terminal controls, not two operations to run consecutively. Educationalization is a separate downstream request after approval and is never triggered by promotion or status.
 
 1. Start with a unique campaign ID. Start does not create candidates.
 2. Select only an entry returned in `next_actions` and send its `required_state_revision` as `expected_state_revision`.
@@ -56,6 +57,18 @@ The fixture's [`expected-tool-sequence.json`](examples/openmath-research-campaig
 4. After interruption or restart, call status, then explicitly call `step` with the returned revision. Status, startup, timers, and recovery hooks never dispatch work.
 5. On `STALE_STATE_REVISION`, discard the planned mutation, read status, and choose again. On a live operation owner, expect `STORAGE_BUSY`; only an explicit step can recover a dead recorded owner.
 6. Treat `ok: true` as a successfully returned state, not as campaign completion. Inspect `status`, `awaiting_reason`, and `next_actions`.
+
+### Educationalization and export
+
+After a certified V2 campaign reaches `PROMOTION_READY`, call `openmath_research_educationalize` with the exact approved campaign revision, certification revision, and dossier SHA-256. The operation stores a distinct revisioned workflow whose immutable `reference_solution` is the selected child artifact's exact bytes. Only the hint ladder, grading rubric, and variant problem are generated or revised. A reviewer independently checks those derivatives and may return `PASS`, `REVISE`, or `SOURCE_DEFECT`; a source defect stops fail-closed rather than repairing the fixed proof.
+
+On pedagogical `PASS`, the tool returns a stable `research_educationalization_id`. Export it through the existing renderer:
+
+```text
+/openmath-export {"research_educationalization_id":"research-education-<sha256>","dir":"./exports","prefix":"approved-proof"}
+```
+
+Draft, blocked, malformed, source-defective, stale, or mismatched educationalizations are not exportable. Repeated educationalization and export of the same approved identity reuse persisted reviewed bytes; they do not regenerate hints. The teacher certificate explicitly remains pedagogical only: `NO_COUNTEREXAMPLE_FOUND` is not proof, LLM review is not machine checking, and neither `PROMOTION_READY` nor export creates canonical authority.
 
 ## Phase Matrix
 
