@@ -8,6 +8,8 @@ export const WorkflowAdapterNameSchema = z.enum([
   "review_verdict_markdown",
   "patch_set_json",
   "full_replace_markdown",
+  "research_educational_artifacts",
+  "research_educational_review_json",
 ])
 
 export const WorkflowStageNameSchema = z.enum(["solve", "review", "revise"])
@@ -19,12 +21,14 @@ const SOLVE_ADAPTERS: readonly WorkflowAdapterName[] = [
   "legacy_omo_sections",
   "legacy_json_artifacts",
   "opaque_markdown",
+  "research_educational_artifacts",
 ]
-const REVIEW_ADAPTERS: readonly WorkflowAdapterName[] = ["review_verdict_json", "review_verdict_markdown"]
+const REVIEW_ADAPTERS: readonly WorkflowAdapterName[] = ["review_verdict_json", "review_verdict_markdown", "research_educational_review_json"]
 const REVISE_ADAPTERS: readonly WorkflowAdapterName[] = [
   "patch_set_json",
   "full_replace_markdown",
   "legacy_json_artifacts",
+  "research_educational_artifacts",
 ]
 
 export function isWorkflowAdapterAllowed(

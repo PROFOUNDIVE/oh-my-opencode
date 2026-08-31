@@ -2,6 +2,7 @@ import { adaptLegacyJsonArtifacts, adaptLegacyOmoSections } from "./legacy-artif
 import { adaptMarkdownReplacement } from "./markdown-replacement"
 import { adaptPatchSet } from "./patch-set"
 import { adaptJsonReviewVerdict, adaptMarkdownReviewVerdict } from "./review-verdict"
+import { adaptResearchEducationalArtifacts, adaptResearchEducationalReview } from "./research-educational-artifacts"
 import type { AdapterInput, AdapterResult } from "./types"
 
 export function adaptWorkflowOutput(input: AdapterInput): AdapterResult {
@@ -24,6 +25,10 @@ export function adaptWorkflowOutput(input: AdapterInput): AdapterResult {
       })
     case "full_replace_markdown":
       return adaptMarkdownReplacement(input.adapter, input.raw_output)
+    case "research_educational_artifacts":
+      return adaptResearchEducationalArtifacts(input.raw_output, input.fixed_reference_solution)
+    case "research_educational_review_json":
+      return adaptResearchEducationalReview(input.raw_output)
     default:
       return assertNever(input)
   }
