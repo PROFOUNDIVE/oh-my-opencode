@@ -13,6 +13,7 @@ import {
 } from "./dir-resolution"
 import { validatePrefix } from "./prefix-validation"
 import { getFrozenArtifactsOrError } from "./export-state-reader"
+import { getResearchFrozenArtifactsOrError } from "./research-export-state-reader"
 import {
   ensureWritableExportPaths,
   resolveExportPaths,
@@ -56,9 +57,10 @@ export function createOpenMathExportTool(
   defaults?: OpenMathExportToolDefaults,
 ): ToolDefinition {
   return tool({
-    description: "Export deterministic OpenMath student/teacher markdown artifacts from state.frozen_artifacts.",
+    description: "Export deterministic student/teacher markdown from frozen solve-only or research-derived educational artifacts.",
     args: {
-      session_id: tool.schema.string().describe("OpenMath session id to export"),
+      session_id: tool.schema.string().optional().describe("Frozen solve-only session id to export"),
+      research_educationalization_id: tool.schema.string().optional().describe("Passed research educationalization id to export"),
       dir: tool.schema.string().optional().describe("Target directory to write exports"),
       prefix: tool.schema.string().optional().describe("File prefix (defaults to config or session_id)"),
       overwrite: tool.schema.boolean().optional().describe("If true, allow overwriting existing files"),
@@ -87,7 +89,8 @@ export function createOpenMathExportTool(
           return JSON.stringify({ ok: false, error_code: dirOk.error_code, message: dirOk.message })
         }
 
-        const prefix = validatedArgs.prefix ?? defaults?.default_prefix ?? validatedArgs.session_id
+        const sourceId = "session_id" in validatedArgs ? validatedArgs.session_id : validatedArgs.research_educationalization_id
+        const prefix = validatedArgs.prefix ?? defaults?.default_prefix ?? sourceId
         const prefixOk = validatePrefix(prefix)
         if (!prefixOk.ok) {
           return JSON.stringify({ ok: false, error_code: prefixOk.error_code, message: prefixOk.message })
@@ -105,7 +108,9 @@ export function createOpenMathExportTool(
           })
         }
 
-        const artifactsResult = getFrozenArtifactsOrError(directory, validatedArgs.session_id)
+        const artifactsResult = "session_id" in validatedArgs
+          ? getFrozenArtifactsOrError(directory, validatedArgs.session_id)
+          : await getResearchFrozenArtifactsOrError(directory, validatedArgs.research_educationalization_id)
         if (!artifactsResult.ok) {
           return JSON.stringify({ ok: false, error_code: artifactsResult.error_code, message: artifactsResult.message })
         }
