@@ -6,6 +6,7 @@ import {
   CampaignRevisionSchema,
   NonBlankSchema,
 } from "../../openmath/research/state"
+import { CertificationRevisionSchema } from "../../openmath/research/certification/state/literals"
 import {
   jsonResearchException,
   jsonResearchResult,
@@ -21,6 +22,7 @@ export function createOpenMathResearchAbortTool(
     args: {
       campaign_id: CampaignIdSchema,
       expected_state_revision: CampaignRevisionSchema,
+      expected_certification_revision: CertificationRevisionSchema.nullable().optional(),
       reason: NonBlankSchema.optional(),
     },
     execute: async (rawArgs: Record<string, unknown>) => {

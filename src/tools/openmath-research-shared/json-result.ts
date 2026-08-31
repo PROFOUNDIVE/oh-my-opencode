@@ -1,10 +1,10 @@
 import { ZodError } from "zod"
 
-import { campaignErrorEnvelope, type CampaignApplicationResult } from "../../openmath/research/application"
+import { campaignErrorEnvelope, type PublicCampaignApplicationResult } from "../../openmath/research/application"
 import { ReferenceManifestError } from "../../openmath/references/types"
 import { ProblemRefNotFoundError } from "../openmath-solve-only/problem-ref"
 
-export function jsonResearchResult(result: CampaignApplicationResult): string {
+export function jsonResearchResult(result: PublicCampaignApplicationResult): string {
   return JSON.stringify(result)
 }
 

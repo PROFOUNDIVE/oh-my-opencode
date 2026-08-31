@@ -1,4 +1,5 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 
 import { amendResearchCampaign } from "../../openmath/research/application"
 import {
@@ -7,6 +8,8 @@ import {
   CampaignRevisionSchema,
   NonBlankSchema,
 } from "../../openmath/research/state"
+import { CertificationAmendmentScopeSchema } from "../../openmath/research/certification/state/amendments"
+import { CertificationRevisionSchema } from "../../openmath/research/certification/state/literals"
 import {
   jsonResearchException,
   jsonResearchResult,
@@ -25,9 +28,10 @@ export function createOpenMathResearchAmendTool(
     args: {
       campaign_id: CampaignIdSchema,
       expected_state_revision: CampaignRevisionSchema,
+      expected_certification_revision: CertificationRevisionSchema.optional(),
       operation: tool.schema.enum(["add", "retract"]),
       kind: OpenMathResearchAmendmentKindSchema.optional(),
-      scope: CampaignAmendmentScopeSchema.optional(),
+      scope: z.union([CampaignAmendmentScopeSchema, CertificationAmendmentScopeSchema]).optional(),
       content: NonBlankSchema.optional(),
       amendment_id: NonBlankSchema.optional(),
     },

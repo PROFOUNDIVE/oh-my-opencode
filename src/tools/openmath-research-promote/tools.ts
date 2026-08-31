@@ -6,6 +6,7 @@ import {
   CampaignIdSchema,
   CampaignRevisionSchema,
 } from "../../openmath/research/state"
+import { CertificationRevisionSchema } from "../../openmath/research/certification/state/literals"
 import type { ToolContextWithMetadata } from "../delegate-task/types"
 import {
   jsonResearchException,
@@ -22,6 +23,7 @@ export function createOpenMathResearchPromoteTool(
     args: {
       campaign_id: CampaignIdSchema,
       expected_state_revision: CampaignRevisionSchema,
+      expected_certification_revision: CertificationRevisionSchema.optional(),
       dossier_sha256: CampaignHashSchema,
       decision: tool.schema.enum(["approve", "reject"]),
     },

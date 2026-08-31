@@ -2,6 +2,7 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 import { stepResearchCampaign } from "../../openmath/research/application"
 import { CampaignIdSchema, CampaignRevisionSchema } from "../../openmath/research/state"
+import { CertificationRevisionSchema } from "../../openmath/research/certification/state/literals"
 import type { ToolContextWithMetadata } from "../delegate-task/types"
 import {
   jsonResearchException,
@@ -22,6 +23,7 @@ export function createOpenMathResearchStepTool(
     args: {
       campaign_id: CampaignIdSchema,
       expected_state_revision: CampaignRevisionSchema,
+      expected_certification_revision: CertificationRevisionSchema.nullable().optional(),
       mode: tool.schema.enum(["one_stage", "to_checkpoint"]).optional(),
     },
     execute: async (rawArgs: Record<string, unknown>, context) => {
@@ -34,6 +36,9 @@ export function createOpenMathResearchStepTool(
           directory: options.directory,
           campaign_id: input.campaign_id,
           expected_state_revision: input.expected_state_revision,
+          ...("expected_certification_revision" in input
+            ? { expected_certification_revision: input.expected_certification_revision }
+            : {}),
           mode: input.mode ?? "one_stage",
         }, dependencies))
       } catch (error) {
