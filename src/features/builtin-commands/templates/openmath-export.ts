@@ -1,6 +1,6 @@
 export const OPENMATH_EXPORT_TEMPLATE = `# /openmath-export
 
-Export the currently frozen OpenMath artifacts for a session to student/teacher markdown files.
+Export frozen solve-only or research-derived OpenMath educational artifacts to student/teacher markdown files.
 
 This command MUST NOT modify or regenerate artifacts. It only exports what is already frozen.
 
@@ -10,7 +10,7 @@ You MUST call this tool (exact name): openmath_export
 
 ### Required Tool Arguments
 
-- session_id: string
+- exactly one of session_id or research_educationalization_id
 
 ### Optional Tool Arguments
 
@@ -24,6 +24,12 @@ Preferred (deterministic): pass a JSON object matching the tool input schema:
 
 \`\`\`
 /openmath-export {"session_id":"root::p1","dir":"./exports","prefix":"algebra-","overwrite":false}
+\`\`\`
+
+Research-derived:
+
+\`\`\`
+/openmath-export {"research_educationalization_id":"research-education-<sha256>","dir":"./exports","prefix":"research-proof","overwrite":false}
 \`\`\`
 
 Fallback (simple):

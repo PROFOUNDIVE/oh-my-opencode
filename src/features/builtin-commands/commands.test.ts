@@ -32,6 +32,7 @@ describe("loadBuiltinCommands", () => {
       "openmath-research-step": "openmath_research_step",
       "openmath-research-amend": "openmath_research_amend",
       "openmath-research-promote": "openmath_research_promote",
+      "openmath-research-educationalize": "openmath_research_educationalize",
       "openmath-research-abort": "openmath_research_abort",
     } as const
 

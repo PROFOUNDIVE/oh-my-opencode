@@ -3,6 +3,7 @@ import type { OpenMathResearchCommandName } from "./types"
 import { OPENMATH_RESEARCH_ABORT_TEMPLATE } from "./templates/openmath-research-abort"
 import { OPENMATH_RESEARCH_AMEND_TEMPLATE } from "./templates/openmath-research-amend"
 import { OPENMATH_RESEARCH_PROMOTE_TEMPLATE } from "./templates/openmath-research-promote"
+import { OPENMATH_RESEARCH_EDUCATIONALIZE_TEMPLATE } from "./templates/openmath-research-educationalize"
 import { OPENMATH_RESEARCH_START_TEMPLATE } from "./templates/openmath-research-start"
 import { OPENMATH_RESEARCH_STATUS_TEMPLATE } from "./templates/openmath-research-status"
 import { OPENMATH_RESEARCH_STEP_TEMPLATE } from "./templates/openmath-research-step"
@@ -32,6 +33,11 @@ export const OPENMATH_RESEARCH_COMMAND_DEFINITIONS = {
     "(builtin) Record a promotion-ready metadata decision",
     OPENMATH_RESEARCH_PROMOTE_TEMPLATE,
     '{"campaign_id":"campaign-1","expected_state_revision":9,"dossier_sha256":"<sha256>","decision":"approve"}',
+  ),
+  "openmath-research-educationalize": commandDefinition(
+    "(builtin) Create reviewed educational derivatives from approved research",
+    OPENMATH_RESEARCH_EDUCATIONALIZE_TEMPLATE,
+    '{"campaign_id":"campaign-1","expected_state_revision":10,"expected_certification_revision":4,"dossier_sha256":"<sha256>"}',
   ),
   "openmath-research-abort": commandDefinition(
     "(builtin) Abort an OpenMath research campaign",

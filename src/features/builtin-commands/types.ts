@@ -14,6 +14,7 @@ export type OpenMathResearchCommandName =
   | "openmath-research-step"
   | "openmath-research-amend"
   | "openmath-research-promote"
+  | "openmath-research-educationalize"
   | "openmath-research-abort"
 
 export type BuiltinCommandName =
