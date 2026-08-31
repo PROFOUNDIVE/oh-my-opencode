@@ -188,4 +188,5 @@ describe("research campaign operation lock failures", () => {
     expect(acquiredWhileSerialized).toBe(true)
     expect(releasedWhileSerialized).toBe(true)
   })
+
 })

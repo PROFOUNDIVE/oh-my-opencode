@@ -91,37 +91,30 @@ async function acquireOperationLock(
     return { kind: "error", error_code: "STORAGE_BUSY", message: "Research campaign operation is owned by another worker" }
   }
 
-  const archivePath = join(request.campaign_directory, `.operation-recovery-${current.owner.token}-${owner.token}`)
+  const replacementPath = join(request.campaign_directory, `.operation-recovery-${current.owner.token}-${owner.token}`)
   try {
-    await runtime.link(lockPath, archivePath)
-    const archiveMatches = await runtime.sameIdentity(archivePath, current.identity)
+    await runtime.writeExclusive(replacementPath, serializeResearchCampaignOperationOwner(owner))
     const publicMatches = await runtime.sameIdentity(lockPath, current.identity)
-    if (!archiveMatches || !publicMatches) {
-      await removeRecoveryArchive(archivePath, runtime)
+    if (!publicMatches) {
+      const replacementRemoved = await removeRecoveryArchive(replacementPath, runtime)
       await current.handle.close()
-      return { kind: "error", error_code: "STORAGE_BUSY", message: "Research campaign operation owner changed during recovery" }
+      return replacementRemoved
+        ? { kind: "error", error_code: "STORAGE_BUSY", message: "Research campaign operation owner changed during recovery" }
+        : { kind: "error", error_code: "STORAGE_WRITE_FAILED", message: "Unable to clean research campaign operation recovery candidate" }
     }
-    await runtime.unlink(lockPath)
+    await runtime.rename(replacementPath, lockPath)
   } catch (error) {
-    await removeRecoveryArchive(archivePath, runtime)
+    const replacementRemoved = await removeRecoveryArchive(replacementPath, runtime)
     await current.handle.close()
+    if (!replacementRemoved) {
+      return { kind: "error", error_code: "STORAGE_WRITE_FAILED", message: "Unable to clean research campaign operation recovery candidate" }
+    }
     return ATOMICITY_CODES.has(getFilesystemErrorCode(error) ?? "")
       ? { kind: "error", error_code: "STORAGE_ATOMICITY_UNAVAILABLE", message: "Atomic research campaign operation recovery is unavailable" }
       : { kind: "error", error_code: "STORAGE_WRITE_FAILED", message: "Unable to retire dead research campaign operation owner" }
   }
   await current.handle.close()
-  if (!await removeRecoveryArchive(archivePath, runtime)) {
-    return { kind: "error", error_code: "STORAGE_WRITE_FAILED", message: "Unable to clean research campaign operation recovery archive" }
-  }
-  try {
-    await runtime.writeExclusive(lockPath, serializeResearchCampaignOperationOwner(owner))
-    return { kind: "acquired", owner, recovered_owner: current.owner }
-  } catch (error) {
-    if (getFilesystemErrorCode(error) === "EEXIST") {
-      return { kind: "error", error_code: "STORAGE_BUSY", message: "Research campaign operation was acquired during recovery" }
-    }
-    return { kind: "error", error_code: "STORAGE_WRITE_FAILED", message: "Unable to publish recovered research campaign operation owner" }
-  }
+  return { kind: "acquired", owner, recovered_owner: current.owner }
 }
 
 async function releaseOperationLock(

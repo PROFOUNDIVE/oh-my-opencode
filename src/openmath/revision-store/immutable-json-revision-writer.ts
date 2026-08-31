@@ -6,9 +6,9 @@ import type {
   StorageFileIdentity,
   StorageRuntime,
 } from "../workflow/storage/storage-runtime-contract"
+import { syncImmutableJsonRevisionDirectory } from "./immutable-json-directory-sync"
 
 const ATOMICITY_CODES = new Set(["ENOSYS", "ENOTSUP", "EOPNOTSUPP", "EINVAL", "EXDEV", "EPERM"])
-const DIRECTORY_SYNC_UNSUPPORTED = new Set(["ENOTSUP", "EOPNOTSUPP", "EINVAL", "EISDIR"])
 
 type AtomicityFailureReason = "EXCLUSIVE_TEMP_CREATE_UNAVAILABLE" | "NO_REPLACE_PUBLICATION_UNAVAILABLE"
   | "OWNERSHIP_BOUND_TEMP_CREATE_UNAVAILABLE" | "TEMP_QUARANTINE_UNAVAILABLE" | "TEMP_RESTORATION_UNAVAILABLE"
@@ -104,35 +104,6 @@ async function cleanupBoundTemp(
   return { kind: "ok" }
 }
 
-async function syncRunDirectory(
-  runDirectory: string,
-  runtime: StorageRuntime,
-): Promise<ImmutableJsonRevisionWriteResult> {
-  let handle: StorageFileHandle
-  try {
-    handle = await runtime.open(runDirectory, "r")
-  } catch (error) {
-    if (DIRECTORY_SYNC_UNSUPPORTED.has(errorCode(error) ?? "")) return { kind: "ok" }
-    if (!(error instanceof Error)) throw error
-    return writeFailure("RUN_DIRECTORY_OPEN_FAILED")
-  }
-
-  let syncError: unknown
-  try {
-    await handle.sync()
-  } catch (error) {
-    if (!(error instanceof Error)) throw error
-    if (!DIRECTORY_SYNC_UNSUPPORTED.has(errorCode(error) ?? "")) syncError = error
-  }
-  try {
-    await handle.close()
-  } catch (error) {
-    if (!(error instanceof Error)) throw error
-    return writeFailure("RUN_DIRECTORY_CLOSE_FAILED")
-  }
-  return syncError === undefined ? { kind: "ok" } : writeFailure("RUN_DIRECTORY_SYNC_FAILED")
-}
-
 export async function writeImmutableJsonRevision(
   request: {
     readonly run_directory: string
@@ -157,13 +128,14 @@ export async function writeImmutableJsonRevision(
   try {
     if (!await runtime.sameIdentity(tempPath, identity)) {
       await handle.close()
-      return writeFailure("EXCLUSIVE_TEMP_IDENTITY_CHANGED")
+      const cleaned = await cleanupBoundTemp(boundTemp, runtime)
+      return cleaned.kind === "error" ? cleaned : writeFailure("EXCLUSIVE_TEMP_IDENTITY_CHANGED")
     }
     await runtime.link(tempPath, ownerPath)
     if (!await runtime.sameIdentity(ownerPath, identity)) {
       await handle.close()
-      await removeOwnedPath(ownerPath, runtime)
-      return writeFailure("TEMP_OWNERSHIP_BINDING_CHANGED")
+      const cleaned = await cleanupBoundTemp(boundTemp, runtime)
+      return cleaned.kind === "error" ? cleaned : writeFailure("TEMP_OWNERSHIP_BINDING_CHANGED")
     }
   } catch (error) {
     try {
@@ -171,7 +143,8 @@ export async function writeImmutableJsonRevision(
     } catch (closeError) {
       if (!(closeError instanceof Error)) throw closeError
     }
-    await removeOwnedPath(tempPath, runtime)
+    const cleaned = await cleanupBoundTemp(boundTemp, runtime)
+    if (cleaned.kind === "error") return cleaned
     return ATOMICITY_CODES.has(errorCode(error) ?? "")
       ? atomicityFailure("OWNERSHIP_BOUND_TEMP_CREATE_UNAVAILABLE")
       : writeFailure("TEMP_OWNERSHIP_BIND_FAILED")
@@ -212,5 +185,5 @@ export async function writeImmutableJsonRevision(
   }
   const cleaned = await cleanupBoundTemp(boundTemp, runtime)
   if (cleaned.kind === "error") return cleaned
-  return syncRunDirectory(request.run_directory, runtime)
+  return syncImmutableJsonRevisionDirectory(request.run_directory, runtime)
 }

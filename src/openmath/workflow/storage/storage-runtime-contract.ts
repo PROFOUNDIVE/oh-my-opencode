@@ -14,6 +14,7 @@ export type StorageRuntime = {
   readonly mkdir: (path: string) => Promise<void>
   readonly readdir: (path: string) => Promise<readonly string[]>
   readonly readFile: (path: string) => Promise<string>
+  readonly readBytes: (path: string) => Promise<Uint8Array>
   readonly writeExclusive: (path: string, content: string) => Promise<void>
   readonly open: (path: string, flags: "r" | "wx") => Promise<StorageFileHandle>
   readonly link: (source: string, destination: string) => Promise<void>

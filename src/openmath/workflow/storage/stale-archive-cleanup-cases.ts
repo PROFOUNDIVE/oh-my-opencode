@@ -50,5 +50,22 @@ export function registerStaleArchiveCleanupCases(): void {
       expect(readFileSync(lockPath(), "utf8")).toBe(stale)
       expect(existsSync(stalePath())).toBe(false)
     })
+
+    test("removes its archive after successful stale-owner recovery", async () => {
+      // given
+      const runtime: StorageRuntime = {
+        ...nodeStorageRuntime,
+        now: () => Date.parse("2026-07-29T12:00:31.000Z"),
+        processStatus: () => "dead",
+        token: () => "replacement-owner",
+      }
+
+      // when
+      const result = await acquireWorkflowWriteLock({ run_directory: directory, timeout_ms: 0 }, runtime)
+
+      // then
+      expect(result).toEqual({ kind: "acquired", token: "replacement-owner" })
+      expect(existsSync(stalePath())).toBe(false)
+    })
   })
 }

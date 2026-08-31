@@ -94,30 +94,6 @@ export function registerLockFailureCases(): void {
       expect(corrupt).toMatchObject({ kind: "error", error_code: "STORAGE_READ_FAILED" })
     })
 
-    test("renames a dead stale lock once and retries exclusive acquisition", async () => {
-      // given
-      const now = Date.parse("2026-07-29T12:00:31.000Z")
-      const state = createStoredWorkflowState("stale-lock", 0)
-      const runDirectory = getWorkflowRunDirectory(directory, state.run_id)
-      const deadPid = 2_147_483_647
-      mkdirSync(runDirectory, { recursive: true })
-      writeFileSync(join(runDirectory, ".write.lock"), JSON.stringify({
-        token: "dead-token",
-        pid: deadPid,
-        started_at: "2026-07-29T12:00:00.000Z",
-      }))
-
-      // when
-      const processStatus = nodeStorageRuntime.processStatus(deadPid)
-      const result = await startWorkflowState({ directory, state }, advancingRuntime(now, nodeStorageRuntime.processStatus))
-
-      // then
-      expect(processStatus).toBe("dead")
-      expect(result).toMatchObject({ kind: "ok", state: { state_revision: 0 } })
-      expect(existsSync(join(runDirectory, ".stale-lock-dead-token"))).toBe(true)
-      expect(existsSync(join(runDirectory, ".write.lock"))).toBe(false)
-    })
-
     test("treats a malformed lock as unverifiable until the start deadline", async () => {
       // given
       const now = Date.parse("2026-07-29T12:00:00.000Z")

@@ -85,6 +85,7 @@ export async function acquireWorkflowWriteLock(
           const publicMatches = await runtime.sameIdentity(lockPath, current.identity)
           if (archiveMatches && publicMatches) {
             await runtime.unlink(lockPath)
+            await runtime.unlink(stalePath)
             archiveCreated = false
             await closeInspection(current)
             continue

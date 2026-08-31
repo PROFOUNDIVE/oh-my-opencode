@@ -5,6 +5,7 @@ import { registerLockFailureCases } from "./lock-failure-cases"
 import { registerOwnershipRaceFailureCases } from "./ownership-race-failure-cases"
 import { registerRaceFailureCases } from "./race-failure-cases"
 import { registerStaleArchiveCleanupCases } from "./stale-archive-cleanup-cases"
+import { registerStaleLockRecoveryIntegrationCases } from "./stale-lock-recovery-integration-cases"
 import { registerWriteFaultCases } from "./write-fault-cases"
 
 registerWriteFaultCases()
@@ -15,3 +16,4 @@ registerOwnershipRaceFailureCases()
 registerLockFailureCases()
 registerRaceFailureCases()
 registerStaleArchiveCleanupCases()
+registerStaleLockRecoveryIntegrationCases()

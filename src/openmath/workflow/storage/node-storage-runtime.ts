@@ -14,6 +14,7 @@ export const nodeStorageRuntime: StorageRuntime = {
   },
   readdir: async (path) => readdir(path),
   readFile: async (path) => readFile(path, "utf8"),
+  readBytes: async (path) => readFile(path),
   writeExclusive: async (path, content) => {
     await writeFile(path, content, { encoding: "utf8", flag: "wx" })
   },
