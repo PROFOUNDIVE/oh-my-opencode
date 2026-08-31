@@ -50,6 +50,58 @@
         "model": "openai/gpt-5.2",
         "prompt": { "kind": "file", "uri": "file://./TOURNAMENT.md" }
       }
+    },
+    "phase-b-certification-example": {
+      "candidate_workflow_profile": "research-candidate",
+      "strategies": [
+        { "id": "direct", "prompt": { "kind": "file", "uri": "file://./STRATEGY_DIRECT.md" } },
+        { "id": "contradiction", "prompt": { "kind": "file", "uri": "file://./STRATEGY_CONTRADICTION.md" } }
+      ],
+      "candidates_per_strategy": 1,
+      "screening_roles": [
+        {
+          "id": "logical-screen",
+          "agent": "reference-reviewer-markdown",
+          "model": "anthropic/claude-opus-4-6",
+          "prompt": { "kind": "file", "uri": "file://./SCREEN_LOGICAL.md" }
+        }
+      ],
+      "max_active_candidates": 2,
+      "survivor_limit": 2,
+      "tournament_role": {
+        "agent": "oracle",
+        "model": "openai/gpt-5.2",
+        "prompt": { "kind": "file", "uri": "file://./TOURNAMENT.md" }
+      },
+      "certification": {
+        "schema_version": 1,
+        "extraction_role": {
+          "agent": "oracle",
+          "model": "openai/gpt-5.2",
+          "prompt": { "kind": "file", "uri": "file://./CERTIFICATION_EXTRACTION.md" }
+        },
+        "coverage_role": {
+          "agent": "reference-reviewer-markdown",
+          "model": "anthropic/claude-opus-4-6",
+          "prompt": { "kind": "file", "uri": "file://./CERTIFICATION_COVERAGE.md" }
+        },
+        "counterexample_role": {
+          "agent": "oracle",
+          "model": "openai/gpt-5.2",
+          "prompt": { "kind": "file", "uri": "file://./CERTIFICATION_COUNTEREXAMPLE.md" }
+        },
+        "witness_role": {
+          "agent": "reference-reviewer-markdown",
+          "model": "anthropic/claude-opus-4-6",
+          "prompt": { "kind": "file", "uri": "file://./CERTIFICATION_WITNESS.md" }
+        },
+        "max_obligations": 8,
+        "max_coverage_rounds": 2,
+        "max_coverage_findings": 16,
+        "allowed_attack_modes": ["EDGE_CASE", "FINITE_SEARCH"],
+        "max_attacks_per_obligation": 2,
+        "max_active_certification_jobs": 2
+      }
     }
   }
 }

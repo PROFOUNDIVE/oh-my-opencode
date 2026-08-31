@@ -287,6 +287,10 @@ Research campaigns are opt-in through `openmath.research_profiles`; `openmath.de
 | `research_profiles` | Strict Phase A profile map | `{}` |
 | `default_research_profile` | Profile name | No default |
 
+The repository also contains an explicit Phase B example, [`docs/examples/openmath-research-campaign/profile.jsonc`](examples/openmath-research-campaign/profile.jsonc). Its `phase-b-certification-example` profile adds an optional `certification` block with four file-backed roles and strict bounds. It is opt-in, never default-on. Use the matching six-route catalog in [`expected-tool-sequence.json`](examples/openmath-research-campaign/expected-tool-sequence.json).
+
+Phase B starts only after the selected Phase A child passes. It extracts a source-bound obligation graph, reviews coverage, runs bounded counterexample attempts, independently verifies found witnesses, and builds a V2 dossier. Status remains pure, recovery requires an explicit revision-checked step, and stale artifact identity blocks publication. `PROMOTION_READY` remains a human decision state, not a canonical export.
+
 ### Permission Options
 
 Fine-grained control over what agents can do:

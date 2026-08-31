@@ -1,24 +1,21 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { parse as parseJsonc } from "jsonc-parser"
 import { z } from "zod"
 
 import { OpenMathConfigSchema } from "../../config/schema"
 import { OPENMATH_RESEARCH_COMMAND_DEFINITIONS } from "../../features/builtin-commands/research-command-definitions"
 import { createOpenMathResearchTools } from "../../tools/openmath-research-tools"
-import { OpenMathResearchAbortInputSchema } from "../../tools/openmath-research-abort"
-import { OpenMathResearchAmendInputSchema } from "../../tools/openmath-research-amend"
-import { OpenMathResearchPromoteInputSchema } from "../../tools/openmath-research-promote"
+import { OpenMathResearchEnabledAbortInputSchema, OpenMathResearchPhaseAAbortInputSchema } from "../../tools/openmath-research-abort/types"
+import { OpenMathResearchEnabledAmendInputSchema, OpenMathResearchPhaseAAmendInputSchema } from "../../tools/openmath-research-amend/types"
+import { OpenMathResearchEnabledPromoteInputSchema, OpenMathResearchPhaseAPromoteInputSchema } from "../../tools/openmath-research-promote/types"
 import { OpenMathResearchStartInputSchema } from "../../tools/openmath-research-start"
 import { OpenMathResearchStatusInputSchema } from "../../tools/openmath-research-status"
-import { OpenMathResearchStepInputSchema } from "../../tools/openmath-research-step"
-import { loadReferenceSnapshot } from "../references/snapshot"
+import { OpenMathResearchEnabledStepInputSchema, OpenMathResearchPhaseAStepInputSchema } from "../../tools/openmath-research-step/types"
 import { createOhMyOpenCodeJsonSchema } from "../../../script/build-schema-document"
-import { resolveResearchProfileSnapshot } from "./profile-snapshot"
+import { exampleDirectory, fixtureConfig, fixtureConfigValue, generatedSchemaShape, resolveFixtureSnapshot } from "./docs-examples-fixture"
 
 const repositoryDirectory = join(import.meta.dir, "../../..")
-const exampleDirectory = join(repositoryDirectory, "docs/examples/openmath-research-campaign")
 const expectedToolNames = [
   "openmath_research_start",
   "openmath_research_status",
@@ -43,44 +40,19 @@ const expectedOpenMathProperties = [
   "export",
 ] as const
 
-const ToolSequenceSchema = z.array(z.discriminatedUnion("tool", [
+const EnabledToolSequenceSchema = z.array(z.discriminatedUnion("tool", [
   route("openmath_research_start", "openmath-research-start", OpenMathResearchStartInputSchema),
   route("openmath_research_status", "openmath-research-status", OpenMathResearchStatusInputSchema),
-  route("openmath_research_step", "openmath-research-step", OpenMathResearchStepInputSchema),
-  route("openmath_research_amend", "openmath-research-amend", OpenMathResearchAmendInputSchema),
-  route("openmath_research_promote", "openmath-research-promote", OpenMathResearchPromoteInputSchema),
-  route("openmath_research_abort", "openmath-research-abort", OpenMathResearchAbortInputSchema),
+  route("openmath_research_step", "openmath-research-step", OpenMathResearchEnabledStepInputSchema),
+  route("openmath_research_amend", "openmath-research-amend", OpenMathResearchEnabledAmendInputSchema),
+  route("openmath_research_promote", "openmath-research-promote", OpenMathResearchEnabledPromoteInputSchema),
+  route("openmath_research_abort", "openmath-research-abort", OpenMathResearchEnabledAbortInputSchema),
 ])).length(6).readonly()
-
-const GeneratedSchemaShape = z.object({
-  properties: z.object({
-    disabled_commands: z.object({ items: z.object({ enum: z.array(z.string()) }).loose() }).loose(),
-    disabled_tools: z.object({
-      items: z.object({
-        anyOf: z.array(z.object({ enum: z.array(z.string()).optional() }).loose()),
-      }).loose(),
-    }).loose(),
-    openmath: z.object({
-      properties: z.record(z.string(), z.unknown()),
-    }).loose(),
-  }).loose(),
-}).loose()
 
 describe("OpenMath research campaign documentation examples", () => {
   test("parses the Phase A profile, prompt sources, references, and runtime snapshot", () => {
     const config = fixtureConfig()
-    const references = loadReferenceSnapshot({
-      referenceManifestPath: join(exampleDirectory, "references.yaml"),
-      projectDirectory: exampleDirectory,
-      configuredAllowedRoots: ["."],
-    })
-
-    const snapshot = resolveResearchProfileSnapshot({
-      config,
-      directory: exampleDirectory,
-      reference_snapshot: references,
-      resolve_agent_model: (agent) => ({ providerID: "fixture", modelID: agent }),
-    })
+    const snapshot = resolveFixtureSnapshot(config)
 
     expect(snapshot.name).toBe("phase-a-documentation-example")
     expect(snapshot.candidate_workflow_profile.checkpoint).toBe("after_solve")
@@ -91,9 +63,38 @@ describe("OpenMath research campaign documentation examples", () => {
     expect(Object.isFrozen(snapshot)).toBe(true)
   })
 
-  test("binds the fixture to the exact six public tool and command routes", () => {
+  test("parses the opt-in Phase B profile with four certification roles and bounded settings", () => {
+    const raw = fixtureConfigValue()
+    const parsed = OpenMathConfigSchema.parse(raw)
+    if (parsed.research_profiles === undefined) throw new Error("Research profiles are missing")
+    const profile = parsed.research_profiles["phase-b-certification-example"]
+    if (profile === undefined) throw new Error("Phase B fixture profile is missing")
+    if (profile.certification === undefined) throw new Error("Phase B certification block is missing")
+    const certification = profile.certification
+    expect(certification.schema_version).toBe(1)
+    expect(certification.max_obligations).toBe(8)
+    expect(certification.max_coverage_rounds).toBe(2)
+    expect(certification.max_coverage_findings).toBe(16)
+    expect(certification.allowed_attack_modes).toEqual(["EDGE_CASE", "FINITE_SEARCH"])
+    expect(certification.max_attacks_per_obligation).toBe(2)
+    expect(certification.max_active_certification_jobs).toBe(2)
+    const rolePrompts = [
+      certification.extraction_role.prompt,
+      certification.coverage_role.prompt,
+      certification.counterexample_role.prompt,
+      certification.witness_role.prompt,
+    ]
+    expect(rolePrompts.every((prompt) => prompt.kind === "file")).toBe(true)
+    const snapshot = resolveFixtureSnapshot({ ...raw, default_research_profile: "phase-b-certification-example" })
+    expect(snapshot.certification?.extraction_role.prompt.kind).toBe("file")
+    expect(snapshot.certification?.coverage_role.prompt.kind).toBe("file")
+    expect(snapshot.certification?.counterexample_role.prompt.kind).toBe("file")
+    expect(snapshot.certification?.witness_role.prompt.kind).toBe("file")
+  })
+
+  test("binds Phase A and enabled examples to their exact six public routes", () => {
     const config = fixtureConfig()
-    const sequence = ToolSequenceSchema.parse(JSON.parse(readFileSync(
+    const sequence = EnabledToolSequenceSchema.parse(JSON.parse(readFileSync(
       join(exampleDirectory, "expected-tool-sequence.json"),
       "utf8",
     )))
@@ -103,11 +104,17 @@ describe("OpenMath research campaign documentation examples", () => {
     }))
     const commandNames = Object.keys(OPENMATH_RESEARCH_COMMAND_DEFINITIONS)
 
-    expect(sequence.map((entry) => entry.tool)).toEqual(expectedToolNames)
-    expect(sequence.map((entry) => entry.command)).toEqual(expectedCommandNames)
-    expect(toolNames).toEqual(expectedToolNames)
+    expect(sequence.map((entry) => entry.tool)).toEqual([...expectedToolNames])
+    expect(sequence.map((entry) => entry.command)).toEqual([...expectedCommandNames])
+    expect(toolNames).toEqual([...expectedToolNames])
     expect(commandNames).toEqual(expectedCommandNames)
     expect(commandNames.map((name) => name.replace(/-/g, "_"))).toEqual(toolNames)
+    expect([
+      OpenMathResearchPhaseAStepInputSchema.safeParse({ campaign_id: "phase-a-example", expected_state_revision: 0 }),
+      OpenMathResearchPhaseAAmendInputSchema.safeParse({ campaign_id: "phase-a-example", expected_state_revision: 1, operation: "add", kind: "required_check", scope: "all_candidates", content: "Check every boundary case." }),
+      OpenMathResearchPhaseAPromoteInputSchema.safeParse({ campaign_id: "phase-a-example", expected_state_revision: 2, dossier_sha256: "0".repeat(64), decision: "approve" }),
+      OpenMathResearchPhaseAAbortInputSchema.safeParse({ campaign_id: "phase-a-example", expected_state_revision: 2 }),
+    ].every((result) => result.success)).toBe(true)
   })
 
   test("rejects Phase B-D profile keys, incompatible checkpoints, and nonexistent routes", () => {
@@ -128,12 +135,12 @@ describe("OpenMath research campaign documentation examples", () => {
       ...raw,
       workflow_profiles: { "research-candidate": { ...workflow, checkpoint: "after_review" } },
     })).toThrow()
-    expect(ToolSequenceSchema.safeParse([{ tool: "canonical_promote", command: "canonical-promote", input: {} }]).success).toBe(false)
+    expect(EnabledToolSequenceSchema.safeParse([{ tool: "canonical_promote", command: "canonical-promote", input: {} }]).success).toBe(false)
   })
 
   test("publishes the canonical generated schema with only Phase A research fields", () => {
-    const generated = GeneratedSchemaShape.parse(createOhMyOpenCodeJsonSchema())
-    const asset = GeneratedSchemaShape.parse(JSON.parse(readFileSync(
+    const generated = generatedSchemaShape.parse(createOhMyOpenCodeJsonSchema())
+    const asset = generatedSchemaShape.parse(JSON.parse(readFileSync(
       join(repositoryDirectory, "assets/oh-my-openmath.schema.json"),
       "utf8",
     )))
@@ -146,8 +153,8 @@ describe("OpenMath research campaign documentation examples", () => {
     const researchCommands = generated.properties.disabled_commands.items.enum
       .filter((name) => name.startsWith("openmath-research-"))
 
-    expect(Object.keys(generated.properties.openmath.properties)).toEqual(expectedOpenMathProperties)
-    expect(Object.keys(asset.properties.openmath.properties)).toEqual(expectedOpenMathProperties)
+    expect(Object.keys(generated.properties.openmath.properties)).toEqual([...expectedOpenMathProperties])
+    expect(Object.keys(asset.properties.openmath.properties)).toEqual([...expectedOpenMathProperties])
     expect(profileFields).toEqual([
       "candidate_workflow_profile",
       "strategies",
@@ -156,19 +163,21 @@ describe("OpenMath research campaign documentation examples", () => {
       "max_active_candidates",
       "survivor_limit",
       "tournament_role",
+      "certification",
     ])
-    expect(researchTools).toEqual(expectedToolNames)
-    expect(researchCommands).toEqual(expectedCommandNames)
+    expect(researchTools).toEqual([...expectedToolNames])
+    expect(researchCommands).toEqual([...expectedCommandNames])
     expect(asset).toEqual(generated)
   })
 
   test("rejects an unsupported top-level OpenMath property", () => {
-    const generated = createOhMyOpenCodeJsonSchema()
-    const injected = JSON.parse(JSON.stringify(generated))
-    injected.properties.openmath.properties.obligations = { type: "object" }
+    const raw = fixtureConfigValue()
+    const result = OpenMathConfigSchema.strict().safeParse({ ...raw, obligations: {} })
 
-    expect(GeneratedSchemaShape.parse(injected)).toBeDefined()
-    expect(Object.keys(injected.properties.openmath.properties)).not.toEqual(expectedOpenMathProperties)
+    if (result.success) throw new Error("Unsupported top-level OpenMath property was accepted")
+    expect(result.error.issues.some((issue) =>
+      issue.code === "unrecognized_keys" && issue.path.length === 0 && issue.keys.includes("obligations")
+    )).toBe(true)
   })
 
   test.skipIf(process.env.OPENMATH_RESEARCH_DOCS_FAILURE_PROBE === undefined)("fails structurally for the selected invalid fixture probe", () => {
@@ -190,31 +199,10 @@ describe("OpenMath research campaign documentation examples", () => {
       })
       return
     }
-    ToolSequenceSchema.parse([{ tool: "canonical_promote", command: "canonical-promote", input: {} }])
+    EnabledToolSequenceSchema.parse([{ tool: "canonical_promote", command: "canonical-promote", input: {} }])
   })
 })
 
 function route<T extends z.ZodType>(tool: string, command: string, input: T) {
   return z.object({ tool: z.literal(tool), command: z.literal(command), input }).strict()
-}
-
-function fixtureConfigValue() {
-  return parseJsonc(readFileSync(join(exampleDirectory, "profile.jsonc"), "utf8"))
-}
-
-function fixtureConfig() {
-  return OpenMathConfigSchema.parse(fixtureConfigValue())
-}
-
-function resolveFixtureSnapshot(value: unknown) {
-  return resolveResearchProfileSnapshot({
-    config: OpenMathConfigSchema.parse(value),
-    directory: exampleDirectory,
-    reference_snapshot: loadReferenceSnapshot({
-      referenceManifestPath: join(exampleDirectory, "references.yaml"),
-      projectDirectory: exampleDirectory,
-      configuredAllowedRoots: ["."],
-    }),
-    resolve_agent_model: (agent) => ({ providerID: "fixture", modelID: agent }),
-  })
 }

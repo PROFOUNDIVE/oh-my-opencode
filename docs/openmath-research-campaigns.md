@@ -1,6 +1,6 @@
-# OpenMath Research Campaigns: Phase A Operations
+# OpenMath Research Campaigns: Phase A and Phase B Operations
 
-This guide covers only Phase A research campaigns. A campaign creates isolated proof candidates as ordinary [OpenMath workflows](openmath-workflows.md), blind-screens them, runs a categorical tournament, deep-refines one survivor, and prepares an immutable dossier for an explicit human decision. The repository-owned fixture is in [`docs/examples/openmath-research-campaign/`](examples/openmath-research-campaign/).
+This guide covers Phase A research campaigns and the opt-in Phase B certification interval. A campaign creates isolated proof candidates as ordinary [OpenMath workflows](openmath-workflows.md), blind-screens them, runs a categorical tournament, deep-refines one survivor, and prepares an immutable dossier for an explicit human decision. The repository-owned examples are in [`docs/examples/openmath-research-campaign/`](examples/openmath-research-campaign/).
 
 Phase A evidence is not mathematical certification. The campaign never writes a canonical artifact or refines canonical authority.
 
@@ -10,7 +10,7 @@ Research campaigns are opt-in. There is no built-in or implicit research profile
 
 Add the fixture's [`profile.jsonc`](examples/openmath-research-campaign/profile.jsonc) fields under the top-level `openmath` key. File prompt URIs are relative to the config file that declares them, so adjust the fixture paths when copying it into `.opencode/oh-my-openmath.jsonc`. `workflow_allowed_roots` applies to workflow, research-prompt, and reference sources.
 
-Each entry in `research_profiles` has exactly these fields:
+Each entry in `research_profiles` has the Phase A fields below. `certification` is optional. Its absence preserves the Phase A path and serialized behavior.
 
 | Field | Contract |
 | --- | --- |
@@ -21,8 +21,17 @@ Each entry in `research_profiles` has exactly these fields:
 | `max_active_candidates` | 1–32 and no greater than the total candidate count |
 | `survivor_limit` | 1–32 and no greater than the total candidate count |
 | `tournament_role` | `{ agent, prompt, model?, variant? }` |
+| `certification` | Optional Phase B block with four roles and bounded settings |
 
 Research prompts are either `{ "kind": "inline", "content": "..." }` or `{ "kind": "file", "uri": "file://..." }`; the workflow-only `builtin` prompt source is not accepted. `variant` requires `model`. Start freezes the selected profile, all prompt bytes and hashes, resolved models, candidate workflow profile, objective, and references before dispatch.
+
+### Phase B certification profile
+
+Phase B is never enabled by default. Select a profile containing `certification` explicitly, or set `default_research_profile` to that profile explicitly. The fixture profile named `phase-b-certification-example` is an opt-in example and does not change the Phase A profile.
+
+The certification block requires `schema_version: 1`, `extraction_role`, `coverage_role`, `counterexample_role`, and `witness_role`. Each role is a normal research role with a captured prompt and optional explicit model. The example bounds are eight obligations, two coverage rounds, sixteen findings per round, two attack modes, two attacks per obligation, and two active certification jobs. Runtime schemas reject values outside their limits, duplicate attack modes, and a total attack cap above the unique mode count.
+
+The four roles have separate responsibilities. Extraction produces a source-bound acyclic obligation graph. Coverage checks that graph against the artifact and may return `PASS`, `REVISE`, or `INCONCLUSIVE`. Counterexample attempts use only the configured bounded modes. Witness verification independently checks each found witness and returns `CONFIRMED`, `REJECTED`, or `INCONCLUSIVE`.
 
 The objective is the existing workflow request union: a `problem` with text or file source, or `markdown`. Reference manifests use the same YAML/JSON/JSONC format and source controls described in the [workflow guide](openmath-workflows.md#reference-manifests-and-snapshots).
 
@@ -85,6 +94,57 @@ Campaign phases are not workflow stages. Child workflows remain SOLVE, REVIEW, a
 
 Every returned action carries the current `required_state_revision`. Amendment kinds are `question`, `required_check`, `suspected_blocker`, and `scope_change`. Scopes are `candidate:<id>`, `all_candidates`, `next_screen`, `all_remaining_screens`, `next_tournament`, and `selected_refinement`.
 
+## Phase B certification flow
+
+After the selected child reaches `PASSED`, the enabled profile inserts certification before dossier construction. The flow is:
+
+1. Extract a bounded graph of `THEOREM`, `LEMMA`, `CLAIM`, `DEFINITION`, `IMPORTED_RESULT`, or `COMPUTATION` obligations. Nodes carry normalized statements, source spans, prerequisites, assumptions, and hashes. Required roots and acyclic prerequisites are checked by runtime schemas.
+2. Review graph coverage independently. `PASS` advances to bounded counterexample attempts. `REVISE` starts another bounded extraction and coverage round while `max_coverage_rounds` remains; an exhausted `REVISE` pauses at `COVERAGE_REVIEW_REQUIRED` for human input. `INCONCLUSIVE` pauses at `COVERAGE_REVIEW_REQUIRED` for human input. Malformed adapter output or failed dispatch/storage work blocks fail-closed, with no optimistic continuation.
+3. Run the configured attack modes for each obligation within the frozen caps. `NO_COUNTEREXAMPLE_FOUND` is a recorded bounded outcome, not a proof. A found witness is stored before a separate witness job verifies it.
+4. Build the deterministic certification summary. Only `REJECTED` witness outcomes are approval eligible. Any `CONFIRMED` or `INCONCLUSIVE` witness rejects approval, and uncertainty remains visible in the summary.
+5. Publish an immutable certification sidecar, then build `PromotionDossierV2` with its exact revision and hash. The human gate still requires the exact campaign revision, certification revision, and dossier SHA-256.
+
+### Eligibility matrix
+
+| Coverage | Attack or witness outcome | Approval eligibility | Result |
+| --- | --- | --- | --- |
+| `PASS` | All attacks `NO_COUNTEREXAMPLE_FOUND` or `INVALID_TARGET`; no witness is found | Yes, when all revisions and hashes match | V2 dossier may reach the human gate |
+| `PASS` | Any witness `REJECTED` and none `CONFIRMED` or `INCONCLUSIVE` | Yes, when all revisions and hashes match | V2 dossier may reach the human gate |
+| `PASS` | Any `CONFIRMED` or `INCONCLUSIVE` witness | No | Reject-only; the adverse or uncertain outcome remains visible |
+| `REVISE` before `max_coverage_rounds` | Any | No | Start another bounded extraction and coverage round |
+| Exhausted `REVISE` or `INCONCLUSIVE` | Any | No | Pause at `COVERAGE_REVIEW_REQUIRED` for explicit human review |
+| Any | Stale artifact, stale revision, malformed evidence, or storage anomaly | No | Fail closed; no evidence is carried forward |
+
+Illustrative records use the runtime vocabulary:
+
+```json
+{
+  "graph": { "nodes": [{ "obligation_id": "obl-0001", "kind": "THEOREM", "prerequisite_ids": [] }], "required_root_ids": ["obl-0001"] },
+  "coverage": { "verdict": "PASS", "findings": [] },
+  "attack": { "mode": "EDGE_CASE", "outcome": "NO_COUNTEREXAMPLE_FOUND", "witness": null },
+  "witness": { "outcome": "REJECTED" },
+  "dossier": { "schema_version": 2, "canonical": false, "mathematical_correctness_certified": false, "human_approval_required": true }
+}
+```
+
+The abbreviated record above is explanatory only. Published state, hashes, source spans, revisions, job IDs, and provenance must pass the strict runtime schemas.
+
+### Recovery and truth boundaries
+
+Status is read-only. It reports missing, index-only, revision-only, corrupt-highest, and stale-artifact conditions without repair, dispatch, or side effects. Recovery is explicit: read status, retain the returned revision, then call `step` with that revision. A validated revision orphan may be repaired only by that step. A live operation owner returns `STORAGE_BUSY`; a stale owner can be reconciled only by an explicit step.
+
+Amend, step, promote, and abort are revision checked. If the selected artifact tuple or exact content bytes change, the certification run blocks as `STALE_ARTIFACT` and carries no evidence forward. Abort commits the campaign abort first. A readable nonterminal sidecar may then receive `ABORTED`; storage anomaly cleanup returns `SIDECAR_CLEANUP_FAILED` without pretending cleanup succeeded. No status call repairs or adopts an artifact.
+
+The exact claims are:
+
+`NO_COUNTEREXAMPLE_FOUND ≠ PROVED`
+
+`LLM REVIEW PASS ≠ MACHINE-CHECKED PROOF`
+
+`PROMOTION_READY ≠ CANONICAL`
+
+Phase B records only LLM review and LLM counterargument evidence. Machine evidence such as executable tests, finite exhaustive search, CAS, SMT, Lean kernel checks, and human domain-expert review has no producer or import route here. Evidence receipt counts never establish a quorum or certification by themselves.
+
 ## Candidate Isolation and Blind Screening
 
 Every candidate starts in a fresh session with all tools denied. Its request contains only the common frozen objective and references plus that candidate's strategy prompt. It cannot contain a sibling ID, strategy, lineage, model, prompt, session, artifact, output, hash, timing, or size. Child identity is logical: each candidate owns one ordinary workflow run `<campaign_id>::<candidate_id>`; no Git branch is created.
@@ -134,6 +194,6 @@ An attachment reference has exactly `attachment_id`, `kind`, `schema_version`, `
 
 ## Phase B–D Exclusions and STOP Boundary
 
-Phase A does not configure or implement obligations, counterexample or witness execution, Lean or another formal verifier, axiom or statement-alignment audits, independence groups, diversity enforcement, novelty search, certification, or later-phase budget policy. Keys such as `obligations`, `counterexample`, `formal_verifier`, `independence_group`, and `novelty` are rejected by the strict profile schema. There is no `canonical_promote` route.
+Phase A does not configure or implement obligations, counterexample or witness execution, Lean or another formal verifier, axiom or statement-alignment audits, independence groups, diversity enforcement, novelty search, certification, or later-phase budget policy. The Phase B example does not add Phase C, Phase D, or Layer 2 surfaces. It has no executable backend, independence or quorum policy, adaptive search, automatic continuation beyond the bounded Phase-B extraction/coverage loop, or canonical write. Keys such as `obligations`, `counterexample`, `formal_verifier`, `independence_group`, and `novelty` remain rejected by the Phase A profile schema. There is no seventh research tool and no `canonical_promote` route.
 
-The campaign ends at terminal `PROMOTION_READY` or `REJECTED` after the explicit human decision. It produces no canonical artifact, correctness certification, authority refinement, or automatic continuation. Any later phase requires a separate explicit human request and a separately approved plan.
+The campaign ends at terminal `PROMOTION_READY` or `REJECTED` after the explicit human decision. It produces no canonical artifact, correctness certification, authority refinement, or automatic continuation beyond the bounded Phase-B extraction/coverage loop. Any later phase requires a separate explicit human request and a separately approved plan.

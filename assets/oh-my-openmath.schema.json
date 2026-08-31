@@ -3982,6 +3982,309 @@
                   "prompt"
                 ],
                 "additionalProperties": false
+              },
+              "certification": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "schema_version": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "extraction_role": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "agent": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      },
+                      "variant": {
+                        "type": "string"
+                      },
+                      "prompt": {
+                        "readOnly": true,
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "inline"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "content"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "file"
+                              },
+                              "uri": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "uri"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "agent",
+                      "prompt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "coverage_role": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "agent": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      },
+                      "variant": {
+                        "type": "string"
+                      },
+                      "prompt": {
+                        "readOnly": true,
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "inline"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "content"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "file"
+                              },
+                              "uri": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "uri"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "agent",
+                      "prompt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "counterexample_role": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "agent": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      },
+                      "variant": {
+                        "type": "string"
+                      },
+                      "prompt": {
+                        "readOnly": true,
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "inline"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "content"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "file"
+                              },
+                              "uri": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "uri"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "agent",
+                      "prompt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "witness_role": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "agent": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      },
+                      "variant": {
+                        "type": "string"
+                      },
+                      "prompt": {
+                        "readOnly": true,
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "inline"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "content"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "file"
+                              },
+                              "uri": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "uri"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "agent",
+                      "prompt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "max_obligations": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 256
+                  },
+                  "max_coverage_rounds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "max_coverage_findings": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 256
+                  },
+                  "allowed_attack_modes": {
+                    "readOnly": true,
+                    "minItems": 1,
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "EDGE_CASE",
+                        "FINITE_SEARCH",
+                        "DEGENERATE_CASE",
+                        "ASSUMPTION_REMOVAL",
+                        "PARAMETER_BOUNDARY",
+                        "CONSTRUCTION_SEARCH",
+                        "COMPUTATIONAL_FALSIFICATION"
+                      ]
+                    }
+                  },
+                  "max_attacks_per_obligation": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 7
+                  },
+                  "max_active_certification_jobs": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 16
+                  }
+                },
+                "required": [
+                  "schema_version",
+                  "extraction_role",
+                  "coverage_role",
+                  "counterexample_role",
+                  "witness_role",
+                  "max_obligations",
+                  "max_coverage_rounds",
+                  "max_coverage_findings",
+                  "allowed_attack_modes",
+                  "max_attacks_per_obligation",
+                  "max_active_certification_jobs"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [

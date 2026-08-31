@@ -3,8 +3,8 @@
     "tool": "openmath_research_start",
     "command": "openmath-research-start",
     "input": {
-      "campaign_id": "phase-a-example",
-      "research_profile": "phase-a-documentation-example",
+      "campaign_id": "phase-b-example",
+      "research_profile": "phase-b-certification-example",
       "objective": { "kind": "markdown", "instruction": "Prove the stated result." },
       "reference_manifest_path": "docs/examples/openmath-research-campaign/references.yaml"
     }
@@ -12,22 +12,23 @@
   {
     "tool": "openmath_research_status",
     "command": "openmath-research-status",
-    "input": { "campaign_id": "phase-a-example" }
+    "input": { "campaign_id": "phase-b-example" }
   },
   {
     "tool": "openmath_research_step",
     "command": "openmath-research-step",
-    "input": { "campaign_id": "phase-a-example", "expected_state_revision": 0, "mode": "to_checkpoint" }
+    "input": { "campaign_id": "phase-b-example", "expected_state_revision": 0, "expected_certification_revision": null, "mode": "to_checkpoint" }
   },
   {
     "tool": "openmath_research_amend",
     "command": "openmath-research-amend",
     "input": {
-      "campaign_id": "phase-a-example",
+      "campaign_id": "phase-b-example",
       "expected_state_revision": 1,
+      "expected_certification_revision": 0,
       "operation": "add",
       "kind": "required_check",
-      "scope": "all_candidates",
+      "scope": "graph",
       "content": "Check every boundary case."
     }
   },
@@ -35,8 +36,9 @@
     "tool": "openmath_research_promote",
     "command": "openmath-research-promote",
     "input": {
-      "campaign_id": "phase-a-example",
+      "campaign_id": "phase-b-example",
       "expected_state_revision": 2,
+      "expected_certification_revision": 1,
       "dossier_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "decision": "approve"
     }
@@ -44,6 +46,6 @@
   {
     "tool": "openmath_research_abort",
     "command": "openmath-research-abort",
-    "input": { "campaign_id": "phase-a-example", "expected_state_revision": 2, "reason": "Operator stop." }
+    "input": { "campaign_id": "phase-b-example", "expected_state_revision": 2, "expected_certification_revision": 1, "reason": "Operator stop." }
   }
 ]
