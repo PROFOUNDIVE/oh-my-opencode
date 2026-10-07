@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test"
-import { mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import type { OhMyOpenCodeConfig } from "../config"
 import { OpenMathConfigSchema } from "../config/schema"
 import { readWorkflowState } from "../openmath/workflow/storage"
+import { readOpenMathSessionState } from "../openmath/storage"
+import { getOpenMathStorageDirectory } from "../openmath/storage-directory"
 import { createToolRegistry } from "./tool-registry"
 
 type CreateToolRegistryArgs = Parameters<typeof createToolRegistry>[0]
@@ -41,6 +43,32 @@ function createMockArgs(pluginConfig: OhMyOpenCodeConfig, directory = process.cw
 }
 
 describe("createToolRegistry", () => {
+  test("routes registered raw-state and export readers to the configured local store", async () => {
+    // given
+    const directory = mkdtempSync(join(tmpdir(), "openmath-local-registry-"))
+    const storageRoot = mkdtempSync(join(tmpdir(), "openmath-local-registry-state-"))
+    try {
+      const config = createMockConfig({ openmath: OpenMathConfigSchema.parse({ storage_root: storageRoot }) })
+      const { filteredTools } = createToolRegistry(createMockArgs(config, directory))
+      const get = filteredTools.openmath_state_get
+      const exportTool = filteredTools.openmath_export
+      if (!get || !exportTool) throw new Error("Expected registered OpenMath tools")
+      const context = { sessionID: "parent", messageID: "message", agent: "test", abort: new AbortController().signal }
+
+      // when
+      await get.execute({ session_id: "registry-session", init_if_missing: true }, context)
+      const exported = JSON.parse(await exportTool.execute({ session_id: "registry-session", dir: "./exports", prefix: "registry" }, context))
+
+      // then
+      expect(readOpenMathSessionState(getOpenMathStorageDirectory(directory, storageRoot), "registry-session")).toMatchObject({ session_id: "registry-session" })
+      expect(exported).toMatchObject({ ok: false, error_code: "ARTIFACTS_MISSING" })
+      expect(existsSync(join(directory, ".sisyphus"))).toBe(false)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+      rmSync(storageRoot, { recursive: true, force: true })
+    }
+  })
+
   test("returns OpenMath minimal tool set with multimodal enabled", () => {
     const { filteredTools } = createToolRegistry(createMockArgs(createMockConfig()))
     expect(Object.keys(filteredTools).sort()).toEqual([

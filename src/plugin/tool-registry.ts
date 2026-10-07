@@ -15,6 +15,7 @@ import {
   createOpenMathWorkflowTools,
 } from "../tools"
 import { filterDisabledTools } from "../shared/disabled-tools"
+import { getOpenMathStorageDirectory } from "../openmath/storage-directory"
 
 import type { Managers } from "../create-managers"
 
@@ -48,6 +49,7 @@ export function createToolRegistry(args: {
   })
 
   const taskSystemEnabled = false
+  const storageDirectory = getOpenMathStorageDirectory(ctx.directory, pluginConfig.openmath?.storage_root)
 
   const openMathArtifactsTools = createOpenMathArtifactsTools({
     max_ops: pluginConfig.openmath?.artifacts?.patch?.max_ops ?? 20,
@@ -69,7 +71,7 @@ export function createToolRegistry(args: {
 
   const allTools: Record<string, ToolDefinition> = {
     ...createOpenMathStateTools(
-      ctx.directory,
+      storageDirectory,
       pluginConfig.openmath
         ? {
             max_review_rounds: pluginConfig.openmath.max_review_rounds,
@@ -77,7 +79,7 @@ export function createToolRegistry(args: {
           }
         : undefined,
     ),
-    openmath_export: createOpenMathExportTool(ctx.directory, pluginConfig.openmath?.export),
+    openmath_export: createOpenMathExportTool(ctx.directory, pluginConfig.openmath?.export, storageDirectory),
     openmath_solve_only: createOpenMathSolveOnlyTool({
       directory: ctx.directory,
       client: ctx.client,
