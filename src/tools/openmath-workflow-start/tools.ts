@@ -1,5 +1,6 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 import { startWorkflowFromCurrentSources } from "../../openmath/workflow/application/start-workflow"
 import { startWorkflowState } from "../../openmath/workflow/storage"
 import type { ToolContextWithMetadata } from "../delegate-task/types"
@@ -15,6 +16,7 @@ import {
 import { OpenMathWorkflowStartInputSchema } from "./types"
 
 export function createOpenMathWorkflowStartTool(options: OpenMathWorkflowToolOptions): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig.storage_root)
   return tool({
     description: "Start an immutable, resumable OpenMath workflow run.",
     args: OpenMathWorkflowStartInputSchema.shape,
@@ -25,7 +27,7 @@ export function createOpenMathWorkflowStartTool(options: OpenMathWorkflowToolOpt
         const result = await startWorkflowFromCurrentSources(
           { run_id: input.run_id, parent_session_id: ctx.sessionID },
           {
-            directory: options.directory,
+            directory: storageDirectory,
             resolve_request: () => resolveWorkflowRequest(input.request, options.directory),
             resolve_profile: () => resolveInitialProfileSnapshot({
               config: options.openmathConfig,
