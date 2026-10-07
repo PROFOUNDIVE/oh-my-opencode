@@ -6,7 +6,6 @@ import { readWorkflowState, startWorkflowState } from "../../workflow/storage"
 import { sha256 } from "../../workflow/stage-runner/sha256"
 import {
   validateApprovedEducationalSource,
-  type ApprovedEducationalSource,
   type ApprovedEducationalSourceResult,
 } from "./approved-source"
 import { createEducationalReferenceSnapshot } from "./educational-reference-snapshot"
@@ -14,6 +13,7 @@ import { withEducationalizationLock } from "./educationalization-lock"
 
 type EducationalizationInput = Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly campaign_id: string
   readonly expected_state_revision: number
   readonly expected_certification_revision: number
@@ -64,7 +64,8 @@ async function educationalizeLocked(
   const validated = await (dependencies.validate_source ?? validateApprovedEducationalSource)(input)
   if (!validated.ok) return sourceFailure(input.campaign_id, educationalizationId, validated)
   const requestSnapshot = { kind: "research_educationalization" as const, ...validated.source }
-  let current = await readWorkflowState(input.directory, educationalizationId)
+  const storageDirectory = input.storageDirectory ?? input.directory
+  let current = await readWorkflowState(storageDirectory, educationalizationId)
   if (current.kind === "error") {
     if (current.error_code !== "RUN_NOT_FOUND") {
       return failure(input.campaign_id, educationalizationId, current.error_code, current.message)
@@ -80,11 +81,11 @@ async function educationalizeLocked(
         validated.source.reference_solution_sha256,
       ),
     })
-    const started = await startWorkflowState({ directory: input.directory, state: initial })
+    const started = await startWorkflowState({ directory: storageDirectory, state: initial })
     if (started.kind === "error" && started.error_code !== "RUN_ALREADY_EXISTS") {
       return failure(input.campaign_id, educationalizationId, started.error_code, started.message)
     }
-    current = await readWorkflowState(input.directory, educationalizationId)
+    current = await readWorkflowState(storageDirectory, educationalizationId)
   }
   if (current.kind === "error") return failure(input.campaign_id, educationalizationId, current.error_code, current.message)
   if (JSON.stringify(current.state.request_snapshot) !== JSON.stringify(requestSnapshot)) {
@@ -97,6 +98,7 @@ async function educationalizeLocked(
   }
   const stepped = await stepWorkflow({
     directory: input.directory,
+    storageDirectory,
     run_id: educationalizationId,
     expected_state_revision: current.state.state_revision,
     mode: "to_checkpoint",

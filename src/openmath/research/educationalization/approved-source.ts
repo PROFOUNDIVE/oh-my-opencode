@@ -21,12 +21,14 @@ export type ApprovedEducationalSourceResult =
 
 export async function validateApprovedEducationalSource(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly campaign_id: string
   readonly expected_state_revision: number
   readonly expected_certification_revision: number
   readonly dossier_sha256: string
 }>): Promise<ApprovedEducationalSourceResult> {
-  const campaignRead = await readResearchCampaignState(input.directory, input.campaign_id)
+  const storageDirectory = input.storageDirectory ?? input.directory
+  const campaignRead = await readResearchCampaignState(storageDirectory, input.campaign_id)
   if (campaignRead.kind === "error") return failure("STORAGE_READ_FAILED", campaignRead.message)
   const campaign = campaignRead.state
   if (campaign.status !== "PROMOTION_READY") {
@@ -47,12 +49,12 @@ export async function validateApprovedEducationalSource(input: Readonly<{
   if (dossier.certification_summary.certification_revision !== input.expected_certification_revision) {
     return failure("CERTIFICATION_SOURCE_MISMATCH", "Certification revision does not match the approved dossier")
   }
-  const loaded = await loadCertificationContext({ directory: input.directory, campaign_id: input.campaign_id })
+  const loaded = await loadCertificationContext({ directory: storageDirectory, campaign_id: input.campaign_id })
   if (loaded.kind !== "ok") {
     return failure("SELECTED_ARTIFACT_MISMATCH", loaded.kind === "disabled" ? "Certification is not enabled" : loaded.message)
   }
   const evidence = await readPromotionCertificationEvidence({
-    directory: input.directory,
+    directory: storageDirectory,
     campaign_id: input.campaign_id,
     expected_state_revision: input.expected_state_revision,
   })
