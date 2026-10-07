@@ -10,6 +10,7 @@ export type CandidateJobRuntimeFactory = (
 
 export async function runCandidateDiscovery(input: Parameters<CampaignStepDependencies["run_operation"]>[0], dependencies: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly create_job_runtime: CandidateJobRuntimeFactory
 }>): Promise<CampaignSchedulerResult> {
   if (input.state.status !== "RUNNING" || input.state.phase !== "DISCOVERY") {
@@ -36,6 +37,7 @@ export async function runCandidateDiscovery(input: Parameters<CampaignStepDepend
       if (strategy === undefined) return childFailure("Candidate strategy is absent from the frozen profile")
       return executeCandidateChild({
         directory: dependencies.directory,
+        storageDirectory: dependencies.storageDirectory ?? dependencies.directory,
         parent_session_id: input.state.parent_session_id,
         descriptor,
         strategy_prompt: strategy.prompt.content,

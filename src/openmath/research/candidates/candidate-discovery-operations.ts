@@ -8,6 +8,7 @@ type CampaignInfrastructureDependencies = Omit<CampaignStepDependencies, "plan_o
 
 export function createCandidateDiscoveryStepDependencies(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly create_job_runtime: CandidateJobRuntimeFactory
   readonly infrastructure?: CampaignInfrastructureDependencies
 }>): CampaignStepDependencies {
@@ -20,12 +21,14 @@ export function createCandidateDiscoveryStepDependencies(input: Readonly<{
 
 export function createOpenCodeCandidateDiscoveryStepDependencies(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly infrastructure?: CampaignInfrastructureDependencies
 }>): CampaignStepDependencies {
   return createCandidateDiscoveryStepDependencies({
     directory: input.directory,
+    storageDirectory: input.storageDirectory ?? input.directory,
     ...(input.infrastructure === undefined ? {} : { infrastructure: input.infrastructure }),
     create_job_runtime: (callbacks) => createCampaignDispatchRuntime({
       client: input.client,

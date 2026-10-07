@@ -23,6 +23,7 @@ export type CandidateChildExecutionResult =
 
 export async function executeCandidateChild(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly parent_session_id: string
   readonly descriptor: Extract<CandidateDescriptor, { readonly candidate_kind: "STRATEGY" }>
   readonly strategy_prompt: string
@@ -30,14 +31,15 @@ export async function executeCandidateChild(input: Readonly<{
   readonly attempt: CampaignJobAttempt
   readonly job_runtime: CampaignJobRuntime
 }>): Promise<CandidateChildExecutionResult> {
-  const existing = await getWorkflowStatus({ directory: input.directory, run_id: input.descriptor.child_run_id })
+  const storageDirectory = input.storageDirectory ?? input.directory
+  const existing = await getWorkflowStatus({ directory: storageDirectory, run_id: input.descriptor.child_run_id })
   let state: WorkflowStateV1
   if (existing.kind === "ok") {
     if (!sameFrozenInputs(existing.state, input)) return failed("Candidate child run already exists with different frozen inputs")
     state = existing.state
   } else {
     const started = await startWorkflowFromSnapshots({
-      directory: input.directory,
+      directory: storageDirectory,
       run_id: input.descriptor.child_run_id,
       parent_session_id: input.parent_session_id,
       request_snapshot: input.sources.objective,
@@ -54,7 +56,7 @@ export async function executeCandidateChild(input: Readonly<{
   state = amended.state
 
   const candidateRuntime = createCandidateWorkflowRuntime({
-    directory: input.directory,
+    directory: storageDirectory,
     state,
     attempt: input.attempt,
     job_runtime: input.job_runtime,
@@ -63,6 +65,7 @@ export async function executeCandidateChild(input: Readonly<{
     try {
       const stepped = await stepWorkflow({
         directory: input.directory,
+        storageDirectory,
         run_id: input.descriptor.child_run_id,
         expected_state_revision: state.state_revision,
         mode: "to_checkpoint",
@@ -126,7 +129,7 @@ async function ensureStrategyAmendment(
     return failed("Candidate strategy amendment must be added before SOLVE")
   }
   const amended = await amendWorkflow({
-    directory: input.directory,
+    directory: input.storageDirectory ?? input.directory,
     run_id: input.descriptor.child_run_id,
     expected_state_revision: state.state_revision,
     operation: "add",
