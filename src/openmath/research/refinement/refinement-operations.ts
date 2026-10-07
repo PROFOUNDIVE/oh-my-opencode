@@ -8,6 +8,7 @@ type Infrastructure = Omit<CampaignStepDependencies, "plan_operation" | "run_ope
 
 export function createSelectedRefinementStepDependencies(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly create_job_runtime: RefinementJobRuntimeFactory
   readonly infrastructure?: Infrastructure
 }>): CampaignStepDependencies {
@@ -20,12 +21,14 @@ export function createSelectedRefinementStepDependencies(input: Readonly<{
 
 export function createOpenCodeSelectedRefinementStepDependencies(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly infrastructure?: Infrastructure
 }>): CampaignStepDependencies {
   return createSelectedRefinementStepDependencies({
     directory: input.directory,
+    storageDirectory: input.storageDirectory ?? input.directory,
     ...(input.infrastructure === undefined ? {} : { infrastructure: input.infrastructure }),
     create_job_runtime: (callbacks) => createCampaignDispatchRuntime({ ...input, ...callbacks }),
   })

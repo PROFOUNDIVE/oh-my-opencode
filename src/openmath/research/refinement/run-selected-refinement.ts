@@ -19,8 +19,9 @@ export type RefinementJobRuntimeFactory = (
 
 export async function runSelectedRefinement(
   input: Parameters<CampaignStepDependencies["run_operation"]>[0],
-  dependencies: Readonly<{ readonly directory: string; readonly create_job_runtime: RefinementJobRuntimeFactory }>,
+  dependencies: Readonly<{ readonly directory: string; readonly storageDirectory?: string; readonly create_job_runtime: RefinementJobRuntimeFactory }>,
 ): Promise<CampaignSchedulerResult> {
+  const storageDirectory = dependencies.storageDirectory ?? dependencies.directory
   if (input.state.status !== "RUNNING" || input.state.phase !== "DEEP_REFINEMENT") {
     return failure("ILLEGAL_TRANSITION", "Selected refinement requires RUNNING deep refinement")
   }
@@ -31,7 +32,7 @@ export async function runSelectedRefinement(
   if (selected.length !== 1 || candidate === undefined || attempts.length !== 1 || attempt === undefined) {
     return failure("VALIDATION_ERROR", "Selected refinement requires exactly one selected candidate job")
   }
-  const current = await getWorkflowStatus({ directory: dependencies.directory, run_id: candidate.child_run_id })
+  const current = await getWorkflowStatus({ directory: storageDirectory, run_id: candidate.child_run_id })
   if (current.kind !== "ok") return block(input, attempt, current.message)
   const validation = validateSelectedChildState({ campaign: input.state, candidate, child: current.state })
   if (!validation.ok) return block(input, attempt, validation.message)
@@ -39,7 +40,7 @@ export async function runSelectedRefinement(
   const amendments = renderApplicableCampaignAmendments(input.state, "DEEP_REFINEMENT")
   for (const amendment of amendments.slice(validation.forwarded_amendment_count)) {
     const forwarded = await amendWorkflow({
-      directory: dependencies.directory,
+      directory: storageDirectory,
       run_id: child.run_id,
       expected_state_revision: child.state_revision,
       operation: "add",
@@ -55,7 +56,7 @@ export async function runSelectedRefinement(
     block_reconciliation: input.block_reconciliation,
   })
   const runtime = createCandidateWorkflowRuntime({
-    directory: dependencies.directory,
+    directory: storageDirectory,
     state: child,
     attempt,
     job_runtime: jobRuntime,
@@ -63,14 +64,14 @@ export async function runSelectedRefinement(
   try {
     if (attempt.phase !== "COMPLETED") {
       if (candidate.candidate_kind === "MERGE_IDEA" && candidate.artifact === null) {
-        const solved = await runChildStep(dependencies.directory, child, runtime.runtime)
+        const solved = await runChildStep(dependencies, child, runtime.runtime)
         if (solved.kind === "error") return block(input, attempt, solved.message)
         child = solved.state
         if (!atAfterSolve(child)) return block(input, attempt, "Merge child did not reach the after_solve checkpoint")
       } else if (!atAfterSolve(child) && child.status !== "AWAITING_HUMAN" && child.status !== "RUNNING") {
         return block(input, attempt, "Selected KEEP child is not at its authoritative refinement boundary")
       }
-      const refined = await runChildStep(dependencies.directory, child, runtime.runtime)
+      const refined = await runChildStep(dependencies, child, runtime.runtime)
       if (refined.kind === "error") return block(input, attempt, refined.message)
       child = refined.state
     }
@@ -96,12 +97,13 @@ export async function runSelectedRefinement(
 }
 
 async function runChildStep(
-  directory: string,
+  directories: Readonly<{ readonly directory: string; readonly storageDirectory?: string }>,
   state: WorkflowStateV1,
   runtime: Parameters<typeof stepWorkflow>[1]["create_runtime"] extends (state: WorkflowStateV1) => infer R ? NonNullable<R> : never,
 ) {
   return stepWorkflow({
-    directory,
+    directory: directories.directory,
+    storageDirectory: directories.storageDirectory ?? directories.directory,
     run_id: state.run_id,
     expected_state_revision: state.state_revision,
     mode: "to_checkpoint",
