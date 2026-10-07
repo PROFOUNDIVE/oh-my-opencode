@@ -1,4 +1,5 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 
 import { startResearchCampaign } from "../../openmath/research/application"
 import { CampaignIdSchema, NonBlankSchema } from "../../openmath/research/state"
@@ -19,6 +20,7 @@ import { OpenMathResearchStartInputSchema } from "./types"
 export function createOpenMathResearchStartTool(
   options: OpenMathResearchToolOptions,
 ): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig.storage_root)
   return tool({
     description: "Start an isolated, revision-safe OpenMath research campaign.",
     args: {
@@ -41,7 +43,7 @@ export function createOpenMathResearchStartTool(
           directory: options.directory,
         })
         const result = await startResearchCampaign({
-          directory: options.directory,
+          directory: storageDirectory,
           campaign_id: input.campaign_id,
           parent_session_id: ctx.sessionID,
         }, {

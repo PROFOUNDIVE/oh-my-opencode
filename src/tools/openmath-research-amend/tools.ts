@@ -1,4 +1,5 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 import { z } from "zod"
 
 import { amendResearchCampaign } from "../../openmath/research/application"
@@ -13,7 +14,7 @@ import { CertificationRevisionSchema } from "../../openmath/research/certificati
 import {
   jsonResearchException,
   jsonResearchResult,
-  type OpenMathResearchToolOptions,
+  type OpenMathResearchStorageOptions,
 } from "../openmath-research-shared"
 import {
   OpenMathResearchAmendInputSchema,
@@ -21,8 +22,9 @@ import {
 } from "./types"
 
 export function createOpenMathResearchAmendTool(
-  options: Pick<OpenMathResearchToolOptions, "directory">,
+  options: OpenMathResearchStorageOptions,
 ): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig?.storage_root)
   return tool({
     description: "Add or retract a revision-checked Phase A research campaign amendment.",
     args: {
@@ -40,7 +42,7 @@ export function createOpenMathResearchAmendTool(
         const input = OpenMathResearchAmendInputSchema.parse(rawArgs)
         return jsonResearchResult(await amendResearchCampaign({
           ...input,
-          directory: options.directory,
+          directory: storageDirectory,
         }))
       } catch (error) {
         return jsonResearchException(error)

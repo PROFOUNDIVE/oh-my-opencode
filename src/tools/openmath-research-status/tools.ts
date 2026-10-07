@@ -1,17 +1,19 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 
 import { getResearchCampaignStatus } from "../../openmath/research/application"
 import { CampaignIdSchema } from "../../openmath/research/state"
 import {
   jsonResearchException,
   jsonResearchResult,
-  type OpenMathResearchToolOptions,
+  type OpenMathResearchStorageOptions,
 } from "../openmath-research-shared"
 import { OpenMathResearchStatusInputSchema } from "./types"
 
 export function createOpenMathResearchStatusTool(
-  options: Pick<OpenMathResearchToolOptions, "directory">,
+  options: OpenMathResearchStorageOptions,
 ): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig?.storage_root)
   return tool({
     description: "Read the persisted state and next actions of an OpenMath research campaign.",
     args: { campaign_id: CampaignIdSchema },
@@ -19,7 +21,7 @@ export function createOpenMathResearchStatusTool(
       try {
         const input = OpenMathResearchStatusInputSchema.parse(rawArgs)
         return jsonResearchResult(await getResearchCampaignStatus({
-          directory: options.directory,
+          directory: storageDirectory,
           campaign_id: input.campaign_id,
         }))
       } catch (error) {

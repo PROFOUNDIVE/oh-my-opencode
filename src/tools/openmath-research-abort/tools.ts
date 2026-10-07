@@ -1,4 +1,5 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 
 import { abortResearchCampaign } from "../../openmath/research/application"
 import {
@@ -10,13 +11,14 @@ import { CertificationRevisionSchema } from "../../openmath/research/certificati
 import {
   jsonResearchException,
   jsonResearchResult,
-  type OpenMathResearchToolOptions,
+  type OpenMathResearchStorageOptions,
 } from "../openmath-research-shared"
 import { OpenMathResearchAbortInputSchema } from "./types"
 
 export function createOpenMathResearchAbortTool(
-  options: Pick<OpenMathResearchToolOptions, "directory">,
+  options: OpenMathResearchStorageOptions,
 ): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig?.storage_root)
   return tool({
     description: "Revision-check and abort an OpenMath research campaign.",
     args: {
@@ -30,7 +32,7 @@ export function createOpenMathResearchAbortTool(
         const input = OpenMathResearchAbortInputSchema.parse(rawArgs)
         return jsonResearchResult(await abortResearchCampaign({
           ...input,
-          directory: options.directory,
+          directory: storageDirectory,
         }))
       } catch (error) {
         return jsonResearchException(error)
