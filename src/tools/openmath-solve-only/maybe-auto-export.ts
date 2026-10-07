@@ -2,9 +2,11 @@ import type { ToolContextWithMetadata } from "../delegate-task/types"
 import type { OpenMathToolConfig } from "./tool-config"
 
 import { createOpenMathExportTool } from "../openmath-export/tools"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 
 export async function maybeAutoExport(args: {
   directory: string
+  readonly storageDirectory?: string
   config: OpenMathToolConfig | undefined
   ctx: ToolContextWithMetadata
   sessionId: string
@@ -14,7 +16,8 @@ export async function maybeAutoExport(args: {
 }): Promise<{ student_path: string; teacher_path: string } | undefined> {
   if (!args.enabled) return undefined
 
-  const exportTool = createOpenMathExportTool(args.directory, args.config?.export)
+  const storageDirectory = args.storageDirectory ?? getOpenMathStorageDirectory(args.directory, args.config?.storage_root)
+  const exportTool = createOpenMathExportTool(args.directory, args.config?.export, storageDirectory)
   const exportRaw = await exportTool.execute(
     {
       session_id: args.sessionId,

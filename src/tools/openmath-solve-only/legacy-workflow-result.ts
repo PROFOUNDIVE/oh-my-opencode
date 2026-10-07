@@ -6,6 +6,7 @@ import type { OpenMathSolveOnlyResult } from "./types"
 
 type LegacyWorkflowResultInput = Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly config: OpenMathToolConfig | undefined
   readonly ctx: ToolContextWithMetadata
   readonly problem: { readonly id: string; readonly prefix?: string }
@@ -22,6 +23,7 @@ export async function createLegacyWorkflowResult(
   if (state.status === "PASSED") {
     const exported = await maybeAutoExport({
       directory: input.directory,
+      storageDirectory: input.storageDirectory,
       config: input.config,
       ctx: input.ctx,
       sessionId: state.run_id,
