@@ -17,6 +17,7 @@ export function createWorkflowStageRuntime(
   input: Readonly<{
     readonly state: WorkflowStateV1
     readonly directory: string
+    readonly storageDirectory?: string
     readonly client: OpencodeClient
     readonly ctx: ToolContextWithMetadata
   }>,
@@ -26,7 +27,7 @@ export function createWorkflowStageRuntime(
   return {
     persist: async (nextState) => {
       const result = await dependencies.compareAndSwap({
-        directory: input.directory,
+        directory: input.storageDirectory ?? input.directory,
         run_id: currentState.run_id,
         expected_state_revision: currentState.state_revision,
         next_state: nextState,

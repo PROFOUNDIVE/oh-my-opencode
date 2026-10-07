@@ -1,5 +1,6 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 import { stepWorkflow } from "../../openmath/workflow/application/step-workflow"
 import { createWorkflowStageRuntime } from "../../openmath/workflow/stage-runner"
 import type { ToolContextWithMetadata } from "../delegate-task/types"
@@ -7,6 +8,7 @@ import { jsonWorkflowError, jsonWorkflowException, jsonWorkflowSuccess, type Ope
 import { OpenMathWorkflowStepInputSchema } from "./types"
 
 export function createOpenMathWorkflowStepTool(options: OpenMathWorkflowToolOptions): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig.storage_root)
   return tool({
     description: "Execute one persisted OpenMath workflow stage or continue to its checkpoint.",
     args: OpenMathWorkflowStepInputSchema.shape,
@@ -16,10 +18,11 @@ export function createOpenMathWorkflowStepTool(options: OpenMathWorkflowToolOpti
         const ctx = context as ToolContextWithMetadata
         const result = await stepWorkflow({
           directory: options.directory,
+          storageDirectory,
           run_id: input.run_id,
           expected_state_revision: input.expected_state_revision,
           mode: input.mode ?? "one_stage",
-        }, { create_runtime: (state) => options.createStageRuntime?.({ state, ctx }) ?? defaultRuntime(options, state, ctx) })
+        }, { create_runtime: (state) => options.createStageRuntime?.({ state, ctx, storageDirectory }) ?? defaultRuntime(options, state, ctx) })
         return result.kind === "ok" ? jsonWorkflowSuccess(result.state) : jsonWorkflowError(result)
       } catch (error) {
         return jsonWorkflowException(error)
@@ -34,5 +37,5 @@ function defaultRuntime(
   ctx: ToolContextWithMetadata,
 ) {
   if (!options.client) return undefined
-  return createWorkflowStageRuntime({ state, directory: options.directory, client: options.client, ctx })
+  return createWorkflowStageRuntime({ state, directory: options.directory, storageDirectory: getOpenMathStorageDirectory(options.directory, options.openmathConfig.storage_root), client: options.client, ctx })
 }

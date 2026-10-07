@@ -11,5 +11,6 @@ export type OpenMathWorkflowToolOptions = Readonly<{
   readonly createStageRuntime?: (input: Readonly<{
     readonly state: WorkflowStateV1
     readonly ctx: ToolContextWithMetadata
+    readonly storageDirectory: string
   }>) => StageRunnerRuntime
 }>

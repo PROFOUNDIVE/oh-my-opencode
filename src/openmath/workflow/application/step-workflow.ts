@@ -10,6 +10,7 @@ import { StagePersistenceError } from "../stage-runner/stage-persistence-error"
 
 export async function stepWorkflow(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly run_id: string
   readonly expected_state_revision: number
   readonly mode: StepMode
@@ -17,7 +18,7 @@ export async function stepWorkflow(input: Readonly<{
   readonly create_runtime: (state: WorkflowStateV1) => StageRunnerRuntime | undefined
   readonly validate_research_terminal?: () => Promise<ApprovedEducationalSourceResult>
 }>): Promise<WorkflowApplicationResult> {
-  const current = await readWorkflowState(input.directory, input.run_id)
+  const current = await readWorkflowState(input.storageDirectory ?? input.directory, input.run_id)
   if (current.kind === "error") return current
   if (current.state.state_revision !== input.expected_state_revision) {
     return {
@@ -45,7 +46,7 @@ export async function stepWorkflow(input: Readonly<{
         ...runtime,
         persist: async (nextState) => {
           await admitResearchTerminalState({
-            directory: input.directory,
+            directory: input.storageDirectory ?? input.directory,
             state: nextState,
             ...(dependencies.validate_research_terminal === undefined
               ? {}
