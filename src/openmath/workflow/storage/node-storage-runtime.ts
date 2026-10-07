@@ -9,6 +9,7 @@ function errorCode(error: unknown): string | undefined {
 }
 
 export const nodeStorageRuntime: StorageRuntime = {
+  platform: process.platform,
   mkdir: async (path) => {
     await mkdir(path, { recursive: true })
   },

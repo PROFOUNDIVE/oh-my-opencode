@@ -23,13 +23,24 @@ async function withRunDirectory(run: (runDirectory: string) => Promise<void>): P
   }
 }
 
-function failingSyncHandle(handle: StorageFileHandle): StorageFileHandle {
+function failingSyncHandle(handle: StorageFileHandle, code = "EIO"): StorageFileHandle {
   return {
     readFile: async () => handle.readFile(),
     writeFile: async (content) => handle.writeFile(content),
     identity: async () => handle.identity(),
-    sync: async () => { throw fault("EIO") },
+    sync: async () => { throw fault(code) },
     close: async () => handle.close(),
+  }
+}
+
+function windowsDirectorySyncRuntime(): StorageRuntime {
+  return {
+    ...nodeStorageRuntime,
+    platform: "win32",
+    open: async (path, flags) => {
+      const handle = await nodeStorageRuntime.open(path, flags)
+      return flags === "r" ? failingSyncHandle(handle, "EPERM") : handle
+    },
   }
 }
 
@@ -125,5 +136,21 @@ test("preserves the file-fsync failure code and message", async () => {
     })
     expect(existsSync(getWorkflowRevisionPath(runDirectory, 0))).toBe(false)
     expect(await readdir(runDirectory)).toEqual([])
+  })
+})
+
+test("commits the revision when Windows directory fsync returns EPERM", async () => {
+  await withRunDirectory(async (runDirectory) => {
+    // given
+    const state = createStoredWorkflowState("windows-directory-fsync", 0)
+    const runtime = windowsDirectorySyncRuntime()
+
+    // when
+    const result = await writeImmutableWorkflowRevision({ run_directory: runDirectory, revision: 0, state }, runtime)
+
+    // then
+    expect(result).toEqual({ kind: "ok" })
+    expect(existsSync(getWorkflowRevisionPath(runDirectory, 0))).toBe(true)
+    expect((await readdir(runDirectory)).filter((name) => name.startsWith(".tmp-"))).toEqual([])
   })
 })

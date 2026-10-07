@@ -8,6 +8,11 @@ function errorCode(error: unknown): string | undefined {
   return typeof error.code === "string" ? error.code : undefined
 }
 
+function isUnsupportedDirectorySync(error: unknown, runtime: StorageRuntime): boolean {
+  const code = errorCode(error)
+  return DIRECTORY_SYNC_UNSUPPORTED.has(code ?? "") || (runtime.platform === "win32" && code === "EPERM")
+}
+
 export async function syncImmutableJsonRevisionDirectory(
   directory: string,
   runtime: StorageRuntime,
@@ -26,7 +31,7 @@ export async function syncImmutableJsonRevisionDirectory(
     await handle.sync()
   } catch (error) {
     if (!(error instanceof Error)) throw error
-    if (!DIRECTORY_SYNC_UNSUPPORTED.has(errorCode(error) ?? "")) syncError = error
+    if (!isUnsupportedDirectorySync(error, runtime)) syncError = error
   }
   try {
     await handle.close()

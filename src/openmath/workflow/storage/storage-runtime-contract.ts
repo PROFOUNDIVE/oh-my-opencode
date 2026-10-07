@@ -11,6 +11,7 @@ export type StorageFileHandle = {
 export type ProcessStatus = "live" | "dead" | "unverifiable"
 
 export type StorageRuntime = {
+  readonly platform: NodeJS.Platform
   readonly mkdir: (path: string) => Promise<void>
   readonly readdir: (path: string) => Promise<readonly string[]>
   readonly readFile: (path: string) => Promise<string>
