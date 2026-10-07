@@ -19,6 +19,7 @@ type RunOperationInput = Parameters<OpenMathResearchStepDependencies["run_operat
 
 export function createOpenMathResearchStepDependencies(input: Readonly<{
   readonly options: Pick<OpenMathResearchToolOptions, "directory" | "client">
+  readonly storageDirectory?: string
   readonly context: ToolContextWithMetadata
 }>): OpenMathResearchStepDependencies {
   const client = input.options.client
@@ -27,6 +28,7 @@ export function createOpenMathResearchStepDependencies(input: Readonly<{
   }
   const runtime = {
     directory: input.options.directory,
+    storageDirectory: input.storageDirectory ?? input.options.directory,
     client,
     ctx: input.context,
   }
@@ -35,7 +37,7 @@ export function createOpenMathResearchStepDependencies(input: Readonly<{
   const tournament = createOpenCodeTournamentStepDependencies(runtime)
   const refinement = createOpenCodeSelectedRefinementStepDependencies(runtime)
   const dossier = createPromotionDossierStepDependencies({
-    directory: input.options.directory,
+    directory: runtime.storageDirectory,
   })
   return {
     plan_operation: (state) => planOperation(

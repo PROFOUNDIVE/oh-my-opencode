@@ -1,4 +1,5 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 
 import { stepResearchCampaign } from "../../openmath/research/application"
 import { CampaignIdSchema, CampaignRevisionSchema } from "../../openmath/research/state"
@@ -8,6 +9,7 @@ import {
   jsonResearchException,
   jsonResearchResult,
   type OpenMathResearchToolOptions,
+  type OpenMathResearchStorageOptions,
 } from "../openmath-research-shared"
 import { createOpenMathResearchStepDependencies } from "./step-dependencies"
 import { OpenMathResearchStepInputSchema } from "./types"
@@ -15,9 +17,10 @@ import { OpenMathResearchStepInputSchema } from "./types"
 export function createOpenMathResearchStepTool(
   options: Pick<
     OpenMathResearchToolOptions,
-    "directory" | "client" | "createStepDependencies"
-  >,
+    "client" | "createStepDependencies"
+  > & OpenMathResearchStorageOptions,
 ): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig?.storage_root)
   return tool({
     description: "Execute one research campaign operation or continue to its next checkpoint.",
     args: {
@@ -31,9 +34,9 @@ export function createOpenMathResearchStepTool(
         const input = OpenMathResearchStepInputSchema.parse(rawArgs)
         const ctx: ToolContextWithMetadata = context
         const dependencies = options.createStepDependencies?.(ctx)
-          ?? createOpenMathResearchStepDependencies({ options, context: ctx })
+          ?? createOpenMathResearchStepDependencies({ options, storageDirectory, context: ctx })
         return jsonResearchResult(await stepResearchCampaign({
-          directory: options.directory,
+          directory: storageDirectory,
           campaign_id: input.campaign_id,
           expected_state_revision: input.expected_state_revision,
           ...("expected_certification_revision" in input
