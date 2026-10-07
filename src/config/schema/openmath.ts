@@ -46,6 +46,9 @@ const OpenMathExportConfigSchema = z
   .optional()
 
 export const OpenMathConfigSchema = z.object({
+  storage_root: z.string().trim().min(1).refine((value) => !value.includes("\0"), {
+    message: "storage_root must not contain NUL characters",
+  }).optional(),
   max_review_rounds: z.number().int().min(1).default(3),
   max_consecutive_patch_failures: z.number().int().min(1).default(2),
   artifacts: OpenMathArtifactsConfigSchema,
