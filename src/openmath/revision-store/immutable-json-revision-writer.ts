@@ -1,5 +1,6 @@
 import { join } from "node:path"
 
+import { log } from "../../shared/logger"
 import { nodeStorageRuntime } from "../workflow/storage/node-storage-runtime"
 import type {
   StorageFileHandle,
@@ -125,19 +126,30 @@ export async function writeImmutableJsonRevision(
   }
   const identity = await handle.identity()
   const boundTemp = { tempPath, ownerPath, identity }
+  let operation = "TEMP_IDENTITY_CHECK_FAILED"
   try {
     if (!await runtime.sameIdentity(tempPath, identity)) {
       await handle.close()
       const cleaned = await cleanupBoundTemp(boundTemp, runtime)
       return cleaned.kind === "error" ? cleaned : writeFailure("EXCLUSIVE_TEMP_IDENTITY_CHANGED")
     }
+    operation = "TEMP_OWNER_LINK_FAILED"
     await runtime.link(tempPath, ownerPath)
+    operation = "OWNER_IDENTITY_CHECK_FAILED"
     if (!await runtime.sameIdentity(ownerPath, identity)) {
       await handle.close()
       const cleaned = await cleanupBoundTemp(boundTemp, runtime)
       return cleaned.kind === "error" ? cleaned : writeFailure("TEMP_OWNERSHIP_BINDING_CHANGED")
     }
   } catch (error) {
+    const systemError = typeof error === "object" && error !== null ? error : undefined
+    log("[openmath] Immutable temp ownership binding failed", {
+      operation,
+      platform: runtime.platform,
+      code: errorCode(error),
+      errno: systemError && "errno" in systemError ? systemError.errno : undefined,
+      syscall: systemError && "syscall" in systemError ? systemError.syscall : undefined,
+    })
     try {
       await handle.close()
     } catch (closeError) {
@@ -145,7 +157,8 @@ export async function writeImmutableJsonRevision(
     }
     const cleaned = await cleanupBoundTemp(boundTemp, runtime)
     if (cleaned.kind === "error") return cleaned
-    return ATOMICITY_CODES.has(errorCode(error) ?? "")
+    const code = errorCode(error)
+    return ATOMICITY_CODES.has(code ?? "") || (operation === "TEMP_OWNER_LINK_FAILED" && code === "EISDIR")
       ? atomicityFailure("OWNERSHIP_BOUND_TEMP_CREATE_UNAVAILABLE")
       : writeFailure("TEMP_OWNERSHIP_BIND_FAILED")
   }
