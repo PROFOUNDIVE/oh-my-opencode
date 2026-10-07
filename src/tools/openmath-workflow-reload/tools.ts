@@ -1,5 +1,6 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 import {
   jsonWorkflowException,
   mutateWorkflowFromState,
@@ -10,6 +11,7 @@ import {
 import { OpenMathWorkflowReloadInputSchema } from "./types"
 
 export function createOpenMathWorkflowReloadTool(options: OpenMathWorkflowToolOptions): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig.storage_root)
   return tool({
     description: "Explicitly reload selected persisted OpenMath workflow prompt or reference sources.",
     args: OpenMathWorkflowReloadInputSchema.shape,
@@ -17,7 +19,7 @@ export function createOpenMathWorkflowReloadTool(options: OpenMathWorkflowToolOp
       try {
         const input = OpenMathWorkflowReloadInputSchema.parse(rawArgs)
         return await mutateWorkflowFromState({
-          directory: options.directory,
+          directory: storageDirectory,
           run_id: input.run_id,
           expected_state_revision: input.expected_state_revision,
           preflight_event: (state) => ({
