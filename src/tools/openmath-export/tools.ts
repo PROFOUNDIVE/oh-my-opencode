@@ -55,6 +55,7 @@ function sanitizeArtifacts(artifacts: FrozenArtifacts): FrozenArtifacts {
 export function createOpenMathExportTool(
   directory: string,
   defaults?: OpenMathExportToolDefaults,
+  storageDirectory: string = directory,
 ): ToolDefinition {
   return tool({
     description: "Export deterministic student/teacher markdown from frozen solve-only or research-derived educational artifacts.",
@@ -109,8 +110,8 @@ export function createOpenMathExportTool(
         }
 
         const artifactsResult = "session_id" in validatedArgs
-          ? getFrozenArtifactsOrError(directory, validatedArgs.session_id)
-          : await getResearchFrozenArtifactsOrError(directory, validatedArgs.research_educationalization_id)
+          ? getFrozenArtifactsOrError(storageDirectory, validatedArgs.session_id)
+          : await getResearchFrozenArtifactsOrError(storageDirectory, validatedArgs.research_educationalization_id)
         if (!artifactsResult.ok) {
           return JSON.stringify({ ok: false, error_code: artifactsResult.error_code, message: artifactsResult.message })
         }
