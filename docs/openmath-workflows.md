@@ -36,6 +36,7 @@ New configuration belongs in `.opencode/oh-my-openmath.jsonc` or the correspondi
 | `max_consecutive_patch_failures` | `2` |
 | `workflow_profiles` | `{}` |
 | `workflow_allowed_roots` | `["."]` |
+| `storage_root` | Unset; state remains in the project |
 | `state_filename_mode` | `"linux"` |
 
 `default_mode` is optional and has no schema default.
@@ -242,6 +243,36 @@ Workflow state is stored under `.sisyphus/openmath-workflows/<sha256(run_id)>`. 
 
 On restart, the reader selects the highest allocated revision. If that revision is unreadable, invalid, or unsupported, it returns `STORAGE_READ_FAILED` and never falls back to an older revision. A committed stage is not redispatched. An incomplete recorded attempt is reconciled from its persisted session and receipt identity; ambiguous reconciliation becomes `BLOCKED` rather than guessing. Resume with status and the revision-safe loop above, never by editing persistence files.
 
+### Google Drive and Other Filesystems Without Hard Links
+
+Immutable storage requires hard links for temp ownership and no-replace publication. Google Drive for Desktop can reject these operations with `EISDIR`, so keeping workflow state on that mount prevents initialization. Keep project files on Google Drive and configure a local NTFS state root instead:
+
+```jsonc
+{
+  "openmath": {
+    "storage_root": "C:/Users/student/AppData/Local/OpenMath/state",
+    "state_filename_mode": "windows"
+  }
+}
+```
+
+Put this in `.opencode/oh-my-openmath.jsonc` or the user-level OpenMath config, replace the example user path with a local directory, and restart OpenCode after deploying the updated plugin. The root is created when state is first written. `~/openmath-state` is also supported; relative roots are resolved against the canonical project directory. Do not use a temporary directory or a home directory that is itself on a cloud mount.
+
+With this setting, mutable OpenMath state lives beneath:
+
+```text
+<storage_root>/<sha256(realpath(project_directory))>/.sisyphus/
+  openmath-workflows/<sha256(run_id)>/
+  openmath-state/
+  openmath-research-campaigns/<sha256(campaign_id)>/
+```
+
+The project hash isolates identical run/session IDs in different projects. Campaign locks, certification revisions, dossiers, and educationalization child workflows use the same local persistence domain. Source files, prompt/reference resolution, OpenCode session queries, and configured export destinations continue to use the original project directory. `workflow_allowed_roots` controls source access, not the location of mutable state.
+
+Unset `storage_root` preserves the existing project-local layout. Enabling or changing the root does **not** migrate existing state or search both locations; use the same root in every process and after restart. Moving the project to a different canonical path also changes its state namespace. Back up and deliberately migrate the complete project state before changing those settings if existing runs must remain accessible.
+
+If the configured root also lacks hard-link support, writes still stop with `STORAGE_ATOMICITY_UNAVAILABLE`. There is no copy-based fallback or automatic write to the old project location, because either would weaken the storage protocol or create two authoritative copies.
+
 ## Legacy Compatibility
 
 - `oh-my-openmath` and `oh-my-openmath.json[c]` are canonical. `oh-my-opencode` and `oh-my-opencode.json[c]` are legacy compatibility names only.
@@ -268,7 +299,7 @@ Tool calls return either the success envelope described above or a top-level `ok
 | Top-level error envelope | `STORAGE_READ_FAILED` | The highest allocated revision could not be read or validated. Repair storage; the reader will not fall back to an older revision. |
 | Top-level error envelope | `STORAGE_WRITE_FAILED` | A new revision could not be written. Check filesystem access and space, then call status before retrying. |
 | Top-level error envelope | `STORAGE_BUSY` | Another writer owns the mutation. Call status and retry from the latest revision. |
-| Top-level error envelope | `STORAGE_ATOMICITY_UNAVAILABLE` | The filesystem cannot provide the required no-replace atomic publication. Use a supported local filesystem. |
+| Top-level error envelope | `STORAGE_ATOMICITY_UNAVAILABLE` | The state filesystem cannot provide the required hard-link/no-replace publication. Configure `openmath.storage_root` on a supported local filesystem. |
 | Top-level error envelope | `SUBAGENT_FAILED` | Stage dispatch or an unexpected operation failed. Call status before deciding whether to retry or abort. |
 | Stage-record diagnostic | `RECONCILIATION_BLOCKED` | The tool call may return `ok: true` with `BLOCKED`; use the returned `step_one_stage` action or abort. |
 

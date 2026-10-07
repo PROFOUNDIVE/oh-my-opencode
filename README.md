@@ -148,6 +148,8 @@ Configuration is stored in `.opencode/oh-my-openmath.jsonc` or `~/.config/openco
 
 For legacy JSON mode (`"artifacts": { "format": "json" }`), use `solver` and `reference-reviewer` overrides instead of markdown-mode agent keys.
 
+Projects on Google Drive for Desktop can keep their source files on the mount by setting `openmath.storage_root` to a durable local NTFS directory, such as `C:/Users/student/AppData/Local/OpenMath/state`. Workflow/session/research state then uses the local filesystem's hard links while reference files and exports stay on their configured project paths. Restart OpenCode after updating the plugin and config. See the [local storage setup and migration cautions](docs/openmath-workflows.md#google-drive-and-other-filesystems-without-hard-links).
+
 ## Usage
 
 ### Interactive Mode

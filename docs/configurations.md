@@ -261,6 +261,7 @@ Use `.opencode/oh-my-openmath.jsonc` for new workflow profiles. `oh-my-opencode.
 | `workflow_profiles` | Profile map | `{}` |
 | `default_workflow_profile` | Profile name | No default |
 | `workflow_allowed_roots` | Nonempty array of nonblank paths | `["."]` |
+| `storage_root` | Optional nonblank path without NUL characters | Unset; project-local state |
 | `state_filename_mode` | `"linux"` or `"windows"` | `"linux"` |
 | `default_mode` | `"interactive"`, `"solve_only"`, or `"export"` | No default |
 
@@ -277,6 +278,8 @@ Adapter compatibility is schema-checked:
 | `revise` | `patch_set_json`, `full_replace_markdown`, `legacy_json_artifacts` |
 
 See [Configurable and Interruptible OpenMath Workflows](openmath-workflows.md) for profile selection, request and reference shapes, commands, checkpoints, amendments, reloads, persistence, restart behavior, and troubleshooting. See the complete [workflow fixtures](examples/openmath-workflow/) instead of duplicating them here.
+
+For projects on Google Drive or another filesystem without hard links, set `openmath.storage_root` to a durable local path, for example `C:/Users/student/AppData/Local/OpenMath/state`. All mutable OpenMath state is isolated by canonical project-path hash beneath that root; source/reference paths and export destinations remain project-relative. Absolute and `~/` paths are accepted; relative paths resolve against the canonical project directory. This setting does not migrate existing state, and every process accessing the project must use the same root. See the [local storage guide](openmath-workflows.md#google-drive-and-other-filesystems-without-hard-links).
 
 ### Phase A OpenMath Research Campaign Profiles
 
