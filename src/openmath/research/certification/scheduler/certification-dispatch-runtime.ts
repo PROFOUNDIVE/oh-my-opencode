@@ -20,6 +20,7 @@ const defaultDependencies: CertificationDispatchRuntimeDependencies = {
 export function createCertificationDispatchRuntime(input: Readonly<{
   readonly client: OpencodeClient
   readonly directory: string
+  readonly storageDirectory?: string
   readonly ctx: ToolContextWithMetadata
   readonly campaign_id: string
   readonly operation_owner: CertificationOperationOwner
@@ -33,7 +34,7 @@ export function createCertificationDispatchRuntime(input: Readonly<{
   }, { runSubagent: dependencies.run_subagent })
   return {
     verify_operation_owner: () => dependencies.verify_operation_owner({
-      directory: input.directory,
+      directory: input.storageDirectory ?? input.directory,
       campaign_id: input.campaign_id,
       owner: input.operation_owner,
     }),
@@ -68,7 +69,7 @@ export function createCertificationDispatchRuntime(input: Readonly<{
     },
     dispatch: async (request) => {
       const ownership = await dependencies.verify_operation_owner({
-        directory: input.directory,
+        directory: input.storageDirectory ?? input.directory,
         campaign_id: input.campaign_id,
         owner: input.operation_owner,
       })
