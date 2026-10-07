@@ -20,12 +20,13 @@ export function createTournamentStepDependencies(input: Readonly<{
 
 export function createOpenCodeTournamentStepDependencies(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly infrastructure?: Infrastructure
 }>): CampaignStepDependencies {
   return createTournamentStepDependencies({
-    directory: input.directory,
+    directory: input.storageDirectory ?? input.directory,
     ...(input.infrastructure === undefined ? {} : { infrastructure: input.infrastructure }),
     create_job_runtime: (callbacks) => createCampaignDispatchRuntime({ ...input, ...callbacks }),
   })

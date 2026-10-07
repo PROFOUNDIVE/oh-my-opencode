@@ -20,12 +20,13 @@ export function createInitialScreeningStepDependencies(input: Readonly<{
 
 export function createOpenCodeInitialScreeningStepDependencies(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly infrastructure?: Infrastructure
 }>): CampaignStepDependencies {
   return createInitialScreeningStepDependencies({
-    directory: input.directory,
+    directory: input.storageDirectory ?? input.directory,
     ...(input.infrastructure === undefined ? {} : { infrastructure: input.infrastructure }),
     create_job_runtime: (callbacks) => createCampaignDispatchRuntime({ ...input, ...callbacks }),
   })
