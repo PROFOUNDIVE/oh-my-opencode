@@ -28,6 +28,7 @@ const expectedToolNames = [
 ] as const
 const expectedCommandNames = expectedToolNames.map((name) => name.replace(/_/g, "-"))
 const expectedOpenMathProperties = [
+  "storage_root",
   "max_review_rounds",
   "max_consecutive_patch_failures",
   "artifacts",
