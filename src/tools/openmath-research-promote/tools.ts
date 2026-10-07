@@ -1,4 +1,5 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 
 import { promoteResearchCampaign } from "../../openmath/research/application"
 import {
@@ -11,13 +12,14 @@ import type { ToolContextWithMetadata } from "../delegate-task/types"
 import {
   jsonResearchException,
   jsonResearchResult,
-  type OpenMathResearchToolOptions,
+  type OpenMathResearchStorageOptions,
 } from "../openmath-research-shared"
 import { OpenMathResearchPromoteInputSchema } from "./types"
 
 export function createOpenMathResearchPromoteTool(
-  options: Pick<OpenMathResearchToolOptions, "directory">,
+  options: OpenMathResearchStorageOptions,
 ): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(options.directory, options.openmathConfig?.storage_root)
   return tool({
     description: "Record an explicit dossier decision ending at promotion-ready metadata or rejection.",
     args: {
@@ -33,7 +35,7 @@ export function createOpenMathResearchPromoteTool(
         const ctx: ToolContextWithMetadata = context
         return jsonResearchResult(await promoteResearchCampaign({
           ...input,
-          directory: options.directory,
+          directory: storageDirectory,
         }, {
           trusted_actor_receipt: {
             session_id: ctx.sessionID,
