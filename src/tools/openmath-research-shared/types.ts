@@ -12,6 +12,9 @@ export type OpenMathResearchStepDependencies = CampaignStepDependencies
   & PromotionDossierStepDependencies
   & Partial<CertificationPromotionStepDependencies>
 
+export type OpenMathResearchStorageOptions = Pick<OpenMathResearchToolOptions, "directory">
+  & Readonly<{ readonly openmathConfig?: Pick<OpenMathConfig, "storage_root"> }>
+
 export type OpenMathResearchToolOptions = Readonly<{
   readonly directory: string
   readonly client?: OpencodeClient
