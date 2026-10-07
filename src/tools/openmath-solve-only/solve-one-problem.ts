@@ -5,6 +5,7 @@ import { runLegacyWorkflow } from "./run-legacy-workflow"
 
 export function solveOneProblem(args: {
   directory: string
+  readonly storageDirectory?: string
   client: OpencodeClient
   ctx: ToolContextWithMetadata
   config: OpenMathToolConfig | undefined

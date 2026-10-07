@@ -1,4 +1,5 @@
 export type OpenMathToolConfig = {
+  readonly storage_root?: string
   max_review_rounds?: number
   max_consecutive_patch_failures?: number
   state_filename_mode?: "linux" | "windows"
