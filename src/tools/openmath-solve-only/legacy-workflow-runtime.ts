@@ -9,6 +9,7 @@ import { runSyncSubagentText } from "./run-sync-subagent"
 export function createLegacyWorkflowRuntime(input: Readonly<{
   readonly state: WorkflowStateV1
   readonly directory: string
+  readonly storageDirectory?: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly state_filename_mode: OpenMathStateFilenameMode
@@ -20,7 +21,7 @@ export function createLegacyWorkflowRuntime(input: Readonly<{
     persist: async (nextState) => {
       const normalizedState = recordSuccessfulLegacyRevision(currentState, nextState)
       const result = await compareAndSwapWorkflowState({
-        directory: input.directory,
+        directory: input.storageDirectory ?? input.directory,
         run_id: currentState.run_id,
         expected_state_revision: currentState.state_revision,
         next_state: normalizedState,
@@ -31,7 +32,7 @@ export function createLegacyWorkflowRuntime(input: Readonly<{
         throw new StagePersistenceError(result.error_code, message)
       }
       currentState = result.state
-      persistLegacyProjection(input.directory, input.state_filename_mode, currentState)
+      persistLegacyProjection(input.storageDirectory ?? input.directory, input.state_filename_mode, currentState)
       return currentState
     },
     list_children: async (parentSessionID) => {

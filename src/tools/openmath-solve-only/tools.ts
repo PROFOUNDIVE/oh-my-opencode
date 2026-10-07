@@ -1,5 +1,6 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 import type { OpencodeClient } from "../delegate-task/types"
 import type { OpenMathToolConfig } from "./tool-config"
 import { createSemaphore } from "./semaphore"
@@ -12,6 +13,7 @@ export function createOpenMathSolveOnlyTool(args: {
   client: OpencodeClient
   openmathConfig?: OpenMathToolConfig
 }): ToolDefinition {
+  const storageDirectory = getOpenMathStorageDirectory(args.directory, args.openmathConfig?.storage_root)
   return tool({
     description:
       "Deterministic solve-only orchestration over multiple problems with configurable concurrency. Runs SOLVE->REVIEW loops and freezes artifacts on [CORRECT].",
@@ -68,6 +70,7 @@ export function createOpenMathSolveOnlyTool(args: {
             semaphore.run(async () => {
               results[idx] = await solveOneProblem({
                 directory: args.directory,
+                storageDirectory,
                 client: args.client,
                 ctx: ctx as any,
                 config: args.openmathConfig,

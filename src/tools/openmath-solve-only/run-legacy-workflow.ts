@@ -1,4 +1,5 @@
 import type { OpencodeClient, ToolContextWithMetadata } from "../delegate-task/types"
+import { getOpenMathStorageDirectory } from "../../openmath/storage-directory"
 import { createLegacyReferenceSnapshot } from "../../openmath/references/snapshot"
 import { readOpenMathSessionStateBytes, writeOpenMathSessionState, type OpenMathStateFilenameMode } from "../../openmath/storage"
 import { createInitialWorkflowState } from "../../openmath/workflow/transitions"
@@ -15,6 +16,7 @@ import { normalizeProblem } from "./prompt"
 
 export async function runLegacyWorkflow(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory?: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly config: OpenMathToolConfig | undefined
@@ -33,8 +35,10 @@ export async function runLegacyWorkflow(input: Readonly<{
   const format = input.config?.artifacts?.format ?? "markdown"
   const stateFilenameMode = input.config?.state_filename_mode ?? "linux"
   const problemText = normalizeProblem(input.problem.prefix, input.problem.problem)
+  const storageDirectory = input.storageDirectory ?? getOpenMathStorageDirectory(input.directory, input.config?.storage_root)
+  const scopedInput = { ...input, storageDirectory }
   const initial = await loadOrStartWorkflow({
-    ...input,
+    ...scopedInput,
     runId,
     format,
     problemText,
@@ -43,16 +47,17 @@ export async function runLegacyWorkflow(input: Readonly<{
   if (initial.kind === "error") {
     return { id: input.problem.id, session_id: runId, rounds_used: 0, error_code: initial.error_code, message: initial.message }
   }
-  const state = await runUntilSettled(input, initial.state, stateFilenameMode)
+  const state = await runUntilSettled(scopedInput, initial.state, stateFilenameMode)
   const projected = projectWorkflowStateToLegacy(state)
-  if (projected.kind === "error" || !writeOpenMathSessionState(input.directory, projected.state, stateFilenameMode)) {
+  if (projected.kind === "error" || !writeOpenMathSessionState(storageDirectory, projected.state, stateFilenameMode)) {
     return { id: input.problem.id, session_id: runId, rounds_used: state.completed_review_rounds, error_code: "STATE_WRITE_FAILED", message: "Failed to persist OpenMath state after review" }
   }
-  return createLegacyWorkflowResult(input, state)
+  return createLegacyWorkflowResult(scopedInput, state)
 }
 
 async function loadOrStartWorkflow(input: Readonly<{
   readonly directory: string
+  readonly storageDirectory: string
   readonly client: OpencodeClient
   readonly ctx: ToolContextWithMetadata
   readonly config: OpenMathToolConfig | undefined
@@ -71,7 +76,7 @@ async function loadOrStartWorkflow(input: Readonly<{
   readonly problemText: string
   readonly stateFilenameMode: OpenMathStateFilenameMode
 }>): Promise<Readonly<{ readonly kind: "ok"; readonly state: WorkflowStateV1 }> | Readonly<{ readonly kind: "error"; readonly error_code: string; readonly message: string }>> {
-  const existing = await readWorkflowState(input.directory, input.runId)
+  const existing = await readWorkflowState(input.storageDirectory, input.runId)
   if (existing.kind === "ok") return existing
   if (existing.error_code === "STORAGE_READ_FAILED") return existing
   const request = WorkflowRequestSnapshotSchema.parse({
@@ -85,7 +90,7 @@ async function loadOrStartWorkflow(input: Readonly<{
   })
   const profile = createLegacyWorkflowProfileSnapshot(input.format, input.maxReviewRounds)
   const references = ReferenceSnapshotSchema.parse(createLegacyReferenceSnapshot(input.supplementary_refs ?? []))
-  const legacyBytes = readOpenMathSessionStateBytes(input.directory, input.runId, input.stateFilenameMode)
+  const legacyBytes = readOpenMathSessionStateBytes(input.storageDirectory, input.runId, input.stateFilenameMode)
   const imported = legacyBytes === null ? null : importLegacySolveOnlyState({
     source_bytes: legacyBytes,
     parent_session_id: input.ctx.sessionID,
@@ -125,21 +130,21 @@ async function loadOrStartWorkflow(input: Readonly<{
       } : null,
     },
   })
-  const started = await startWorkflowState({ directory: input.directory, state })
+  const started = await startWorkflowState({ directory: input.storageDirectory, state })
   if (started.kind === "error") return started
   const projected = projectWorkflowStateToLegacy(started.state)
-  if (projected.kind === "error" || !writeOpenMathSessionState(input.directory, projected.state, input.stateFilenameMode)) {
+  if (projected.kind === "error" || !writeOpenMathSessionState(input.storageDirectory, projected.state, input.stateFilenameMode)) {
     return { kind: "error", error_code: "STATE_WRITE_FAILED", message: "Failed to initialize OpenMath state" }
   }
   return started
 }
 
 async function runUntilSettled(
-  input: Parameters<typeof runLegacyWorkflow>[0],
+  input: Parameters<typeof runLegacyWorkflow>[0] & Readonly<{ storageDirectory: string }>,
   state: WorkflowStateV1,
   stateFilenameMode: OpenMathStateFilenameMode,
 ): Promise<WorkflowStateV1> {
-  const resumed = await recoverLegacyParseFailure(input.directory, state)
+  const resumed = await recoverLegacyParseFailure(input.storageDirectory, state)
   if (resumed.state_revision !== state.state_revision) return runUntilSettled(input, resumed, stateFilenameMode)
   if (!isRunnable(state)) return state
   const completed = await runWorkflowStep({
@@ -149,12 +154,13 @@ async function runUntilSettled(
     runtime: createLegacyWorkflowRuntime({
       state,
       directory: input.directory,
+      storageDirectory: input.storageDirectory,
       client: input.client,
       ctx: input.ctx,
       state_filename_mode: stateFilenameMode,
     }),
   })
-  const recovered = await recoverLegacyParseFailure(input.directory, completed)
+  const recovered = await recoverLegacyParseFailure(input.storageDirectory, completed)
   return recovered.state_revision === completed.state_revision
     ? completed
     : runUntilSettled(input, recovered, stateFilenameMode)
