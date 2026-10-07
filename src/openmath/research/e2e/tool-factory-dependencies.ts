@@ -49,6 +49,7 @@ export function createFactoryTransports(
 type RunOperationInput = Parameters<CampaignStepDependencies["run_operation"]>[0]
 
 type FactoryDependencyOptions = Readonly<{
+  readonly project_directory?: string
   readonly transports?: FactoryTransports
   readonly decorate_runtime?: (
     phase: RecoverableCampaignPhase,
@@ -69,7 +70,8 @@ export function createFactoryStepDependencies(
   const { candidate, screening, tournament, refinement } = shared
   const operations = {
     discovery: createCandidateDiscoveryStepDependencies({
-      directory,
+      directory: options.project_directory ?? directory,
+      storageDirectory: directory,
       create_job_runtime: (callbacks) => decorate(options, "DISCOVERY", candidate.runtime(callbacks)),
     }),
     screening: createInitialScreeningStepDependencies({
@@ -81,7 +83,8 @@ export function createFactoryStepDependencies(
       create_job_runtime: (callbacks) => decorate(options, "TOURNAMENT", tournament.runtime(callbacks)),
     }),
     refinement: createSelectedRefinementStepDependencies({
-      directory,
+      directory: options.project_directory ?? directory,
+      storageDirectory: directory,
       create_job_runtime: (callbacks) => decorate(options, "DEEP_REFINEMENT", refinement.runtime(callbacks)),
     }),
   }
